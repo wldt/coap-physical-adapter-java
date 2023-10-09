@@ -1,6 +1,7 @@
 package it.wldt.adapter.coap.physical;
 
 import it.wldt.adapter.coap.physical.resource.CoapResource;
+import it.wldt.adapter.coap.physical.resource.asset.CoapPayloadFunction;
 import it.wldt.adapter.coap.physical.resource.asset.DigitalTwinCoapResource;
 import it.wldt.adapter.physical.PhysicalAssetAction;
 import it.wldt.adapter.physical.PhysicalAssetDescription;
@@ -21,7 +22,7 @@ public class CoapPhysicalAdapterConfiguration {
 
     private Boolean enableResourceDiscovery;
 
-    private Function<byte[], ?> resourceFunction;
+    private CoapPayloadFunction resourceFunction;
 
     private PhysicalAssetDescription physicalAssetDescription;
 
@@ -52,7 +53,7 @@ public class CoapPhysicalAdapterConfiguration {
         return enableAutoUpdate;
     }
 
-    public Function<byte[], ?> getResourceFunction() {
+    public CoapPayloadFunction getPayloadFunction() {
         return resourceFunction;
     }
 
@@ -80,7 +81,7 @@ public class CoapPhysicalAdapterConfiguration {
         this.enableResourceDiscovery = enableResourceDiscovery;
     }
 
-    public void setResourceFunction(Function<byte[], ?> resourceFunction) {
+    public void setResourceFunction(CoapPayloadFunction resourceFunction) {
         this.resourceFunction = resourceFunction;
     }
 

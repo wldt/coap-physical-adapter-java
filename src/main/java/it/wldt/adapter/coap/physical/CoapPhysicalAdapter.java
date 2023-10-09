@@ -61,7 +61,7 @@ public class CoapPhysicalAdapter extends ConfigurablePhysicalAdapter<CoapPhysica
 
     }
 
-    public <T> void discoverCoapResources() throws ConnectorException, IOException {
+    public void discoverCoapResources() throws ConnectorException, IOException {
         Set<WebLink> linkSet = coapClient.discover();
 
         for (WebLink link : linkSet) {
@@ -82,9 +82,9 @@ public class CoapPhysicalAdapter extends ConfigurablePhysicalAdapter<CoapPhysica
 
                 if (ifList.contains("core.s")) {    // CoAP sensor
                     if (observable) {
-                        resource = new PropertyCoapResource<>(this.coapClient, uri, true, rt, getConfiguration().getResourceFunction());
+                        resource = new PropertyCoapResource<>(this.coapClient, uri, true, rt, getConfiguration().getPayloadFunction());
                     } else {
-                        resource = new PropertyCoapResource<>(this.coapClient, uri, getConfiguration().getAutoUpdatePeriod(), rt, getConfiguration().getResourceFunction());
+                        resource = new PropertyCoapResource<>(this.coapClient, uri, getConfiguration().getAutoUpdatePeriod(), rt, getConfiguration().getPayloadFunction());
                     }
                 }
                 /*
