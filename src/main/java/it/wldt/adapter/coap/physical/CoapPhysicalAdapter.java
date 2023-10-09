@@ -43,6 +43,7 @@ public class CoapPhysicalAdapter extends ConfigurablePhysicalAdapter<CoapPhysica
                 logger.info("CoAP Physical Adapter - CoAP client discovering resources");
                 discoverCoapResources();
             }
+            // TODO: Implement mode without resource discovery
 
             getConfiguration().getResources().forEach(this::manageResourcePayload);
 
@@ -81,10 +82,11 @@ public class CoapPhysicalAdapter extends ConfigurablePhysicalAdapter<CoapPhysica
                 List<String> ifList = link.getAttributes().getAttributeValues("if");
 
                 if (ifList.contains("core.s")) {    // CoAP sensor
+                    // CoapPayloadFunction requires a property key. As of now the property key is set to rt
                     if (observable) {
-                        resource = new PropertyCoapResource<>(this.coapClient, uri, true, rt, getConfiguration().getPayloadFunction());
+                        resource = new PropertyCoapResource<>(getConfiguration().getServerConnectionString(), uri, true, rt, getConfiguration().getPayloadFunction());
                     } else {
-                        resource = new PropertyCoapResource<>(this.coapClient, uri, getConfiguration().getAutoUpdatePeriod(), rt, getConfiguration().getPayloadFunction());
+                        resource = new PropertyCoapResource<>(getConfiguration().getServerConnectionString(), uri, getConfiguration().getAutoUpdatePeriod(), rt, getConfiguration().getPayloadFunction());
                     }
                 }
                 /*

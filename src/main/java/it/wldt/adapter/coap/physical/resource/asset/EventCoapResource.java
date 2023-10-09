@@ -10,8 +10,8 @@ import java.util.Collections;
 import java.util.function.Function;
 
 public class EventCoapResource<T> extends DigitalTwinCoapResource {
-    public EventCoapResource(CoapClient client, String relativeUri, long autoUpdatePeriod, String propertyKey, Function<byte[], T> propertyValueProducer) {
-        super(client, relativeUri, autoUpdatePeriod, payload -> {
+    public EventCoapResource(String serverUrl, String relativeUri, long autoUpdatePeriod, String propertyKey, Function<byte[], T> propertyValueProducer) {
+        super(serverUrl, relativeUri, autoUpdatePeriod, payload -> {
             try {
                 return Collections.singletonList(new PhysicalAssetEventWldtEvent<>(propertyKey, propertyValueProducer.apply(payload)));
             } catch (EventBusException e) {
@@ -21,8 +21,8 @@ public class EventCoapResource<T> extends DigitalTwinCoapResource {
         });
     }
 
-    public EventCoapResource(CoapClient client, String relativeUri, boolean observable, String propertyKey, Function<byte[], T> propertyValueProducer) {
-        super(client, relativeUri, observable, payload -> {
+    public EventCoapResource(String serverUrl, String relativeUri, boolean observable, String propertyKey, Function<byte[], T> propertyValueProducer) {
+        super(serverUrl, relativeUri, observable, payload -> {
             try {
                 return Collections.singletonList(new PhysicalAssetEventWldtEvent<>(propertyKey, propertyValueProducer.apply(payload)));
             } catch (EventBusException e) {

@@ -9,13 +9,13 @@ import java.util.List;
 public class DigitalTwinCoapResource extends CoapResource {
     private final CoapPayloadFunction coapPayloadFunction;
 
-    public DigitalTwinCoapResource(CoapClient client, String relativeUri, long autoUpdatePeriod, CoapPayloadFunction function) {
-        super(client, relativeUri, autoUpdatePeriod);
+    public DigitalTwinCoapResource(String serverUrl, String relativeUri, long autoUpdatePeriod, CoapPayloadFunction function) {
+        super(serverUrl, relativeUri, autoUpdatePeriod);
         this.coapPayloadFunction = function;
     }
 
-    public DigitalTwinCoapResource(CoapClient client, String relativeUri, boolean observable, CoapPayloadFunction function) {
-        super(client, relativeUri, observable);
+    public DigitalTwinCoapResource(String serverUrl, String relativeUri, boolean observable, CoapPayloadFunction function) {
+        super(serverUrl, relativeUri, observable);
         this.coapPayloadFunction = function;
     }
 

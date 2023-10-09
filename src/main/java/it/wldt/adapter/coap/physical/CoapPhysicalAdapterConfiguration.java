@@ -17,7 +17,6 @@ public class CoapPhysicalAdapterConfiguration {
     private final Integer serverPort;
 
     private Boolean enableAutoUpdate;
-    private Long autoUpdateDelay;
     private Long autoUpdatePeriod;
 
     private Boolean enableResourceDiscovery;
@@ -28,7 +27,7 @@ public class CoapPhysicalAdapterConfiguration {
 
     private final List<DigitalTwinCoapResource> resources = new ArrayList<>();
 
-    private CoapPhysicalAdapterConfiguration(String serverAddress, int serverPort) {
+    protected CoapPhysicalAdapterConfiguration(String serverAddress, int serverPort) {
         this.serverAddress = serverAddress;
         this.serverPort = serverPort;
     }
@@ -53,53 +52,47 @@ public class CoapPhysicalAdapterConfiguration {
         return enableAutoUpdate;
     }
 
-    public CoapPayloadFunction getPayloadFunction() {
-        return resourceFunction;
-    }
-
-    public void setAutoUpdateFlag(boolean enableAutoUpdate) {
-        this.enableAutoUpdate = enableAutoUpdate;
-    }
-
-    public long getAutoUpdateDelay() {
-        return autoUpdateDelay;
-    }
-
-    public void setAutoUpdateDelay(long autoUpdateDelay) {
-        this.autoUpdateDelay = autoUpdateDelay;
-    }
-
     public long getAutoUpdatePeriod() {
         return autoUpdatePeriod;
     }
 
-    public void setAutoUpdatePeriod(long autoUpdatePeriod) {
-        this.autoUpdatePeriod = autoUpdatePeriod;
+    public CoapPayloadFunction getPayloadFunction() {
+        return resourceFunction;
     }
 
-    public void setResourceDiscoveryFlag(boolean enableResourceDiscovery) {
-        this.enableResourceDiscovery = enableResourceDiscovery;
-    }
-
-    public void setResourceFunction(CoapPayloadFunction resourceFunction) {
-        this.resourceFunction = resourceFunction;
+    public List<DigitalTwinCoapResource> getResources() {
+        return resources;
     }
 
     public PhysicalAssetDescription getPhysicalAssetDescription() {
         return physicalAssetDescription;
     }
 
-    public void setPhysicalAssetDescription(List<PhysicalAssetAction> actions,
+    protected void setAutoUpdateFlag(boolean enableAutoUpdate) {
+        this.enableAutoUpdate = enableAutoUpdate;
+    }
+
+
+    protected void setAutoUpdatePeriod(long autoUpdatePeriod) {
+        this.autoUpdatePeriod = autoUpdatePeriod;
+    }
+
+    protected void setResourceDiscoveryFlag(boolean enableResourceDiscovery) {
+        this.enableResourceDiscovery = enableResourceDiscovery;
+    }
+
+    protected void setResourceFunction(CoapPayloadFunction resourceFunction) {
+        this.resourceFunction = resourceFunction;
+    }
+
+    protected void setPhysicalAssetDescription(List<PhysicalAssetAction> actions,
                        List<PhysicalAssetProperty<?>> properties,
                        List<PhysicalAssetEvent> events) {
         this.physicalAssetDescription = new PhysicalAssetDescription(actions, properties, events);
     }
 
-    public boolean addResource (DigitalTwinCoapResource resource) {
+    protected boolean addResource (DigitalTwinCoapResource resource) {
         return resources.add(resource);
     }
 
-    public List<DigitalTwinCoapResource> getResources() {
-        return resources;
-    }
 }

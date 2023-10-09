@@ -19,7 +19,8 @@ public class CoapResource extends ListenablePayloadResource {
 
     protected final CoapClient client;
 
-    private final String relativeUri;
+    private final String serverUrl;
+    private final String resourceUri;
 
     private Boolean observable;
     private CoapObserveRelation observeRelation;
@@ -31,19 +32,22 @@ public class CoapResource extends ListenablePayloadResource {
     private Timer autoUpdateTimer;
 
 
-    private CoapResource(CoapClient client, String relativeUri) {
-        this.client = client;
-        this.relativeUri = relativeUri;
+    private CoapResource(String serverUrl, String resourceUri) {
+        this.serverUrl = serverUrl;
+        this.resourceUri = resourceUri;
+        this.client = new CoapClient(serverUrl);
     }
 
-    public CoapResource(CoapClient client, String relativeUri, long autoUpdatePeriod) {
-        this(client, relativeUri);
+    public CoapResource(String serverUrl, String resourceUri, long autoUpdatePeriod) {
+        this(serverUrl, resourceUri);
+
+        this.observable = false;
 
         this.autoUpdateTimerPeriod = autoUpdatePeriod;
     }
 
-    public CoapResource(CoapClient client, String relativeUri, boolean observable) {
-        this(client, relativeUri);
+    public CoapResource(String serverUrl, String resourceUri, boolean observable) {
+        this(serverUrl, resourceUri);
 
         this.observable = observable;
         this.autoUpdated = false;
@@ -94,8 +98,12 @@ public class CoapResource extends ListenablePayloadResource {
         }
     }
 
-    public String getRelativeUri() {
-        return relativeUri;
+    public String getServerUrl() {
+        return serverUrl;
+    }
+
+    public String getResourceUri() {
+        return resourceUri;
     }
 
     public byte[] getLastPayload() {
@@ -135,7 +143,7 @@ public class CoapResource extends ListenablePayloadResource {
     protected OptionSet createOptionSet() {
         OptionSet options = new OptionSet();
 
-        options.setUriPath(this.relativeUri);
+        options.setUriPath(this.resourceUri);
 
         return options;
     }
