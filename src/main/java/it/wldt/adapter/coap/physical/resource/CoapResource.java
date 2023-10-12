@@ -1,10 +1,7 @@
 package it.wldt.adapter.coap.physical.resource;
 
 import it.wldt.adapter.coap.physical.resource.event.ListenablePayloadResource;
-import org.eclipse.californium.core.CoapClient;
-import org.eclipse.californium.core.CoapHandler;
-import org.eclipse.californium.core.CoapObserveRelation;
-import org.eclipse.californium.core.CoapResponse;
+import org.eclipse.californium.core.*;
 import org.eclipse.californium.core.coap.CoAP;
 import org.eclipse.californium.core.coap.OptionSet;
 import org.eclipse.californium.core.coap.Request;
@@ -25,7 +22,7 @@ public class CoapResource extends ListenablePayloadResource {
     private Boolean observable;
     private CoapObserveRelation observeRelation;
 
-    protected byte[] lastPayload;
+    protected byte[] lastPayload = "".getBytes();
 
     private Boolean autoUpdated;
     private long autoUpdateTimerPeriod;
@@ -42,6 +39,7 @@ public class CoapResource extends ListenablePayloadResource {
         this(serverUrl, resourceUri);
 
         this.observable = false;
+        this.autoUpdated = true;
 
         this.autoUpdateTimerPeriod = autoUpdatePeriod;
     }
@@ -50,7 +48,7 @@ public class CoapResource extends ListenablePayloadResource {
         this(serverUrl, resourceUri);
 
         this.observable = observable;
-        this.autoUpdated = false;
+        this.autoUpdated = !this.observable;
 
         init();
     }
@@ -60,6 +58,7 @@ public class CoapResource extends ListenablePayloadResource {
             Request request = new Request(CoAP.Code.GET);
 
             request.setOptions(this.createOptionSet());
+            request.setURI(String.format("%s%s", this.client.getURI(), this.resourceUri));
             request.setObserve();
             request.setConfirmable(true);
 
@@ -72,8 +71,6 @@ public class CoapResource extends ListenablePayloadResource {
                         } else {
                             setLastPayload("".getBytes());
                         }
-
-                        notifyListeners(lastPayload);
                     }
 
                     @Override
@@ -86,15 +83,8 @@ public class CoapResource extends ListenablePayloadResource {
             }
         }
 
-        if (autoUpdated) {
-            this.autoUpdateTimer = new Timer();
-
-            autoUpdateTimer.schedule(new TimerTask() {
-                @Override
-                public void run() {
-                    sendGET();
-                }
-            }, 0L, this.autoUpdateTimerPeriod);
+        if (autoUpdated && !observable) {
+            setAutoUpdate(0L, this.autoUpdateTimerPeriod);
         }
     }
 
@@ -111,8 +101,13 @@ public class CoapResource extends ListenablePayloadResource {
     }
 
     private void setLastPayload(byte[] value) {
-        this.lastPayload = value;
-        notifyListeners(value);
+        String oldPayloadString = new String(lastPayload);
+        String newPayloadString = new String(value);
+
+        if (!oldPayloadString.equals(newPayloadString)) {
+            this.lastPayload = value;
+            notifyListeners(value);
+        }
     }
 
     public void setAutoUpdate(long delay, long period) {
@@ -125,12 +120,7 @@ public class CoapResource extends ListenablePayloadResource {
         autoUpdateTimer.schedule(new TimerTask() {
             @Override
             public void run() {
-                String oldPayload = new String(lastPayload);
-                sendGET();
-
-                if (!oldPayload.equals(new String(lastPayload))) {
-                    notifyListeners(lastPayload);
-                }
+                // sendGET();
             }
         }, delay, period);
     }
@@ -143,11 +133,10 @@ public class CoapResource extends ListenablePayloadResource {
     protected OptionSet createOptionSet() {
         OptionSet options = new OptionSet();
 
-        options.setUriPath(this.resourceUri);
-
         return options;
     }
 
+    /*
     private void sendGET() {
         Request request = new Request(CoAP.Code.GET);
         request.setOptions(this.createOptionSet());
@@ -166,4 +155,5 @@ public class CoapResource extends ListenablePayloadResource {
             e.printStackTrace();
         }
     }
+     */
 }

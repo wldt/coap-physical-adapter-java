@@ -34,10 +34,13 @@ public class CoapPhysicalAdapter extends ConfigurablePhysicalAdapter<CoapPhysica
     @Override
     public void onIncomingPhysicalAction(PhysicalAssetActionWldtEvent<?> physicalAssetActionWldtEvent) {
         // TODO
+        logger.debug("CoAP Physical Adapter - [START] onIncomingPhysicalAction()");
+        logger.debug("CoAP Physical Adapter - [STOP] onIncomingPhysicalAction()");
     }
 
     @Override
     public void onAdapterStart() {
+        logger.debug("CoAP Physical Adapter - [START] onAdapterStart()");
         try {
             if (getConfiguration().getResourceDiscoveryFlag()) {
                 logger.info("CoAP Physical Adapter - CoAP client discovering resources");
@@ -55,14 +58,18 @@ public class CoapPhysicalAdapter extends ConfigurablePhysicalAdapter<CoapPhysica
             logger.error("CoAP Physical Adapter - Error discovering CoAP resources");
             e.printStackTrace();
         }
+
+        logger.debug("CoAP Physical Adapter - [STOP] onAdapterStart()");
     }
 
     @Override
     public void onAdapterStop() {
-
+        logger.debug("CoAP Physical Adapter - [START] onAdapterStop()");
+        logger.debug("CoAP Physical Adapter - [STOP] onAdapterStop()");
     }
 
     public void discoverCoapResources() throws ConnectorException, IOException {
+        logger.debug("CoAP Physical Adapter - [START] discoverCoapResources()");
         Set<WebLink> linkSet = coapClient.discover();
 
         for (WebLink link : linkSet) {
@@ -85,8 +92,10 @@ public class CoapPhysicalAdapter extends ConfigurablePhysicalAdapter<CoapPhysica
                     // CoapPayloadFunction requires a property key. As of now the property key is set to rt
                     if (observable) {
                         resource = new PropertyCoapResource<>(getConfiguration().getServerConnectionString(), uri, true, rt, getConfiguration().getPayloadFunction());
-                    } else {
+                    } else if (getConfiguration().getAutoUpdateFlag()){
                         resource = new PropertyCoapResource<>(getConfiguration().getServerConnectionString(), uri, getConfiguration().getAutoUpdatePeriod(), rt, getConfiguration().getPayloadFunction());
+                    } else {
+                        // TODO: Not observable && auto update disabled
                     }
                 }
                 /*
@@ -101,24 +110,32 @@ public class CoapPhysicalAdapter extends ConfigurablePhysicalAdapter<CoapPhysica
                 }
             }
         }
+        logger.debug("CoAP Physical Adapter - [STOP] discoverCoapResources()");
     }
 
     private void manageResourcePayload(DigitalTwinCoapResource resource) {
+        logger.debug("CoAP Physical Adapter - [START] manageResourcePayload()");
+        System.out.println("RESOURCE " + resource.getResourceUri() + " - ADDING PAYLOAD LISTENER");
         resource.addPayloadListener((value) -> {
             List<? extends WldtEvent<?>> wldtEvents = resource.applyPayloadFunction(value);
 
             wldtEvents.forEach(e -> {
                 try {
                     if (e instanceof PhysicalAssetPropertyWldtEvent) {
+                        System.out.println("Physical asset property");
                         publishPhysicalAssetPropertyWldtEvent((PhysicalAssetPropertyWldtEvent<?>) e);
                     } else if (e instanceof PhysicalAssetEventWldtEvent) {
+                        System.out.println("Physical asset event");
                         publishPhysicalAssetEventWldtEvent((PhysicalAssetEventWldtEvent<?>) e);
+                    } else {
+                        // TODO: Manage
+                        System.out.println("Not actual event");
                     }
                 }catch (EventBusException ex) {
                     ex.printStackTrace();
                 }
             });
         });
-
+        logger.debug("CoAP Physical Adapter - [STOP] manageResourcePayload()");
     }
 }

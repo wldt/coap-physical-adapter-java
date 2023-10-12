@@ -1,6 +1,6 @@
 package it.wldt.adapter.coap.physical;
 
-import it.wldt.adapter.coap.physical.resource.CoapResource;
+import it.wldt.adapter.coap.physical.exception.CoapPhysicalAdapterConfigurationException;
 import it.wldt.adapter.coap.physical.resource.asset.CoapPayloadFunction;
 import it.wldt.adapter.coap.physical.resource.asset.DigitalTwinCoapResource;
 import it.wldt.adapter.physical.PhysicalAssetAction;
@@ -10,7 +10,6 @@ import it.wldt.adapter.physical.PhysicalAssetProperty;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Function;
 
 public class CoapPhysicalAdapterConfiguration {
     private final String serverAddress;
@@ -21,7 +20,7 @@ public class CoapPhysicalAdapterConfiguration {
 
     private Boolean enableResourceDiscovery;
 
-    private CoapPayloadFunction resourceFunction;
+    private CoapPayloadFunction payloadFunction;
 
     private PhysicalAssetDescription physicalAssetDescription;
 
@@ -30,6 +29,10 @@ public class CoapPhysicalAdapterConfiguration {
     protected CoapPhysicalAdapterConfiguration(String serverAddress, int serverPort) {
         this.serverAddress = serverAddress;
         this.serverPort = serverPort;
+    }
+
+    public static CoapPhysicalAdapterConfigurationBuilder builder(String serverAddress, int serverPort) throws CoapPhysicalAdapterConfigurationException {
+        return new CoapPhysicalAdapterConfigurationBuilder(serverAddress, serverPort);
     }
 
     public String getServerAddress() {
@@ -57,7 +60,7 @@ public class CoapPhysicalAdapterConfiguration {
     }
 
     public CoapPayloadFunction getPayloadFunction() {
-        return resourceFunction;
+        return payloadFunction;
     }
 
     public List<DigitalTwinCoapResource> getResources() {
@@ -81,8 +84,8 @@ public class CoapPhysicalAdapterConfiguration {
         this.enableResourceDiscovery = enableResourceDiscovery;
     }
 
-    protected void setResourceFunction(CoapPayloadFunction resourceFunction) {
-        this.resourceFunction = resourceFunction;
+    protected void setPayloadFunction(CoapPayloadFunction payloadFunction) {
+        this.payloadFunction = payloadFunction;
     }
 
     protected void setPhysicalAssetDescription(List<PhysicalAssetAction> actions,
