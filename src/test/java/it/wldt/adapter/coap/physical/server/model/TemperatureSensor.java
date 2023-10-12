@@ -34,10 +34,10 @@ public class TemperatureSensor extends GenericSensor<Double> {
 
         double nVal = getValue() + sign * variation;
 
-        if (getValue() > SIM_MAX_TEMPERATURE_VALUE) {
+        if (nVal > SIM_MAX_TEMPERATURE_VALUE) {
             nVal = SIM_MAX_TEMPERATURE_VALUE;
         }
-        else if (getValue() < SIM_MIN_TEMPERATURE_VALUE) {
+        else if (nVal < SIM_MIN_TEMPERATURE_VALUE) {
             nVal = SIM_MIN_TEMPERATURE_VALUE;
         }
 
