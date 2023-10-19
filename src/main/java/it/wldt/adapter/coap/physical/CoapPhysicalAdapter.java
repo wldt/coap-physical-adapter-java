@@ -46,7 +46,6 @@ public class CoapPhysicalAdapter extends ConfigurablePhysicalAdapter<CoapPhysica
                 logger.info("CoAP Physical Adapter - CoAP client discovering resources");
                 discoverCoapResources();
             }
-            // TODO: Implement mode without resource discovery
 
             getConfiguration().getResources().forEach(this::manageResourcePayload);
 
