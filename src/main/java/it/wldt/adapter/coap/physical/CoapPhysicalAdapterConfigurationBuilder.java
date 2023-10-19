@@ -1,7 +1,7 @@
 package it.wldt.adapter.coap.physical;
 
 import it.wldt.adapter.coap.physical.exception.CoapPhysicalAdapterConfigurationException;
-import it.wldt.adapter.coap.physical.resource.asset.CoapPayloadFunction;
+import it.wldt.adapter.coap.physical.resource.asset.payload.CoapPayloadFunction;
 import it.wldt.adapter.coap.physical.resource.asset.DigitalTwinCoapResource;
 import it.wldt.adapter.physical.PhysicalAssetAction;
 import it.wldt.adapter.physical.PhysicalAssetEvent;

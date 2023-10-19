@@ -91,9 +91,9 @@ public class CoapPhysicalAdapter extends ConfigurablePhysicalAdapter<CoapPhysica
                 if (ifList.contains("core.s")) {    // CoAP sensor
                     // CoapPayloadFunction requires a property key. As of now the property key is set to rt
                     if (observable) {
-                        resource = new PropertyCoapResource<>(getConfiguration().getServerConnectionString(), uri, true, rt, getConfiguration().getPayloadFunction());
+                        resource = new PropertyCoapResource(getConfiguration().getServerConnectionString(), uri, true, rt, getConfiguration().getPayloadFunction());
                     } else if (getConfiguration().getAutoUpdateFlag()){
-                        resource = new PropertyCoapResource<>(getConfiguration().getServerConnectionString(), uri, getConfiguration().getAutoUpdatePeriod(), rt, getConfiguration().getPayloadFunction());
+                        resource = new PropertyCoapResource(getConfiguration().getServerConnectionString(), uri, getConfiguration().getAutoUpdatePeriod(), rt, getConfiguration().getPayloadFunction());
                     } else {
                         // TODO: Not observable && auto update disabled
                     }
@@ -117,6 +117,7 @@ public class CoapPhysicalAdapter extends ConfigurablePhysicalAdapter<CoapPhysica
         logger.debug("CoAP Physical Adapter - [START] manageResourcePayload()");
         System.out.println("RESOURCE " + resource.getResourceUri() + " - ADDING PAYLOAD LISTENER");
         resource.addPayloadListener((value) -> {
+            System.out.println("LISTENER OK");
             List<? extends WldtEvent<?>> wldtEvents = resource.applyPayloadFunction(value);
 
             wldtEvents.forEach(e -> {

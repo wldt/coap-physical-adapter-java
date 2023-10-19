@@ -1,7 +1,7 @@
 package it.wldt.adapter.coap.physical;
 
 import it.wldt.adapter.coap.physical.exception.CoapPhysicalAdapterConfigurationException;
-import it.wldt.adapter.coap.physical.resource.asset.CoapPayloadFunction;
+import it.wldt.adapter.coap.physical.resource.asset.payload.CoapPayloadFunction;
 import it.wldt.adapter.coap.physical.resource.asset.DigitalTwinCoapResource;
 import it.wldt.adapter.physical.PhysicalAssetAction;
 import it.wldt.adapter.physical.PhysicalAssetDescription;
@@ -20,7 +20,7 @@ public class CoapPhysicalAdapterConfiguration {
 
     private Boolean enableResourceDiscovery;
 
-    private CoapPayloadFunction payloadFunction;
+    private CoapPayloadFunction<?> payloadFunction;
 
     private PhysicalAssetDescription physicalAssetDescription;
 
@@ -59,7 +59,7 @@ public class CoapPhysicalAdapterConfiguration {
         return autoUpdatePeriod;
     }
 
-    public CoapPayloadFunction getPayloadFunction() {
+    public CoapPayloadFunction<?> getPayloadFunction() {
         return payloadFunction;
     }
 
@@ -84,7 +84,7 @@ public class CoapPhysicalAdapterConfiguration {
         this.enableResourceDiscovery = enableResourceDiscovery;
     }
 
-    protected void setPayloadFunction(CoapPayloadFunction payloadFunction) {
+    protected void setPayloadFunction(CoapPayloadFunction<?> payloadFunction) {
         this.payloadFunction = payloadFunction;
     }
 
@@ -94,8 +94,8 @@ public class CoapPhysicalAdapterConfiguration {
         this.physicalAssetDescription = new PhysicalAssetDescription(actions, properties, events);
     }
 
-    protected boolean addResource (DigitalTwinCoapResource resource) {
-        return resources.add(resource);
+    protected void addResource (DigitalTwinCoapResource resource) {
+        resources.add(resource);
     }
 
 }
