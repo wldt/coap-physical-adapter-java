@@ -20,25 +20,28 @@ import java.util.List;
  */
 public class PropertyCoapResourceDescriptor extends DigitalTwinCoapResourceDescriptor {
 
-    public PropertyCoapResourceDescriptor(String serverUrl, String relativeUri, long autoUpdatePeriod, String propertyKey, CoapPayloadFunction<?> propertyValueProducer) {
-        super(serverUrl, relativeUri, autoUpdatePeriod, payload -> PropertyCoapResourceDescriptor.applyFunction(payload, propertyKey, propertyValueProducer));
+    public PropertyCoapResourceDescriptor(String serverUrl, String relativeUri, long autoUpdatePeriod, String propertyKey, CoapPayloadFunction<?> function) {
+        super(serverUrl, relativeUri, autoUpdatePeriod, function);
     }
 
-    public PropertyCoapResourceDescriptor(String serverUrl, String relativeUri, boolean observable, String propertyKey, CoapPayloadFunction<?> propertyValueProducer) {
-        super(serverUrl, relativeUri, observable, payload -> PropertyCoapResourceDescriptor.applyFunction(payload, propertyKey, propertyValueProducer));
+    public PropertyCoapResourceDescriptor(String serverUrl, String relativeUri, boolean observable, String propertyKey, CoapPayloadFunction<?> function) {
+        super(serverUrl, relativeUri, observable, function);
     }
-
+/*
     private static List<WldtEvent<?>> applyFunction(Object payload, String propertyKey, CoapPayloadFunction<?> propertyValueProducer) {
         try {
             // TODO: Fix the conversion from Object to String to byte[]
 
-            if (propertyValueProducer instanceof CoapStringPayloadFunction)
-                return Collections.singletonList(new PhysicalAssetPropertyWldtEvent<>(propertyKey, ((CoapStringPayloadFunction)propertyValueProducer).apply(String.valueOf(payload))));
+            if (propertyValueProducer instanceof CoapStringPayloadFunction) {
+                String castedPayload = (String) payload;
+                CoapStringPayloadFunction castedFunction =
+                return Collections.singletonList(new PhysicalAssetPropertyWldtEvent<>(propertyKey, ((CoapStringPayloadFunction) propertyValueProducer).apply(castedPayload)));
+            }
             return Collections.singletonList(new PhysicalAssetPropertyWldtEvent<>(propertyKey, ((CoapBytePayloadFunction)propertyValueProducer).apply(String.valueOf(payload).getBytes())));
         } catch (EventBusException e) {
             e.printStackTrace();
         }
 
         return Collections.emptyList();
-    }
+    }*/
 }

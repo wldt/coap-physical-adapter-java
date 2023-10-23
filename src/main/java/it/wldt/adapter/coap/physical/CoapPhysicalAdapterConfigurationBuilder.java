@@ -45,7 +45,7 @@ public class CoapPhysicalAdapterConfigurationBuilder {
         return this;
     }
 
-    public CoapPhysicalAdapterConfigurationBuilder setPayloadFunction(CoapPayloadFunction payloadFunction) {
+    public CoapPhysicalAdapterConfigurationBuilder setPayloadFunction(CoapPayloadFunction<?> payloadFunction) {
         this.configuration.setPayloadFunction(payloadFunction);
         return this;
     }

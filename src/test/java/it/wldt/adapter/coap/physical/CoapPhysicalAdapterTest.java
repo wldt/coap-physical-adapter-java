@@ -2,6 +2,7 @@ package it.wldt.adapter.coap.physical;
 
 import it.wldt.adapter.coap.physical.exception.CoapPhysicalAdapterConfigurationException;
 import it.wldt.adapter.coap.physical.resource.asset.PropertyCoapResourceDescriptor;
+import it.wldt.adapter.coap.physical.resource.asset.payload.CoapBytePayloadFunction;
 import it.wldt.adapter.coap.physical.resource.asset.payload.CoapPayloadFunction;
 import it.wldt.adapter.coap.physical.utils.CoapTestShadowingFunction;
 import it.wldt.adapter.coap.physical.utils.ConsoleDigitalAdapter;
@@ -20,12 +21,12 @@ public class CoapPhysicalAdapterTest {
 
         dt.addDigitalAdapter(digitalAdapter);
 
-        String serverAddress = "192.168.10.40";
+        // String serverAddress = "192.168.10.40";
+        String serverAddress = "127.0.0.1";
         int serverPort = 5683;
 
-        CoapPayloadFunction<?> payloadFunction = bytes -> {
-            // TODO: Discover why it isn't entering the function
-            System.out.println("Payload function: " + bytes);
+        CoapBytePayloadFunction payloadFunction = bytes -> {
+            System.out.println("PAYLOAD");
             return new ArrayList<>();
         };
 
@@ -36,7 +37,7 @@ public class CoapPhysicalAdapterTest {
                 .setPayloadFunction(payloadFunction)
                 .build();
 
-        configuration.addResource(new PropertyCoapResourceDescriptor(configuration.getServerConnectionString(), "temperature", configuration.getAutoUpdatePeriod(), "wldt.test.property.temperature", payloadFunction));
+        // configuration.addResource(new PropertyCoapResourceDescriptor(configuration.getServerConnectionString(), "temperature", configuration.getAutoUpdatePeriod(), "wldt.test.property.temperature", payloadFunction));
 
         dt.addPhysicalAdapter(new CoapPhysicalAdapter("coap-test-physical-adapter", configuration));
 

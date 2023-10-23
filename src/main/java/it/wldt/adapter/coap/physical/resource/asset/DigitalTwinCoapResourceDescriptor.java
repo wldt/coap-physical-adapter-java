@@ -22,8 +22,6 @@ public class DigitalTwinCoapResourceDescriptor extends CoapResourceDescriptor {
     public DigitalTwinCoapResourceDescriptor(String serverUrl, String relativeUri, long autoUpdatePeriod, CoapPayloadFunction<?> function) {
         super(serverUrl, relativeUri, autoUpdatePeriod);
         this.coapPayloadFunction = function;
-
-        System.out.println("Instantiated: " + this.getClass().getCanonicalName());
     }
 
     public DigitalTwinCoapResourceDescriptor(String serverUrl, String relativeUri, boolean observable, CoapPayloadFunction<?> function) {

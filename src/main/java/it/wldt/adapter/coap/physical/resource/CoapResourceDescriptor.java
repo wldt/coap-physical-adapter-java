@@ -39,6 +39,7 @@ public class CoapResourceDescriptor extends ListenablePayloadResource {
         this.serverUrl = serverUrl;
         this.resourceUri = resourceUri;
         this.client = new CoapClient(serverUrl);
+
     }
 
     public CoapResourceDescriptor(String serverUrl, String resourceUri, long autoUpdatePeriod) {
@@ -63,6 +64,8 @@ public class CoapResourceDescriptor extends ListenablePayloadResource {
 
     private void init() {
         if (observable) {
+            System.out.println("OBS");
+
             Request request = this.createRequest(CoAP.Code.GET);
 
             request.setObserve();
@@ -71,16 +74,19 @@ public class CoapResourceDescriptor extends ListenablePayloadResource {
                 observeRelation = client.observe(request, new CoapHandler() {
                     @Override
                     public void onLoad(CoapResponse coapResponse) {
-                        if (coapResponse != null) {
+                        System.out.println("Update");
+
+                        if (coapResponse != null && coapResponse.isSuccess()) {
                             setLastPayload(coapResponse.getPayload());
+                            System.out.println(new String(lastPayload));
                         } else {
-                            setLastPayload("".getBytes());
+                            System.out.println("NULL");
                         }
                     }
 
                     @Override
                     public void onError() {
-                        setLastPayload("".getBytes());
+                        System.out.println("ERR");
                     }
                 });
             } catch (Exception e) {
@@ -90,6 +96,8 @@ public class CoapResourceDescriptor extends ListenablePayloadResource {
 
         if (autoUpdated && !observable) {
             setAutoUpdate(0L, this.autoUpdateTimerPeriod);
+        } else {
+            autoUpdated = false;
         }
     }
 
@@ -106,13 +114,19 @@ public class CoapResourceDescriptor extends ListenablePayloadResource {
     }
 
     private void setLastPayload(byte[] value) {
+        System.out.println("LAST PAYLOAD");
+        this.lastPayload = value;
+        notifyListeners(value);
+        System.out.println("NOTIFY STOP");
+        /*
         String oldPayloadString = new String(lastPayload);
         String newPayloadString = new String(value);
 
+        System.out.println(oldPayloadString);
+        System.out.println(newPayloadString);
+
         if (!oldPayloadString.equals(newPayloadString)) {
-            this.lastPayload = value;
-            notifyListeners(value);
-        }
+        }*/
     }
 
     public void setAutoUpdate(long delay, long period) {
@@ -143,7 +157,8 @@ public class CoapResourceDescriptor extends ListenablePayloadResource {
         OptionSet options = new OptionSet();
 
         request.setOptions(options);
-        request.setURI(String.format("%s/%s", this.client.getURI(), this.resourceUri));
+        request.setURI(this.client.getURI());
+        request.getOptions().setUriPath(this.resourceUri);
         request.setConfirmable(true);
 
         return request;
@@ -156,7 +171,6 @@ public class CoapResourceDescriptor extends ListenablePayloadResource {
             CoapResponse response = client.advanced(request);
 
             if (response != null) {
-                System.out.println(Utils.prettyPrint(response));
                 setLastPayload(response.getPayload());
             }
         } catch (ConnectorException | IOException e) {

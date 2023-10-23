@@ -77,9 +77,11 @@ public class CoapPhysicalAdapter extends ConfigurablePhysicalAdapter<CoapPhysica
 
         CoapClient coapClient = new CoapClient(getConfiguration().getServerConnectionString());
 
+        // TODO: Add custom resource discovery function support (add function in the configuration and here check if present. If not apply the default CoRE resource discovery)
+
         Set<WebLink> linkSet = coapClient.discover();
 
-        // TODO: Add custom resource discovery function support (add function in the configuration and here check if present. If not apply the default CoRE resource discovery)
+        System.out.println(linkSet);
 
         for (WebLink link : linkSet) {
             if (link.getURI() != null && !link.getURI().isBlank()) {
@@ -88,6 +90,7 @@ public class CoapPhysicalAdapter extends ConfigurablePhysicalAdapter<CoapPhysica
                 DigitalTwinCoapResourceDescriptor resource = null;
 
                 if (!link.getAttributes().containsAttribute("rt")) {
+                    // TODO: What if resource contains uri but not rt? Shouldn't discard it
                     continue;
                 }
 
@@ -100,7 +103,7 @@ public class CoapPhysicalAdapter extends ConfigurablePhysicalAdapter<CoapPhysica
                 List<String> ifList = link.getAttributes().getAttributeValues("if");
 
                 if (ifList.contains("core.s")) {    // CoAP sensor
-                    // CoapPayloadFunction requires a property key. As of now the property key is set to rt
+                    // CoapPayloadFunction requires a property key. The property key is set to rt
                     if (observable) {
                         resource = new PropertyCoapResourceDescriptor(getConfiguration().getServerConnectionString(), uri, true, rt, getConfiguration().getPayloadFunction());
                     } else if (getConfiguration().getAutoUpdateFlag()){
@@ -130,13 +133,19 @@ public class CoapPhysicalAdapter extends ConfigurablePhysicalAdapter<CoapPhysica
         resource.addPayloadListener((value) -> {
             List<? extends WldtEvent<?>> wldtEvents = resource.applyPayloadFunction(value);
 
+            System.out.println("Notified " + wldtEvents.size() + " events");
+
             wldtEvents.forEach(e -> {
+                System.out.println(e);
                 try {
                     if (e instanceof PhysicalAssetPropertyWldtEvent) {
+                        System.out.println("Publish: P");
                         publishPhysicalAssetPropertyWldtEvent((PhysicalAssetPropertyWldtEvent<?>) e);
                     } else if (e instanceof PhysicalAssetEventWldtEvent) {
+                        System.out.println("Publish: E");
                         publishPhysicalAssetEventWldtEvent((PhysicalAssetEventWldtEvent<?>) e);
                     } else {
+                        System.out.println("Nope");
                         logger.error("CoAP Physical Adapter - Received invalid event");
                     }
                 }catch (EventBusException ex) {
