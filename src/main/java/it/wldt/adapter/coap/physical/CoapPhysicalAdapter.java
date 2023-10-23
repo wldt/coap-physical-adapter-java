@@ -1,7 +1,7 @@
 package it.wldt.adapter.coap.physical;
 
-import it.wldt.adapter.coap.physical.resource.asset.DigitalTwinCoapResource;
-import it.wldt.adapter.coap.physical.resource.asset.PropertyCoapResource;
+import it.wldt.adapter.coap.physical.resource.asset.DigitalTwinCoapResourceDescriptor;
+import it.wldt.adapter.coap.physical.resource.asset.PropertyCoapResourceDescriptor;
 import it.wldt.adapter.physical.ConfigurablePhysicalAdapter;
 import it.wldt.adapter.physical.event.PhysicalAssetActionWldtEvent;
 import it.wldt.adapter.physical.event.PhysicalAssetEventWldtEvent;
@@ -19,17 +19,22 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Set;
 
+/**
+ * It is an implementation of a WLDT {@code ConfigurablePhysicalAdapter} implementing CoAP protocol support via the {@code californium-core} framework.
+ * The configuration is passed through a {@code CoapPhysicalAdapterConfiguration} class instance.
+ * It implements logging functionalities based on {@code SLF4J}.
+ * Resources can be added both manually by passing them via the configuration and automatically by using resource discovery.
+ *
+ * @see ConfigurablePhysicalAdapter
+ * @see CoapPhysicalAdapterConfiguration
+ * @see DigitalTwinCoapResourceDescriptor
+ */
 public class CoapPhysicalAdapter extends ConfigurablePhysicalAdapter<CoapPhysicalAdapterConfiguration> {
     private static final Logger logger = LoggerFactory.getLogger(CoapPhysicalAdapter.class);
 
-    private CoapClient coapClient;
-
     public CoapPhysicalAdapter(String id, CoapPhysicalAdapterConfiguration configuration) {
         super(id, configuration);
-
-        this.coapClient = new CoapClient(getConfiguration().getServerConnectionString());
     }
-
 
     @Override
     public void onIncomingPhysicalAction(PhysicalAssetActionWldtEvent<?> physicalAssetActionWldtEvent) {
@@ -69,15 +74,18 @@ public class CoapPhysicalAdapter extends ConfigurablePhysicalAdapter<CoapPhysica
 
     public void discoverCoapResources() throws ConnectorException, IOException {
         logger.debug("CoAP Physical Adapter - [START] discoverCoapResources()");
+
+        CoapClient coapClient = new CoapClient(getConfiguration().getServerConnectionString());
+
         Set<WebLink> linkSet = coapClient.discover();
+
+        // TODO: Add custom resource discovery function support (add function in the configuration and here check if present. If not apply the default CoRE resource discovery)
 
         for (WebLink link : linkSet) {
             if (link.getURI() != null && !link.getURI().isBlank()) {
                 String uri = link.getURI().substring(link.getURI().indexOf('/'));
 
-                DigitalTwinCoapResource resource = null;
-
-                boolean observable = link.getAttributes().containsAttribute("obs");
+                DigitalTwinCoapResourceDescriptor resource = null;
 
                 if (!link.getAttributes().containsAttribute("rt")) {
                     continue;
@@ -85,14 +93,18 @@ public class CoapPhysicalAdapter extends ConfigurablePhysicalAdapter<CoapPhysica
 
                 String rt = link.getAttributes().getAttributeValues("rt").get(0);
 
+                logger.debug("CoAP Physical Adapter - Resource discovery found resource '{}'", rt);
+
+                boolean observable = link.getAttributes().containsAttribute("obs");
+
                 List<String> ifList = link.getAttributes().getAttributeValues("if");
 
                 if (ifList.contains("core.s")) {    // CoAP sensor
                     // CoapPayloadFunction requires a property key. As of now the property key is set to rt
                     if (observable) {
-                        resource = new PropertyCoapResource(getConfiguration().getServerConnectionString(), uri, true, rt, getConfiguration().getPayloadFunction());
+                        resource = new PropertyCoapResourceDescriptor(getConfiguration().getServerConnectionString(), uri, true, rt, getConfiguration().getPayloadFunction());
                     } else if (getConfiguration().getAutoUpdateFlag()){
-                        resource = new PropertyCoapResource(getConfiguration().getServerConnectionString(), uri, getConfiguration().getAutoUpdatePeriod(), rt, getConfiguration().getPayloadFunction());
+                        resource = new PropertyCoapResourceDescriptor(getConfiguration().getServerConnectionString(), uri, getConfiguration().getAutoUpdatePeriod(), rt, getConfiguration().getPayloadFunction());
                     } else {
                         // TODO: Not observable && auto update disabled
                     }
@@ -112,24 +124,20 @@ public class CoapPhysicalAdapter extends ConfigurablePhysicalAdapter<CoapPhysica
         logger.debug("CoAP Physical Adapter - [STOP] discoverCoapResources()");
     }
 
-    private void manageResourcePayload(DigitalTwinCoapResource resource) {
+    private void manageResourcePayload(DigitalTwinCoapResourceDescriptor resource) {
         logger.debug("CoAP Physical Adapter - [START] manageResourcePayload()");
-        System.out.println("RESOURCE " + resource.getResourceUri() + " - ADDING PAYLOAD LISTENER");
+        System.out.println("Add listener " + resource.getResourceUri());
         resource.addPayloadListener((value) -> {
-            System.out.println("LISTENER OK");
             List<? extends WldtEvent<?>> wldtEvents = resource.applyPayloadFunction(value);
 
             wldtEvents.forEach(e -> {
                 try {
                     if (e instanceof PhysicalAssetPropertyWldtEvent) {
-                        System.out.println("Physical asset property");
                         publishPhysicalAssetPropertyWldtEvent((PhysicalAssetPropertyWldtEvent<?>) e);
                     } else if (e instanceof PhysicalAssetEventWldtEvent) {
-                        System.out.println("Physical asset event");
                         publishPhysicalAssetEventWldtEvent((PhysicalAssetEventWldtEvent<?>) e);
                     } else {
-                        // TODO: Manage
-                        System.out.println("Not actual event");
+                        logger.error("CoAP Physical Adapter - Received invalid event");
                     }
                 }catch (EventBusException ex) {
                     ex.printStackTrace();

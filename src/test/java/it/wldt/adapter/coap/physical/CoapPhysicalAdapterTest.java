@@ -1,6 +1,8 @@
 package it.wldt.adapter.coap.physical;
 
 import it.wldt.adapter.coap.physical.exception.CoapPhysicalAdapterConfigurationException;
+import it.wldt.adapter.coap.physical.resource.asset.PropertyCoapResourceDescriptor;
+import it.wldt.adapter.coap.physical.resource.asset.payload.CoapPayloadFunction;
 import it.wldt.adapter.coap.physical.utils.CoapTestShadowingFunction;
 import it.wldt.adapter.coap.physical.utils.ConsoleDigitalAdapter;
 import it.wldt.core.engine.WldtEngine;
@@ -18,19 +20,27 @@ public class CoapPhysicalAdapterTest {
 
         dt.addDigitalAdapter(digitalAdapter);
 
-        CoapPhysicalAdapterConfiguration configuration = CoapPhysicalAdapterConfiguration.builder("127.0.0.1", 5683)
+        String serverAddress = "192.168.10.40";
+        int serverPort = 5683;
+
+        CoapPayloadFunction<?> payloadFunction = bytes -> {
+            // TODO: Discover why it isn't entering the function
+            System.out.println("Payload function: " + bytes);
+            return new ArrayList<>();
+        };
+
+        CoapPhysicalAdapterConfiguration configuration = CoapPhysicalAdapterConfiguration.builder(serverAddress, serverPort)
                 .setAutoUpdateFlag(true)
-                .setAutoUpdatePeriod(10000)
+                .setAutoUpdatePeriod(5000)
                 .setResourceDiscoveryFlag(true)
-                .setPayloadFunction(bytes -> {
-                    // TODO: Discover why it isn't entering the function
-                    System.out.println("Payload function: " + bytes);
-                    return new ArrayList<>();
-                })
+                .setPayloadFunction(payloadFunction)
                 .build();
+
+        configuration.addResource(new PropertyCoapResourceDescriptor(configuration.getServerConnectionString(), "temperature", configuration.getAutoUpdatePeriod(), "wldt.test.property.temperature", payloadFunction));
 
         dt.addPhysicalAdapter(new CoapPhysicalAdapter("coap-test-physical-adapter", configuration));
 
+        System.out.println("ENGINE START");
         dt.startLifeCycle();
     }
 }

@@ -1,27 +1,31 @@
 package it.wldt.adapter.coap.physical.resource.asset;
 
-import it.wldt.adapter.coap.physical.resource.CoapResource;
 import it.wldt.adapter.coap.physical.resource.asset.payload.CoapBytePayloadFunction;
 import it.wldt.adapter.coap.physical.resource.asset.payload.CoapPayloadFunction;
 import it.wldt.adapter.coap.physical.resource.asset.payload.CoapStringPayloadFunction;
 import it.wldt.adapter.physical.event.PhysicalAssetPropertyWldtEvent;
 import it.wldt.core.event.WldtEvent;
 import it.wldt.exception.EventBusException;
-import org.eclipse.californium.core.CoapClient;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.function.Function;
 
-public class PropertyCoapResource extends DigitalTwinCoapResource {
+/**
+ * An extension of a {@code DigitalTwinCoapResourceDescriptor} class whose payload function returns a list of {@code PhysicalAssetPropertyWldtEvent}
+ *
+ * @see DigitalTwinCoapResourceDescriptor
+ * @see CoapPayloadFunction
+ * @see WldtEvent
+ * @see PhysicalAssetPropertyWldtEvent
+ */
+public class PropertyCoapResourceDescriptor extends DigitalTwinCoapResourceDescriptor {
 
-    public PropertyCoapResource(String serverUrl, String relativeUri, long autoUpdatePeriod, String propertyKey, CoapPayloadFunction<?> propertyValueProducer) {
-        super(serverUrl, relativeUri, autoUpdatePeriod, payload -> PropertyCoapResource.applyFunction(payload, propertyKey, propertyValueProducer));
+    public PropertyCoapResourceDescriptor(String serverUrl, String relativeUri, long autoUpdatePeriod, String propertyKey, CoapPayloadFunction<?> propertyValueProducer) {
+        super(serverUrl, relativeUri, autoUpdatePeriod, payload -> PropertyCoapResourceDescriptor.applyFunction(payload, propertyKey, propertyValueProducer));
     }
 
-    public PropertyCoapResource(String serverUrl, String relativeUri, boolean observable, String propertyKey, CoapPayloadFunction<?> propertyValueProducer) {
-        super(serverUrl, relativeUri, observable, payload -> PropertyCoapResource.applyFunction(payload, propertyKey, propertyValueProducer));
+    public PropertyCoapResourceDescriptor(String serverUrl, String relativeUri, boolean observable, String propertyKey, CoapPayloadFunction<?> propertyValueProducer) {
+        super(serverUrl, relativeUri, observable, payload -> PropertyCoapResourceDescriptor.applyFunction(payload, propertyKey, propertyValueProducer));
     }
 
     private static List<WldtEvent<?>> applyFunction(Object payload, String propertyKey, CoapPayloadFunction<?> propertyValueProducer) {

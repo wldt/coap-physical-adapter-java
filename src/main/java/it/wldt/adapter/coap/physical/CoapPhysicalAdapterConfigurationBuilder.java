@@ -1,8 +1,8 @@
 package it.wldt.adapter.coap.physical;
 
 import it.wldt.adapter.coap.physical.exception.CoapPhysicalAdapterConfigurationException;
+import it.wldt.adapter.coap.physical.resource.asset.DigitalTwinCoapResourceDescriptor;
 import it.wldt.adapter.coap.physical.resource.asset.payload.CoapPayloadFunction;
-import it.wldt.adapter.coap.physical.resource.asset.DigitalTwinCoapResource;
 import it.wldt.adapter.physical.PhysicalAssetAction;
 import it.wldt.adapter.physical.PhysicalAssetEvent;
 import it.wldt.adapter.physical.PhysicalAssetProperty;
@@ -50,7 +50,7 @@ public class CoapPhysicalAdapterConfigurationBuilder {
         return this;
     }
 
-    public CoapPhysicalAdapterConfigurationBuilder addCoapResource(DigitalTwinCoapResource resource) {
+    public CoapPhysicalAdapterConfigurationBuilder addCoapResource(DigitalTwinCoapResourceDescriptor resource) {
         this.configuration.addResource(resource);
 
         return this;

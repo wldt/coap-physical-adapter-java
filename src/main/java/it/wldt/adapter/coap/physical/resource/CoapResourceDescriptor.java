@@ -8,11 +8,17 @@ import org.eclipse.californium.core.coap.Request;
 import org.eclipse.californium.elements.exception.ConnectorException;
 
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.Timer;
 import java.util.TimerTask;
 
-public class CoapResource extends ListenablePayloadResource {
+/**
+ * Represents a remote CoAP resource descriptor whose payload gets constantly updated by resource observability or automatic requests sent once every a set time period.
+ * Payload changes can be listened via the use of a {@code PayloadListener} implementation.
+ *
+ * @see ListenablePayloadResource
+ * @see it.wldt.adapter.coap.physical.resource.event.PayloadListener
+ */
+public class CoapResourceDescriptor extends ListenablePayloadResource {
 
     protected final CoapClient client;
 
@@ -29,22 +35,24 @@ public class CoapResource extends ListenablePayloadResource {
     private Timer autoUpdateTimer;
 
 
-    private CoapResource(String serverUrl, String resourceUri) {
+    private CoapResourceDescriptor(String serverUrl, String resourceUri) {
         this.serverUrl = serverUrl;
         this.resourceUri = resourceUri;
         this.client = new CoapClient(serverUrl);
     }
 
-    public CoapResource(String serverUrl, String resourceUri, long autoUpdatePeriod) {
+    public CoapResourceDescriptor(String serverUrl, String resourceUri, long autoUpdatePeriod) {
         this(serverUrl, resourceUri);
 
         this.observable = false;
         this.autoUpdated = true;
 
         this.autoUpdateTimerPeriod = autoUpdatePeriod;
+
+        init();
     }
 
-    public CoapResource(String serverUrl, String resourceUri, boolean observable) {
+    public CoapResourceDescriptor(String serverUrl, String resourceUri, boolean observable) {
         this(serverUrl, resourceUri);
 
         this.observable = observable;
@@ -55,12 +63,9 @@ public class CoapResource extends ListenablePayloadResource {
 
     private void init() {
         if (observable) {
-            Request request = new Request(CoAP.Code.GET);
+            Request request = this.createRequest(CoAP.Code.GET);
 
-            request.setOptions(this.createOptionSet());
-            request.setURI(String.format("%s%s", this.client.getURI(), this.resourceUri));
             request.setObserve();
-            request.setConfirmable(true);
 
             try {
                 observeRelation = client.observe(request, new CoapHandler() {
@@ -117,10 +122,12 @@ public class CoapResource extends ListenablePayloadResource {
             stopAutoUpdate();
         }
 
+        this.autoUpdated = true;
+
         autoUpdateTimer.schedule(new TimerTask() {
             @Override
             public void run() {
-                // sendGET();
+                sendGET();
             }
         }, delay, period);
     }
@@ -130,30 +137,30 @@ public class CoapResource extends ListenablePayloadResource {
         autoUpdateTimer.purge();
     }
 
-    protected OptionSet createOptionSet() {
+    protected Request createRequest(CoAP.Code code) {
+        Request request = new Request(code);
+
         OptionSet options = new OptionSet();
 
-        return options;
+        request.setOptions(options);
+        request.setURI(String.format("%s/%s", this.client.getURI(), this.resourceUri));
+        request.setConfirmable(true);
+
+        return request;
     }
 
-    /*
     private void sendGET() {
-        Request request = new Request(CoAP.Code.GET);
-        request.setOptions(this.createOptionSet());
-        request.setConfirmable(true);
+        Request request = this.createRequest(CoAP.Code.GET);
 
         try {
             CoapResponse response = client.advanced(request);
 
             if (response != null) {
+                System.out.println(Utils.prettyPrint(response));
                 setLastPayload(response.getPayload());
-            } else {
-                setLastPayload("".getBytes());
             }
         } catch (ConnectorException | IOException e) {
-            setLastPayload("".getBytes());
             e.printStackTrace();
         }
     }
-     */
 }
