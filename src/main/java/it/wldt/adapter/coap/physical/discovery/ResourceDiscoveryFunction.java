@@ -1,11 +1,11 @@
 package it.wldt.adapter.coap.physical.discovery;
 
+import org.eclipse.californium.core.CoapClient;
 import org.eclipse.californium.core.WebLink;
 
-import java.util.List;
-import java.util.function.Function;
+import java.util.Set;
 
 @FunctionalInterface
 public interface ResourceDiscoveryFunction {
-    List<WebLink> discover();
+    Set<WebLink> discover(CoapClient client);
 }

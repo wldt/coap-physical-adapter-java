@@ -1,5 +1,6 @@
 package it.wldt.adapter.coap.physical;
 
+import it.wldt.adapter.coap.physical.discovery.ResourceDiscoveryFunction;
 import it.wldt.adapter.coap.physical.exception.CoapPhysicalAdapterConfigurationException;
 import it.wldt.adapter.coap.physical.resource.asset.DigitalTwinCoapResourceDescriptor;
 import it.wldt.adapter.coap.physical.resource.asset.payload.CoapPayloadFunction;
@@ -41,6 +42,11 @@ public class CoapPhysicalAdapterConfigurationBuilder {
 
     public CoapPhysicalAdapterConfigurationBuilder setResourceDiscoveryFlag(boolean enableResourceDiscovery) {
         this.configuration.setResourceDiscoveryFlag(enableResourceDiscovery);
+        return this;
+    }
+
+    public CoapPhysicalAdapterConfigurationBuilder setResourceDiscoveryFunction(ResourceDiscoveryFunction function) {
+        this.configuration.setResourceDiscoveryFunction(function);
         return this;
     }
 

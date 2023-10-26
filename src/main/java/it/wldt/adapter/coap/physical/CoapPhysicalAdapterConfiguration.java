@@ -1,5 +1,6 @@
 package it.wldt.adapter.coap.physical;
 
+import it.wldt.adapter.coap.physical.discovery.ResourceDiscoveryFunction;
 import it.wldt.adapter.coap.physical.exception.CoapPhysicalAdapterConfigurationException;
 import it.wldt.adapter.coap.physical.resource.asset.DigitalTwinCoapResourceDescriptor;
 import it.wldt.adapter.coap.physical.resource.asset.payload.CoapPayloadFunction;
@@ -20,6 +21,8 @@ public class CoapPhysicalAdapterConfiguration {
     private Long autoUpdatePeriod;
 
     private Boolean enableResourceDiscovery;
+
+    private ResourceDiscoveryFunction resourceDiscoveryFunction;
 
     private Function<byte[], ?> propertyBodyProducer;
     private Function<byte[], ?> actionBodyProducer;
@@ -80,10 +83,13 @@ public class CoapPhysicalAdapterConfiguration {
         return physicalAssetDescription;
     }
 
+    public ResourceDiscoveryFunction getResourceDiscoveryFunction() {
+        return resourceDiscoveryFunction;
+    }
+
     protected void setAutoUpdateFlag(boolean enableAutoUpdate) {
         this.enableAutoUpdate = enableAutoUpdate;
     }
-
 
     protected void setAutoUpdatePeriod(long autoUpdatePeriod) {
         this.autoUpdatePeriod = autoUpdatePeriod;
@@ -91,6 +97,10 @@ public class CoapPhysicalAdapterConfiguration {
 
     protected void setResourceDiscoveryFlag(boolean enableResourceDiscovery) {
         this.enableResourceDiscovery = enableResourceDiscovery;
+    }
+
+    protected void setResourceDiscoveryFunction(ResourceDiscoveryFunction function) {
+        this.resourceDiscoveryFunction = function;
     }
 
     protected void setPropertyBodyProducer(Function<byte[], ?> propertyBodyProducer) {

@@ -79,9 +79,15 @@ public class CoapPhysicalAdapter extends ConfigurablePhysicalAdapter<CoapPhysica
 
         CoapClient coapClient = new CoapClient(getConfiguration().getServerConnectionString());
 
-        // TODO: Add custom resource discovery function support (add function in the configuration and here check if present. If not apply the default CoRE resource discovery)
+        // TODO: Is it correct to oblige user to use web-link format?
 
-        Set<WebLink> linkSet = coapClient.discover();
+        Set<WebLink> linkSet;
+
+        if (getConfiguration().getResourceDiscoveryFunction() != null) {
+            linkSet = getConfiguration().getResourceDiscoveryFunction().discover(coapClient);
+        } else {
+            linkSet = coapClient.discover();
+        }
 
         for (WebLink link : linkSet) {
             if (link.getURI() != null && !link.getURI().isBlank()) {
@@ -90,7 +96,7 @@ public class CoapPhysicalAdapter extends ConfigurablePhysicalAdapter<CoapPhysica
                 DigitalTwinCoapResourceDescriptor resource = null;
 
                 if (!link.getAttributes().containsAttribute("rt")) {
-                    // TODO: What if resource contains uri but not rtAttr? Shouldn't discard it
+                    // TODO: What if resource contains uri but not rt? Shouldn't discard it
                     continue;
                 }
 
