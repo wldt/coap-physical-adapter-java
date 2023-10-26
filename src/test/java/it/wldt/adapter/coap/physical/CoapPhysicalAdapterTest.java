@@ -21,17 +21,20 @@ public class CoapPhysicalAdapterTest {
 
         dt.addDigitalAdapter(digitalAdapter);
 
-        String serverAddress = "192.168.10.40";
-        // String serverAddress = "127.0.0.1";
+        // String serverAddress = "192.168.10.40";
+        String serverAddress = "127.0.0.1";
         int serverPort = 5683;
 
         CoapPhysicalAdapterConfiguration configuration = CoapPhysicalAdapterConfiguration.builder(serverAddress, serverPort)
                 .setAutoUpdateFlag(true)
                 .setAutoUpdatePeriod(5000)
                 .setResourceDiscoveryFlag(true)
+                .setPropertyBodyProducer(String::new)
+                .setActionBodyProducer(String::new)
+                .setEventBodyProducer(String::new)
                 .build();
 
-        configuration.addResource(new PropertyCoapResourceDescriptor<>(configuration.getServerConnectionString(), "temperature", configuration.getAutoUpdatePeriod(), "wldt.test.property.temperature", Function.identity()));
+        // configuration.addResource(new PropertyCoapResourceDescriptor<>(configuration.getServerConnectionString(), "temperature", configuration.getAutoUpdatePeriod(), "wldt.test.property.temperature", String::new));
 
         dt.addPhysicalAdapter(new CoapPhysicalAdapter("coap-test-physical-adapter", configuration));
 

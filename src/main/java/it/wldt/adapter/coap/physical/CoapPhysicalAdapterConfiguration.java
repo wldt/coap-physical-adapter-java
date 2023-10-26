@@ -24,6 +24,8 @@ public class CoapPhysicalAdapterConfiguration {
 
     private ResourceDiscoveryFunction resourceDiscoveryFunction;
 
+    // TODO: Add content type for requests
+
     private Function<byte[], ?> propertyBodyProducer;
     private Function<byte[], ?> actionBodyProducer;
     private Function<byte[], ?> eventBodyProducer;
