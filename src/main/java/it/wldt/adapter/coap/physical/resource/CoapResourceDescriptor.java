@@ -6,6 +6,8 @@ import org.eclipse.californium.core.coap.CoAP;
 import org.eclipse.californium.core.coap.OptionSet;
 import org.eclipse.californium.core.coap.Request;
 import org.eclipse.californium.elements.exception.ConnectorException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.Timer;
@@ -19,6 +21,7 @@ import java.util.TimerTask;
  * @see it.wldt.adapter.coap.physical.resource.event.PayloadListener
  */
 public class CoapResourceDescriptor extends ListenablePayloadResource {
+    private transient Logger logger = LoggerFactory.getLogger(CoapResourceDescriptor.class);
 
     protected final CoapClient client;
 
@@ -64,8 +67,6 @@ public class CoapResourceDescriptor extends ListenablePayloadResource {
 
     private void init() {
         if (observable) {
-            System.out.println("OBS");
-
             Request request = this.createRequest(CoAP.Code.GET);
 
             request.setObserve();
@@ -74,19 +75,18 @@ public class CoapResourceDescriptor extends ListenablePayloadResource {
                 observeRelation = client.observe(request, new CoapHandler() {
                     @Override
                     public void onLoad(CoapResponse coapResponse) {
-                        System.out.println("Update");
 
                         if (coapResponse != null && coapResponse.isSuccess()) {
                             setLastPayload(coapResponse.getPayload());
-                            System.out.println(new String(lastPayload));
+                            logger.info("Received new payload");
                         } else {
-                            System.out.println("NULL");
+                            logger.info("Payload is null or unsuccessful");
                         }
                     }
 
                     @Override
                     public void onError() {
-                        System.out.println("ERR");
+                        logger.error("Observation error");
                     }
                 });
             } catch (Exception e) {
@@ -114,19 +114,8 @@ public class CoapResourceDescriptor extends ListenablePayloadResource {
     }
 
     private void setLastPayload(byte[] value) {
-        System.out.println("LAST PAYLOAD");
         this.lastPayload = value;
         notifyListeners(value);
-        System.out.println("NOTIFY STOP");
-        /*
-        String oldPayloadString = new String(lastPayload);
-        String newPayloadString = new String(value);
-
-        System.out.println(oldPayloadString);
-        System.out.println(newPayloadString);
-
-        if (!oldPayloadString.equals(newPayloadString)) {
-        }*/
     }
 
     public void setAutoUpdate(long delay, long period) {

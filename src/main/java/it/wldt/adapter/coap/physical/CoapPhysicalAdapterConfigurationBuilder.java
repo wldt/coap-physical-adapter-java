@@ -9,12 +9,11 @@ import it.wldt.adapter.physical.PhysicalAssetProperty;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Function;
 
 public class CoapPhysicalAdapterConfigurationBuilder {
-    // TODO: Continue
     private final CoapPhysicalAdapterConfiguration configuration;
 
-    // TODO: Are these lists really useful for a CoAP context?
     private final List<PhysicalAssetProperty<?>> properties = new ArrayList<>();
     private final List<PhysicalAssetEvent> events = new ArrayList<>();
     private final List<PhysicalAssetAction> actions = new ArrayList<>();
@@ -45,8 +44,16 @@ public class CoapPhysicalAdapterConfigurationBuilder {
         return this;
     }
 
-    public CoapPhysicalAdapterConfigurationBuilder setPayloadFunction(CoapPayloadFunction<?> payloadFunction) {
-        this.configuration.setPayloadFunction(payloadFunction);
+    public CoapPhysicalAdapterConfigurationBuilder setPropertyBodyProducer(Function<byte[], ?> propertyBodyProducer) {
+        this.configuration.setPropertyBodyProducer(propertyBodyProducer);
+        return this;
+    }
+    public CoapPhysicalAdapterConfigurationBuilder setActionBodyProducer(Function<byte[], ?> actionBodyProducer) {
+        this.configuration.setActionBodyProducer(actionBodyProducer);
+        return this;
+    }
+    public CoapPhysicalAdapterConfigurationBuilder setEventBodyProducer(Function<byte[], ?> eventBodyProducer) {
+        this.configuration.setEventBodyProducer(eventBodyProducer);
         return this;
     }
 
@@ -61,8 +68,14 @@ public class CoapPhysicalAdapterConfigurationBuilder {
             throw new CoapPhysicalAdapterConfigurationException("If resource discovery is disabled Physical Adapter must define at least one resource");
         }
 
-        if (this.configuration.getPayloadFunction() == null) {
-            throw new CoapPhysicalAdapterConfigurationException("Physical Adapter needs a payload function");
+        if (this.configuration.getResourceDiscoveryFlag() && this.configuration.getPropertyBodyProducer() == null) {
+            this.configuration.setPropertyBodyProducer(Function.identity());
+        }
+        if (this.configuration.getResourceDiscoveryFlag() && this.configuration.getActionBodyProducer() == null) {
+            this.configuration.setActionBodyProducer(Function.identity());
+        }
+        if (this.configuration.getResourceDiscoveryFlag() && this.configuration.getEventBodyProducer() == null) {
+            this.configuration.setEventBodyProducer(Function.identity());
         }
 
         this.configuration.setPhysicalAssetDescription(this.actions, this.properties, this.events);

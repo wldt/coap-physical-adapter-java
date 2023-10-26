@@ -1,5 +1,6 @@
 package it.wldt.adapter.coap.physical;
 
+import it.wldt.adapter.coap.physical.resource.asset.ActionCoapResourceDescriptor;
 import it.wldt.adapter.coap.physical.resource.asset.DigitalTwinCoapResourceDescriptor;
 import it.wldt.adapter.coap.physical.resource.asset.PropertyCoapResourceDescriptor;
 import it.wldt.adapter.physical.ConfigurablePhysicalAdapter;
@@ -18,6 +19,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Function;
 
 /**
  * It is an implementation of a WLDT {@code ConfigurablePhysicalAdapter} implementing CoAP protocol support via the {@code californium-core} framework.
@@ -81,8 +83,6 @@ public class CoapPhysicalAdapter extends ConfigurablePhysicalAdapter<CoapPhysica
 
         Set<WebLink> linkSet = coapClient.discover();
 
-        System.out.println(linkSet);
-
         for (WebLink link : linkSet) {
             if (link.getURI() != null && !link.getURI().isBlank()) {
                 String uri = link.getURI().substring(link.getURI().indexOf('/'));
@@ -90,26 +90,37 @@ public class CoapPhysicalAdapter extends ConfigurablePhysicalAdapter<CoapPhysica
                 DigitalTwinCoapResourceDescriptor resource = null;
 
                 if (!link.getAttributes().containsAttribute("rt")) {
-                    // TODO: What if resource contains uri but not rt? Shouldn't discard it
+                    // TODO: What if resource contains uri but not rtAttr? Shouldn't discard it
                     continue;
                 }
 
-                String rt = link.getAttributes().getAttributeValues("rt").get(0);
+                String rtAttr = link.getAttributes().getAttributeValues("rt").get(0);
 
-                logger.debug("CoAP Physical Adapter - Resource discovery found resource '{}'", rt);
+                logger.debug("CoAP Physical Adapter - Resource discovery found resource '{}'", rtAttr);
 
                 boolean observable = link.getAttributes().containsAttribute("obs");
 
-                List<String> ifList = link.getAttributes().getAttributeValues("if");
+                String ifAttr = link.getAttributes().getFirstAttributeValue("if");
 
-                if (ifList.contains("core.s")) {    // CoAP sensor
-                    // CoapPayloadFunction requires a property key. The property key is set to rt
-                    if (observable) {
-                        resource = new PropertyCoapResourceDescriptor(getConfiguration().getServerConnectionString(), uri, true, rt, getConfiguration().getPayloadFunction());
-                    } else if (getConfiguration().getAutoUpdateFlag()){
-                        resource = new PropertyCoapResourceDescriptor(getConfiguration().getServerConnectionString(), uri, getConfiguration().getAutoUpdatePeriod(), rt, getConfiguration().getPayloadFunction());
-                    } else {
-                        // TODO: Not observable && auto update disabled
+                switch (ifAttr) {
+                    case "core.s" -> {      // Sensor -> WLDT Property
+                        if (observable) {
+                            resource = new PropertyCoapResourceDescriptor<>(getConfiguration().getServerConnectionString(), uri, true, rtAttr, getConfiguration().getPropertyBodyProducer());
+                        } else if (getConfiguration().getAutoUpdateFlag()){
+                            resource = new PropertyCoapResourceDescriptor<>(getConfiguration().getServerConnectionString(), uri, getConfiguration().getAutoUpdatePeriod(), rtAttr, getConfiguration().getPropertyBodyProducer());
+                        }
+
+                        // if not observable and auto update is disabled the resource is discarded
+                    }
+                    case "core.a" -> {      // Actuator -> WLDT Action
+                        if (observable) {
+                            resource = new ActionCoapResourceDescriptor<>(getConfiguration().getServerConnectionString(), uri, true, rtAttr, getConfiguration().getActionBodyProducer());
+                        } else if (getConfiguration().getAutoUpdateFlag()){
+                            resource = new ActionCoapResourceDescriptor<>(getConfiguration().getServerConnectionString(), uri, getConfiguration().getAutoUpdatePeriod(), rtAttr, getConfiguration().getActionBodyProducer());
+                        }
+                    }
+                    default -> {
+
                     }
                 }
                 /*
@@ -129,24 +140,15 @@ public class CoapPhysicalAdapter extends ConfigurablePhysicalAdapter<CoapPhysica
 
     private void manageResourcePayload(DigitalTwinCoapResourceDescriptor resource) {
         logger.debug("CoAP Physical Adapter - [START] manageResourcePayload()");
-        System.out.println("Add listener " + resource.getResourceUri());
         resource.addPayloadListener((value) -> {
             List<? extends WldtEvent<?>> wldtEvents = resource.applyPayloadFunction(value);
 
-            System.out.println("Notified " + wldtEvents.size() + " events");
-
             wldtEvents.forEach(e -> {
-                System.out.println(e);
                 try {
                     if (e instanceof PhysicalAssetPropertyWldtEvent) {
-                        System.out.println("Publish: P");
                         publishPhysicalAssetPropertyWldtEvent((PhysicalAssetPropertyWldtEvent<?>) e);
                     } else if (e instanceof PhysicalAssetEventWldtEvent) {
-                        System.out.println("Publish: E");
                         publishPhysicalAssetEventWldtEvent((PhysicalAssetEventWldtEvent<?>) e);
-                    } else {
-                        System.out.println("Nope");
-                        logger.error("CoAP Physical Adapter - Received invalid event");
                     }
                 }catch (EventBusException ex) {
                     ex.printStackTrace();

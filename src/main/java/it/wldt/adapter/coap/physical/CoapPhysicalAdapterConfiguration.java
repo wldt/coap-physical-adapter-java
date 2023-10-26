@@ -10,6 +10,7 @@ import it.wldt.adapter.physical.PhysicalAssetProperty;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Function;
 
 public class CoapPhysicalAdapterConfiguration {
     private final String serverAddress;
@@ -20,7 +21,9 @@ public class CoapPhysicalAdapterConfiguration {
 
     private Boolean enableResourceDiscovery;
 
-    private CoapPayloadFunction<?> payloadFunction;
+    private Function<byte[], ?> propertyBodyProducer;
+    private Function<byte[], ?> actionBodyProducer;
+    private Function<byte[], ?> eventBodyProducer;
 
     private PhysicalAssetDescription physicalAssetDescription;
 
@@ -59,8 +62,14 @@ public class CoapPhysicalAdapterConfiguration {
         return autoUpdatePeriod;
     }
 
-    public CoapPayloadFunction<?> getPayloadFunction() {
-        return payloadFunction;
+    public Function<byte[], ?> getPropertyBodyProducer() {
+        return propertyBodyProducer;
+    }
+    public Function<byte[], ?> getActionBodyProducer() {
+        return actionBodyProducer;
+    }
+    public Function<byte[], ?> getEventBodyProducer() {
+        return eventBodyProducer;
     }
 
     public List<DigitalTwinCoapResourceDescriptor> getResources() {
@@ -84,8 +93,16 @@ public class CoapPhysicalAdapterConfiguration {
         this.enableResourceDiscovery = enableResourceDiscovery;
     }
 
-    protected void setPayloadFunction(CoapPayloadFunction<?> payloadFunction) {
-        this.payloadFunction = payloadFunction;
+    protected void setPropertyBodyProducer(Function<byte[], ?> propertyBodyProducer) {
+        this.propertyBodyProducer = propertyBodyProducer;
+    }
+
+    protected void setActionBodyProducer(Function<byte[], ?> actionBodyProducer) {
+        this.actionBodyProducer = actionBodyProducer;
+    }
+
+    protected void setEventBodyProducer(Function<byte[], ?> eventBodyProducer) {
+        this.eventBodyProducer = eventBodyProducer;
     }
 
     protected void setPhysicalAssetDescription(List<PhysicalAssetAction> actions,

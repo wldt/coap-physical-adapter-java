@@ -1,9 +1,7 @@
 package it.wldt.adapter.coap.physical.resource.asset;
 
 import it.wldt.adapter.coap.physical.resource.CoapResourceDescriptor;
-import it.wldt.adapter.coap.physical.resource.asset.payload.CoapBytePayloadFunction;
 import it.wldt.adapter.coap.physical.resource.asset.payload.CoapPayloadFunction;
-import it.wldt.adapter.coap.physical.resource.asset.payload.CoapStringPayloadFunction;
 import it.wldt.core.event.WldtEvent;
 
 import java.util.List;
@@ -17,25 +15,23 @@ import java.util.List;
  * @see WldtEvent
  */
 public class DigitalTwinCoapResourceDescriptor extends CoapResourceDescriptor {
-    private final CoapPayloadFunction<?> coapPayloadFunction;
+    private final CoapPayloadFunction coapPayloadFunction;
 
-    public DigitalTwinCoapResourceDescriptor(String serverUrl, String relativeUri, long autoUpdatePeriod, CoapPayloadFunction<?> function) {
+    public DigitalTwinCoapResourceDescriptor(String serverUrl, String relativeUri, long autoUpdatePeriod, CoapPayloadFunction function) {
         super(serverUrl, relativeUri, autoUpdatePeriod);
         this.coapPayloadFunction = function;
     }
 
-    public DigitalTwinCoapResourceDescriptor(String serverUrl, String relativeUri, boolean observable, CoapPayloadFunction<?> function) {
+    public DigitalTwinCoapResourceDescriptor(String serverUrl, String relativeUri, boolean observable, CoapPayloadFunction function) {
         super(serverUrl, relativeUri, observable);
         this.coapPayloadFunction = function;
     }
 
     public List<WldtEvent<?>> applyPayloadFunction(byte[] payload) {
-        if (coapPayloadFunction instanceof CoapStringPayloadFunction)
-            return ((CoapStringPayloadFunction) coapPayloadFunction).apply(new String(payload));
-        return ((CoapBytePayloadFunction) coapPayloadFunction).apply(payload);
+        return coapPayloadFunction.apply(payload);
     }
 
-    public CoapPayloadFunction<?> getPayloadFunction() {
+    public CoapPayloadFunction getPayloadFunction() {
         return coapPayloadFunction;
     }
 }

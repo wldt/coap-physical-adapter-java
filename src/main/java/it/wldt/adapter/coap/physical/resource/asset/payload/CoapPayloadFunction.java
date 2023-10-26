@@ -9,10 +9,9 @@ import java.util.function.Function;
  *
  * Represents a function that accepts a CoAP payload and, when applied, produces a {@code WldtEvent}.
  *
- * @param <T> The type of the payload
  * @see FunctionalInterface
  * @see Function
  */
 @FunctionalInterface
-public interface CoapPayloadFunction<T> extends Function<T, List<WldtEvent<?>>> {
+public interface CoapPayloadFunction extends Function<byte[], List<WldtEvent<?>>> {
 }
