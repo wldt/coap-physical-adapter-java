@@ -78,7 +78,7 @@ public class CoapPhysicalAdapter extends ConfigurablePhysicalAdapter<CoapPhysica
 
         CoapClient coapClient = new CoapClient(getConfiguration().getServerConnectionString());
 
-        // TODO: Is it correct to oblige user to use web-link format? Is it better to make a wrapper class and use that instead?
+        // TODO: Is it correct to force user to use web-link format? Is it better to make a wrapper class and use that instead?
 
         Set<WebLink> linkSet;
 
