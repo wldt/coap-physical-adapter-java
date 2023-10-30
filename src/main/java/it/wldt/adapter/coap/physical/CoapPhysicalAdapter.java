@@ -95,7 +95,7 @@ public class CoapPhysicalAdapter extends ConfigurablePhysicalAdapter<CoapPhysica
                 DigitalTwinCoapResourceDescriptor resource = null;
 
                 if (!link.getAttributes().containsAttribute("rt")) {
-                    // TODO: What if resource contains uri but not rt? Shouldn't discard it
+                    // TODO: What if resource contains uri but not rt?
                     continue;
                 }
 
