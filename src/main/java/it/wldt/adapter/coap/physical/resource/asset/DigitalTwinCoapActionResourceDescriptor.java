@@ -23,7 +23,7 @@ public class DigitalTwinCoapActionResourceDescriptor extends DigitalTwinCoapReso
         this.coapActionFunction = coapActionFunction;
     }
 
-    public String applyPayloadFunction(PhysicalAssetActionWldtEvent<?> actionWldtEvent) {
+    public byte[] applyPayloadFunction(PhysicalAssetActionWldtEvent<?> actionWldtEvent) {
         return coapActionFunction.apply(actionWldtEvent);
     }
 
