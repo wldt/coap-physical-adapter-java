@@ -7,5 +7,5 @@ import java.util.Set;
 
 @FunctionalInterface
 public interface ResourceDiscoveryFunction {
-    Set<WebLink> discover(CoapClient client);
+    Set<DiscoveredResource> discover(CoapClient client);
 }

@@ -1,9 +1,11 @@
 package it.wldt.adapter.coap.physical.resource.asset;
 
 import it.wldt.adapter.coap.physical.resource.CoapResourceDescriptor;
-import it.wldt.adapter.coap.physical.resource.asset.payload.CoapPayloadFunction;
+import it.wldt.adapter.coap.physical.resource.asset.functions.CoapEventFunction;
+import it.wldt.adapter.coap.physical.resource.asset.functions.CoapPropertyFunction;
 import it.wldt.core.event.WldtEvent;
 
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -11,22 +13,41 @@ import java.util.List;
  * It makes possible to apply a custom function to the incoming payloads.
  *
  * @see CoapResourceDescriptor
- * @see CoapPayloadFunction
+ * @see CoapPropertyFunction
  * @see WldtEvent
  */
 public class DigitalTwinCoapResourceDescriptor extends CoapResourceDescriptor {
-    private final CoapPayloadFunction coapPayloadFunction;
+    private final CoapPropertyFunction coapPropertyFunction;
+    private final CoapEventFunction coapEventFunction;
 
-    public DigitalTwinCoapResourceDescriptor(String serverUrl, String relativeUri, CoapPayloadFunction function) {
-        super(serverUrl, relativeUri);
-        this.coapPayloadFunction = function;
+    public DigitalTwinCoapResourceDescriptor(String serverUrl, String relativeUri, CoapPropertyFunction function) {
+        super(serverUrl, relativeUri, false);
+        this.coapPropertyFunction = function;
+        this.coapEventFunction = null;
+    }
+
+    public DigitalTwinCoapResourceDescriptor(String serverUrl, String relativeUri, CoapPropertyFunction payloadFunction, CoapEventFunction errorFunction) {
+        super(serverUrl, relativeUri, true);
+        this.coapPropertyFunction = payloadFunction;
+        this.coapEventFunction = errorFunction;
     }
 
     public List<WldtEvent<?>> applyPayloadFunction(byte[] payload) {
-        return coapPayloadFunction.apply(payload);
+        return coapPropertyFunction.apply(payload);
     }
 
-    public CoapPayloadFunction getPayloadFunction() {
-        return coapPayloadFunction;
+    public List<WldtEvent<?>> applyErrorFunction(String message) {
+        if (this.coapEventFunction != null) {
+            return coapEventFunction.apply(message);
+        }
+        return Collections.emptyList();
+    }
+
+    public CoapPropertyFunction getPayloadFunction() {
+        return coapPropertyFunction;
+    }
+
+    public CoapEventFunction getCoapErrorFunction() {
+        return coapEventFunction;
     }
 }

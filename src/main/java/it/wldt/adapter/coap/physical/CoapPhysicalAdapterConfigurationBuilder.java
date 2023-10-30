@@ -3,12 +3,9 @@ package it.wldt.adapter.coap.physical;
 import it.wldt.adapter.coap.physical.discovery.ResourceDiscoveryFunction;
 import it.wldt.adapter.coap.physical.exception.CoapPhysicalAdapterConfigurationException;
 import it.wldt.adapter.coap.physical.resource.asset.DigitalTwinCoapResourceDescriptor;
-import it.wldt.adapter.coap.physical.resource.asset.payload.CoapPayloadFunction;
 import it.wldt.adapter.physical.PhysicalAssetAction;
 import it.wldt.adapter.physical.PhysicalAssetEvent;
 import it.wldt.adapter.physical.PhysicalAssetProperty;
-import org.eclipse.californium.core.coap.CoAP;
-import org.eclipse.californium.core.coap.MediaTypeRegistry;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -52,21 +49,26 @@ public class CoapPhysicalAdapterConfigurationBuilder {
         return this;
     }
 
-    public CoapPhysicalAdapterConfigurationBuilder setPreferredContentType(int preferredContentType) {
-        this.configuration.setPreferredContentType(preferredContentType);
+    public CoapPhysicalAdapterConfigurationBuilder setDigitalTwinEventsFlag(boolean enableDigitalTwinEvents) {
+        this.configuration.setDigitalTwinEventsFlag(enableDigitalTwinEvents);
         return this;
     }
 
-    public CoapPhysicalAdapterConfigurationBuilder setPropertyBodyProducer(Function<byte[], ?> propertyBodyProducer) {
-        this.configuration.setPropertyBodyProducer(propertyBodyProducer);
+    public CoapPhysicalAdapterConfigurationBuilder setPreferredContentFormat(int preferredContentFormat) {
+        this.configuration.setPreferredContentFormat(preferredContentFormat);
         return this;
     }
-    public CoapPhysicalAdapterConfigurationBuilder setActionBodyProducer(Function<byte[], ?> actionBodyProducer) {
-        this.configuration.setActionBodyProducer(actionBodyProducer);
+
+    public CoapPhysicalAdapterConfigurationBuilder setDefaultPropertyBodyProducer(Function<byte[], ?> defaultPropertyBodyProducer) {
+        this.configuration.setDefaultPropertyBodyProducer(defaultPropertyBodyProducer);
         return this;
     }
-    public CoapPhysicalAdapterConfigurationBuilder setEventBodyProducer(Function<byte[], ?> eventBodyProducer) {
-        this.configuration.setEventBodyProducer(eventBodyProducer);
+    public CoapPhysicalAdapterConfigurationBuilder setDefaultActionBodyProducer(Function<byte[], ?> defaultActionBodyProducer) {
+        this.configuration.setDefaultActionBodyProducer(defaultActionBodyProducer);
+        return this;
+    }
+    public CoapPhysicalAdapterConfigurationBuilder setDefaultEventBodyProducer(Function<String, ?> defaultEventBodyProducer) {
+        this.configuration.setDefaultEventBodyProducer(defaultEventBodyProducer);
         return this;
     }
 
@@ -81,14 +83,14 @@ public class CoapPhysicalAdapterConfigurationBuilder {
             throw new CoapPhysicalAdapterConfigurationException("If resource discovery is disabled Physical Adapter must define at least one resource");
         }
 
-        if (this.configuration.getResourceDiscoveryFlag() && this.configuration.getPropertyBodyProducer() == null) {
-            this.configuration.setPropertyBodyProducer(Function.identity());
+        if (this.configuration.getResourceDiscoveryFlag() && this.configuration.getDefaultPropertyBodyProducer() == null) {
+            this.configuration.setDefaultPropertyBodyProducer(Function.identity());
         }
-        if (this.configuration.getResourceDiscoveryFlag() && this.configuration.getActionBodyProducer() == null) {
-            this.configuration.setActionBodyProducer(Function.identity());
+        if (this.configuration.getResourceDiscoveryFlag() && this.configuration.getDefaultActionBodyProducer() == null) {
+            this.configuration.setDefaultActionBodyProducer(Function.identity());
         }
-        if (this.configuration.getResourceDiscoveryFlag() && this.configuration.getEventBodyProducer() == null) {
-            this.configuration.setEventBodyProducer(Function.identity());
+        if (this.configuration.getResourceDiscoveryFlag() && this.configuration.getDefaultEventBodyProducer() == null) {
+            this.configuration.setDefaultEventBodyProducer(Function.identity());
         }
 
         this.configuration.setPhysicalAssetDescription(this.actions, this.properties, this.events);

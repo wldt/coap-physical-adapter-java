@@ -1,19 +1,14 @@
 package it.wldt.adapter.coap.physical;
 
 import it.wldt.adapter.coap.physical.exception.CoapPhysicalAdapterConfigurationException;
-import it.wldt.adapter.coap.physical.resource.asset.PropertyCoapResourceDescriptor;
 import it.wldt.adapter.coap.physical.utils.CoapTestShadowingFunction;
 import it.wldt.adapter.coap.physical.utils.ConsoleDigitalAdapter;
 import it.wldt.core.engine.WldtEngine;
-import it.wldt.core.event.WldtEvent;
 import it.wldt.exception.EventBusException;
 import it.wldt.exception.ModelException;
 import it.wldt.exception.WldtConfigurationException;
 import it.wldt.exception.WldtRuntimeException;
 import org.eclipse.californium.core.coap.MediaTypeRegistry;
-
-import java.util.ArrayList;
-import java.util.function.Function;
 
 public class CoapPhysicalAdapterTest {
     public static void main(String[] args) throws ModelException, WldtRuntimeException, EventBusException, WldtConfigurationException, CoapPhysicalAdapterConfigurationException, InterruptedException {
@@ -30,10 +25,11 @@ public class CoapPhysicalAdapterTest {
                 .setAutoUpdateFlag(true)
                 .setAutoUpdatePeriod(5000)
                 .setResourceDiscoveryFlag(true)
-                .setPreferredContentType(MediaTypeRegistry.APPLICATION_SENML_JSON)
-                .setPropertyBodyProducer(String::new)
-                .setActionBodyProducer(String::new)
-                .setEventBodyProducer(String::new)
+                .setPreferredContentFormat(MediaTypeRegistry.APPLICATION_SENML_JSON)
+                .setDefaultPropertyBodyProducer(String::new)
+                .setDefaultActionBodyProducer(String::new)
+                .setDefaultEventBodyProducer(String::new)
+                //.setDigitalTwinEventsFlag(true)
                 .build();
 
         // configuration.addResource(new PropertyCoapResourceDescriptor<>(configuration.getServerConnectionString(), "temperature", configuration.getAutoUpdatePeriod(), "wldt.test.property.temperature", String::new));

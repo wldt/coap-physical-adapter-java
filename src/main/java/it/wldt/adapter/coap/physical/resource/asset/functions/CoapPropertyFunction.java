@@ -1,4 +1,4 @@
-package it.wldt.adapter.coap.physical.resource.asset.payload;
+package it.wldt.adapter.coap.physical.resource.asset.functions;
 
 import it.wldt.core.event.WldtEvent;
 
@@ -13,5 +13,5 @@ import java.util.function.Function;
  * @see Function
  */
 @FunctionalInterface
-public interface CoapPayloadFunction extends Function<byte[], List<WldtEvent<?>>> {
+public interface CoapPropertyFunction extends Function<byte[], List<WldtEvent<?>>> {
 }

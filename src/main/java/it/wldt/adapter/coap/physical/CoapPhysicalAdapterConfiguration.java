@@ -3,13 +3,10 @@ package it.wldt.adapter.coap.physical;
 import it.wldt.adapter.coap.physical.discovery.ResourceDiscoveryFunction;
 import it.wldt.adapter.coap.physical.exception.CoapPhysicalAdapterConfigurationException;
 import it.wldt.adapter.coap.physical.resource.asset.DigitalTwinCoapResourceDescriptor;
-import it.wldt.adapter.coap.physical.resource.asset.payload.CoapPayloadFunction;
 import it.wldt.adapter.physical.PhysicalAssetAction;
 import it.wldt.adapter.physical.PhysicalAssetDescription;
 import it.wldt.adapter.physical.PhysicalAssetEvent;
 import it.wldt.adapter.physical.PhysicalAssetProperty;
-import org.eclipse.californium.core.coap.CoAP;
-import org.eclipse.californium.core.coap.MediaTypeRegistry;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -22,15 +19,18 @@ public class CoapPhysicalAdapterConfiguration {
     private Boolean enableAutoUpdate;
     private Long autoUpdatePeriod;
 
+    private int preferredContentFormat;
+
+    private boolean enableDigitalTwinEvents;
+
     private Boolean enableResourceDiscovery;
 
     private ResourceDiscoveryFunction resourceDiscoveryFunction;
 
-    private int preferredContentType;
 
-    private Function<byte[], ?> propertyBodyProducer;
-    private Function<byte[], ?> actionBodyProducer;
-    private Function<byte[], ?> eventBodyProducer;
+    private Function<byte[], ?> defaultPropertyBodyProducer;
+    private Function<byte[], ?> defaultActionBodyProducer;
+    private Function<String, ?> defaultEventBodyProducer;
 
     private PhysicalAssetDescription physicalAssetDescription;
 
@@ -57,6 +57,10 @@ public class CoapPhysicalAdapterConfiguration {
         return enableResourceDiscovery;
     }
 
+    public boolean getDigitalTwinEventsFlag() {
+        return enableDigitalTwinEvents;
+    }
+
     public String getServerConnectionString() {
         return String.format("coap://%s:%d", serverAddress, serverPort);
     }
@@ -69,14 +73,14 @@ public class CoapPhysicalAdapterConfiguration {
         return autoUpdatePeriod;
     }
 
-    public Function<byte[], ?> getPropertyBodyProducer() {
-        return propertyBodyProducer;
+    public Function<byte[], ?> getDefaultPropertyBodyProducer() {
+        return defaultPropertyBodyProducer;
     }
-    public Function<byte[], ?> getActionBodyProducer() {
-        return actionBodyProducer;
+    public Function<byte[], ?> getDefaultActionBodyProducer() {
+        return defaultActionBodyProducer;
     }
-    public Function<byte[], ?> getEventBodyProducer() {
-        return eventBodyProducer;
+    public Function<String, ?> getDefaultEventBodyProducer() {
+        return defaultEventBodyProducer;
     }
 
     public List<DigitalTwinCoapResourceDescriptor> getResources() {
@@ -91,8 +95,8 @@ public class CoapPhysicalAdapterConfiguration {
         return resourceDiscoveryFunction;
     }
 
-    public int getPreferredContentType() {
-        return preferredContentType;
+    public int getPreferredContentFormat() {
+        return preferredContentFormat;
     }
 
     protected void setAutoUpdateFlag(boolean enableAutoUpdate) {
@@ -111,20 +115,24 @@ public class CoapPhysicalAdapterConfiguration {
         this.resourceDiscoveryFunction = function;
     }
 
-    protected void setPreferredContentType(int preferredContentType) {
-        this.preferredContentType = preferredContentType;
+    protected void setDigitalTwinEventsFlag (boolean enableDigitalTwinEvents) {
+        this.enableDigitalTwinEvents = enableDigitalTwinEvents;
     }
 
-    protected void setPropertyBodyProducer(Function<byte[], ?> propertyBodyProducer) {
-        this.propertyBodyProducer = propertyBodyProducer;
+    protected void setPreferredContentFormat(int preferredContentFormat) {
+        this.preferredContentFormat = preferredContentFormat;
     }
 
-    protected void setActionBodyProducer(Function<byte[], ?> actionBodyProducer) {
-        this.actionBodyProducer = actionBodyProducer;
+    protected void setDefaultPropertyBodyProducer(Function<byte[], ?> defaultPropertyBodyProducer) {
+        this.defaultPropertyBodyProducer = defaultPropertyBodyProducer;
     }
 
-    protected void setEventBodyProducer(Function<byte[], ?> eventBodyProducer) {
-        this.eventBodyProducer = eventBodyProducer;
+    protected void setDefaultActionBodyProducer(Function<byte[], ?> defaultActionBodyProducer) {
+        this.defaultActionBodyProducer = defaultActionBodyProducer;
+    }
+
+    protected void setDefaultEventBodyProducer(Function<String, ?> defaultEventBodyProducer) {
+        this.defaultEventBodyProducer = defaultEventBodyProducer;
     }
 
     protected void setPhysicalAssetDescription(List<PhysicalAssetAction> actions,

@@ -1,8 +1,8 @@
 package it.wldt.adapter.coap.physical;
 
-import it.wldt.adapter.coap.physical.resource.asset.ActionCoapResourceDescriptor;
+import it.wldt.adapter.coap.physical.discovery.DiscoveredResource;
+import it.wldt.adapter.coap.physical.resource.asset.CoapSensorResourceDescriptor;
 import it.wldt.adapter.coap.physical.resource.asset.DigitalTwinCoapResourceDescriptor;
-import it.wldt.adapter.coap.physical.resource.asset.PropertyCoapResourceDescriptor;
 import it.wldt.adapter.physical.ConfigurablePhysicalAdapter;
 import it.wldt.adapter.physical.event.PhysicalAssetActionWldtEvent;
 import it.wldt.adapter.physical.event.PhysicalAssetEventWldtEvent;
@@ -12,15 +12,14 @@ import it.wldt.exception.EventBusException;
 import it.wldt.exception.PhysicalAdapterException;
 import org.eclipse.californium.core.CoapClient;
 import org.eclipse.californium.core.WebLink;
-import org.eclipse.californium.core.coap.MediaTypeRegistry;
 import org.eclipse.californium.elements.exception.ConnectorException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.function.Function;
 
 /**
  * It is an implementation of a WLDT {@code ConfigurablePhysicalAdapter} implementing CoAP protocol support via the {@code californium-core} framework.
@@ -80,53 +79,67 @@ public class CoapPhysicalAdapter extends ConfigurablePhysicalAdapter<CoapPhysica
 
         // TODO: Is it correct to force user to use web-link format? Is it better to make a wrapper class and use that instead?
 
-        Set<WebLink> linkSet;
+        Set<DiscoveredResource> discoveredResources;
 
         if (getConfiguration().getResourceDiscoveryFunction() != null) {
-            linkSet = getConfiguration().getResourceDiscoveryFunction().discover(coapClient);
+            discoveredResources = getConfiguration().getResourceDiscoveryFunction().discover(coapClient);
         } else {
-            linkSet = coapClient.discover();
+            discoveredResources = new HashSet<>();
+            Set<WebLink> linkSet = coapClient.discover();
+
+            for (WebLink link : linkSet) {
+                String uri = link.getURI();
+                String resourceType = link.getAttributes().getFirstAttributeValue(DiscoveredResource.WKC_ATTR_RESOURCE_TYPE);
+                String resourceInterface = link.getAttributes().getFirstAttributeValue(DiscoveredResource.WKC_ATTR_RESOURCE_INTERFACE);
+                boolean observable = link.getAttributes().containsAttribute(DiscoveredResource.WKC_ATTR_OBSERVABLE);
+
+                discoveredResources.add(new DiscoveredResource(uri, resourceType, resourceInterface, observable));
+            }
         }
 
-        for (WebLink link : linkSet) {
-            if (link.getURI() != null && !link.getURI().isBlank()) {
-                String uri = link.getURI().substring(link.getURI().indexOf('/'));
+        for (DiscoveredResource dr : discoveredResources) {
+            if (dr.uri() != null && !dr.uri().isBlank()) {
+                String uri = dr.uri().substring(dr.uri().indexOf('/'));
+
+                String wldtKey;
+
+                if (dr.resourceType() != null && !dr.resourceType().isBlank()) {
+                    wldtKey = String.format("%s.%s",
+                            dr.resourceType().replaceAll("[^a-zA-Z0-9.]", ""),
+                            uri.replaceAll("[^a-zA-Z0-9.]", ""));
+                } else {
+                    wldtKey = uri;
+                }
 
                 DigitalTwinCoapResourceDescriptor resource = null;
 
-                if (!link.getAttributes().containsAttribute("rt")) {
-                    // TODO: What if resource contains uri but not rt?
-                    continue;
-                }
+                logger.info("CoAP Physical Adapter - Resource discovery found resource {}", wldtKey);
 
-                String rtAttr = link.getAttributes().getAttributeValues("rt").get(0);
-
-                logger.info("CoAP Physical Adapter - Resource discovery found resource '{}'", rtAttr);
-
-                boolean observable = link.getAttributes().containsAttribute("obs");
-
-                String ifAttr = link.getAttributes().getFirstAttributeValue("if");
-
-                if (ifAttr != null) {
-                    switch (ifAttr) {
-                        case "core.s" -> {      // Sensor -> WLDT Property
-                            resource = new PropertyCoapResourceDescriptor<>(getConfiguration().getServerConnectionString(), uri, rtAttr, getConfiguration().getPropertyBodyProducer());
+                if (dr.resourceInterface() != null && ! dr.resourceInterface().isBlank()) {
+                    switch (dr.resourceInterface()) {
+                        case DiscoveredResource.INTERFACE_SENSOR -> {
+                            logger.info("CoAP Physical Adapter - Resource {} is a sensor", wldtKey);
+                            if (getConfiguration().getDigitalTwinEventsFlag()) {
+                                resource = new CoapSensorResourceDescriptor<>(getConfiguration().getServerConnectionString(), uri, wldtKey, getConfiguration().getDefaultPropertyBodyProducer(), getConfiguration().getDefaultEventBodyProducer());
+                            } else {
+                                resource = new CoapSensorResourceDescriptor<>(getConfiguration().getServerConnectionString(), uri, wldtKey, getConfiguration().getDefaultPropertyBodyProducer());
+                            }
                         }
-                        case "core.a" -> {      // Actuator -> WLDT Action
-                            resource = new ActionCoapResourceDescriptor<>(getConfiguration().getServerConnectionString(), uri, rtAttr, getConfiguration().getActionBodyProducer());
+                        case DiscoveredResource.INTERFACE_ACTUATOR -> {
+                            logger.info("CoAP Physical Adapter - Resource {} is an actuator", wldtKey);
                         }
                         default -> {
-                            // TODO: What if not sensor nor actuator?
+                            // If not in CoRE Interfaces format resource is discarded
+                            logger.warn("CoAP Physical Adapter - Resource {} is not in CoRE Interfaces format. Discarded.", wldtKey);
                         }
                     }
-                } else {
-                    // TODO: What if field "if" not present
+
                 }
 
                 if (resource != null) {
-                    resource.setPreferredContentType(getConfiguration().getPreferredContentType());
+                    resource.setPreferredContentType(getConfiguration().getPreferredContentFormat());
 
-                    if (observable) {
+                    if (dr.observable()) {
                         resource.startObserving();
                     } else if (getConfiguration().getAutoUpdateFlag()){
                         resource.setAutoUpdatePeriod(getConfiguration().getAutoUpdatePeriod());
@@ -147,13 +160,26 @@ public class CoapPhysicalAdapter extends ConfigurablePhysicalAdapter<CoapPhysica
 
             wldtEvents.forEach(e -> {
                 try {
-                    // TODO: Set content type of published event?
+                    // TODO: Set content type of published event? Could be impossible since payload can be modified with body producers in specific resource classes
                     if (e instanceof PhysicalAssetPropertyWldtEvent) {
                         publishPhysicalAssetPropertyWldtEvent((PhysicalAssetPropertyWldtEvent<?>) e);
-                    } else if (e instanceof PhysicalAssetEventWldtEvent) {
+                    }
+                    // TODO: Since actuators can have a GET method and theoretically could be observable, what if event is action event?
+                }catch (EventBusException ex) {
+                    ex.printStackTrace();
+                }
+            });
+        });
+
+        resource.addErrorListener(message -> {
+            List<? extends WldtEvent<?>> wldtEvents = resource.applyErrorFunction(message);
+
+            wldtEvents.forEach(e -> {
+                try {
+                    if (e instanceof PhysicalAssetEventWldtEvent) {
                         publishPhysicalAssetEventWldtEvent((PhysicalAssetEventWldtEvent<?>) e);
                     }
-                }catch (EventBusException ex) {
+                } catch (EventBusException ex) {
                     ex.printStackTrace();
                 }
             });

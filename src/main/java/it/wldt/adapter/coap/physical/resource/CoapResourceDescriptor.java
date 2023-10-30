@@ -1,6 +1,6 @@
 package it.wldt.adapter.coap.physical.resource;
 
-import it.wldt.adapter.coap.physical.resource.event.ListenablePayloadResource;
+import it.wldt.adapter.coap.physical.resource.event.ListenableResource;
 import org.eclipse.californium.core.*;
 import org.eclipse.californium.core.coap.CoAP;
 import org.eclipse.californium.core.coap.MediaTypeRegistry;
@@ -18,10 +18,10 @@ import java.util.TimerTask;
  * Represents a remote CoAP resource descriptor whose payload gets constantly updated by resource observability or automatic requests sent once every a set time period.
  * Payload changes can be listened via the use of a {@code PayloadListener} implementation.
  *
- * @see ListenablePayloadResource
+ * @see ListenableResource
  * @see it.wldt.adapter.coap.physical.resource.event.PayloadListener
  */
-public class CoapResourceDescriptor extends ListenablePayloadResource {
+public class CoapResourceDescriptor extends ListenableResource {
     private transient Logger logger = LoggerFactory.getLogger(CoapResourceDescriptor.class);
 
     protected final CoapClient client;
@@ -37,14 +37,19 @@ public class CoapResourceDescriptor extends ListenablePayloadResource {
     protected int lastPayloadContentType = MediaTypeRegistry.TEXT_PLAIN;
     protected byte[] lastPayload = "".getBytes();
 
+    protected String lastError = "";
+    protected Boolean notifyErrors;
+
     private Boolean autoUpdated;
     private long autoUpdateTimerPeriod;
     private Timer autoUpdateTimer;
 
 
-    public CoapResourceDescriptor(String serverUrl, String resourceUri) {
+    public CoapResourceDescriptor(String serverUrl, String resourceUri, boolean notifyErrors) {
         this.serverUrl = serverUrl;
         this.resourceUri = resourceUri;
+        this.notifyErrors = notifyErrors;
+
         this.client = new CoapClient(serverUrl);
     }
 
@@ -63,7 +68,13 @@ public class CoapResourceDescriptor extends ListenablePayloadResource {
     private void setLastPayload(byte[] value, int ct) {
         this.lastPayload = value;
         this.lastPayloadContentType = ct;
-        notifyListeners(value);
+        notifyPayloadListeners(value);
+    }
+
+    private void setLastError(String value) {
+        this.lastError = value;
+        if (notifyErrors)
+            notifyErrorListeners(value);
     }
 
     public void setPreferredContentType(int preferredContentType) {
@@ -88,18 +99,13 @@ public class CoapResourceDescriptor extends ListenablePayloadResource {
             observeRelation = client.observe(request, new CoapHandler() {
                 @Override
                 public void onLoad(CoapResponse coapResponse) {
-
-                    if (coapResponse != null && coapResponse.isSuccess()) {
-                        logger.info("CoapResourceDescriptor - {} received new payload", getResourceUri());
-                        setLastPayload(coapResponse.getPayload(), coapResponse.getOptions().getContentFormat());
-                    } else {
-                        logger.info("CoapResourceDescriptor - {} received null or unsuccessful payload", getResourceUri());
-                    }
+                    manageResponse(coapResponse);
                 }
 
                 @Override
                 public void onError() {
                     logger.error("CoapResourceDescriptor - {}: observation error", getResourceUri());
+                    setLastError("Notification error");
                 }
             });
         } catch (Exception e) {
@@ -158,15 +164,23 @@ public class CoapResourceDescriptor extends ListenablePayloadResource {
         return request;
     }
 
+    private void manageResponse(CoapResponse response) {
+        if (response == null) {
+            setLastError("Response is null");
+        } else if (!response.isSuccess()) {
+            setLastError("Response code: " + response.getCode());
+        } else {
+            setLastPayload(response.getPayload(), response.getOptions().getContentFormat());
+        }
+    }
+
     private void sendGET() {
         Request request = this.createRequest(CoAP.Code.GET);
 
         try {
             CoapResponse response = client.advanced(request);
 
-            if (response != null) {
-                setLastPayload(response.getPayload(), response.getOptions().getContentFormat());
-            }
+            manageResponse(response);
         } catch (ConnectorException | IOException e) {
             e.printStackTrace();
         }
