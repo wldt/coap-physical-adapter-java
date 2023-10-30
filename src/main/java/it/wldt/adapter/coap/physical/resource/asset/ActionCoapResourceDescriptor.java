@@ -9,21 +9,10 @@ import java.util.Collections;
 import java.util.function.Function;
 
 public class ActionCoapResourceDescriptor<T> extends DigitalTwinCoapResourceDescriptor {
-    public ActionCoapResourceDescriptor(String serverUrl, String relativeUri, long autoUpdatePeriod, String propertyKey, Function<byte[], T> eventBodyProducer) {
-        super(serverUrl, relativeUri, autoUpdatePeriod, payload -> {
+    public ActionCoapResourceDescriptor(String serverUrl, String relativeUri, String propertyKey, Function<byte[], T> actionBodyProducer) {
+        super(serverUrl, relativeUri, payload -> {
             try {
-                return Collections.singletonList(new PhysicalAssetActionWldtEvent<>(propertyKey, eventBodyProducer.apply((byte[]) payload)));
-            } catch (EventBusException e) {
-                e.printStackTrace();
-            }
-            return Collections.emptyList();
-        });
-    }
-
-    public ActionCoapResourceDescriptor(String serverUrl, String relativeUri, boolean observable, String propertyKey, Function<byte[], T> eventBodyProducer) {
-        super(serverUrl, relativeUri, observable, payload -> {
-            try {
-                return Collections.singletonList(new PhysicalAssetActionWldtEvent<>(propertyKey, eventBodyProducer.apply((byte[]) payload)));
+                return Collections.singletonList(new PhysicalAssetActionWldtEvent<>(propertyKey, actionBodyProducer.apply(payload)));
             } catch (EventBusException e) {
                 e.printStackTrace();
             }

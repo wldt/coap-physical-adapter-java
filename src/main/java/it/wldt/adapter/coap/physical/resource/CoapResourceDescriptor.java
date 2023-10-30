@@ -3,6 +3,7 @@ package it.wldt.adapter.coap.physical.resource;
 import it.wldt.adapter.coap.physical.resource.event.ListenablePayloadResource;
 import org.eclipse.californium.core.*;
 import org.eclipse.californium.core.coap.CoAP;
+import org.eclipse.californium.core.coap.MediaTypeRegistry;
 import org.eclipse.californium.core.coap.OptionSet;
 import org.eclipse.californium.core.coap.Request;
 import org.eclipse.californium.elements.exception.ConnectorException;
@@ -28,9 +29,12 @@ public class CoapResourceDescriptor extends ListenablePayloadResource {
     private final String serverUrl;
     private final String resourceUri;
 
+    private int preferredContentType;
+
     private Boolean observable;
     private CoapObserveRelation observeRelation;
 
+    protected int lastPayloadContentType = MediaTypeRegistry.TEXT_PLAIN;
     protected byte[] lastPayload = "".getBytes();
 
     private Boolean autoUpdated;
@@ -38,67 +42,10 @@ public class CoapResourceDescriptor extends ListenablePayloadResource {
     private Timer autoUpdateTimer;
 
 
-    private CoapResourceDescriptor(String serverUrl, String resourceUri) {
+    public CoapResourceDescriptor(String serverUrl, String resourceUri) {
         this.serverUrl = serverUrl;
         this.resourceUri = resourceUri;
         this.client = new CoapClient(serverUrl);
-
-    }
-
-    public CoapResourceDescriptor(String serverUrl, String resourceUri, long autoUpdatePeriod) {
-        this(serverUrl, resourceUri);
-
-        this.observable = false;
-        this.autoUpdated = true;
-
-        this.autoUpdateTimerPeriod = autoUpdatePeriod;
-
-        init();
-    }
-
-    public CoapResourceDescriptor(String serverUrl, String resourceUri, boolean observable) {
-        this(serverUrl, resourceUri);
-
-        this.observable = observable;
-        this.autoUpdated = !this.observable;
-
-        init();
-    }
-
-    private void init() {
-        if (observable) {
-            Request request = this.createRequest(CoAP.Code.GET);
-
-            request.setObserve();
-
-            try {
-                observeRelation = client.observe(request, new CoapHandler() {
-                    @Override
-                    public void onLoad(CoapResponse coapResponse) {
-
-                        if (coapResponse != null && coapResponse.isSuccess()) {
-                            setLastPayload(coapResponse.getPayload());
-                            logger.info("Received new payload");
-                        } else {
-                            logger.info("Payload is null or unsuccessful");
-                        }
-                    }
-
-                    @Override
-                    public void onError() {
-                        logger.error("Observation error");
-                    }
-                });
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-
-        if (autoUpdated && !observable) {
-            setAutoUpdate(0L, this.autoUpdateTimerPeriod);
-        } else {
-            autoUpdated = false;
-        }
     }
 
     public String getServerUrl() {
@@ -113,12 +60,65 @@ public class CoapResourceDescriptor extends ListenablePayloadResource {
         return lastPayload;
     }
 
-    private void setLastPayload(byte[] value) {
+    private void setLastPayload(byte[] value, int ct) {
         this.lastPayload = value;
+        this.lastPayloadContentType = ct;
         notifyListeners(value);
     }
 
-    public void setAutoUpdate(long delay, long period) {
+    public void setPreferredContentType(int preferredContentType) {
+        this.preferredContentType = preferredContentType;
+    }
+
+    public int getPreferredContentType() {
+        return this.preferredContentType;
+    }
+
+    public void startObserving() {
+        this.stopObserving();
+        this.stopAutoUpdate();
+
+        this.observable = true;
+
+        Request request = this.createRequest(CoAP.Code.GET);
+
+        request.setObserve();
+
+        try {
+            observeRelation = client.observe(request, new CoapHandler() {
+                @Override
+                public void onLoad(CoapResponse coapResponse) {
+
+                    if (coapResponse != null && coapResponse.isSuccess()) {
+                        logger.info("CoapResourceDescriptor - {} received new payload", getResourceUri());
+                        setLastPayload(coapResponse.getPayload(), coapResponse.getOptions().getContentFormat());
+                    } else {
+                        logger.info("CoapResourceDescriptor - {} received null or unsuccessful payload", getResourceUri());
+                    }
+                }
+
+                @Override
+                public void onError() {
+                    logger.error("CoapResourceDescriptor - {}: observation error", getResourceUri());
+                }
+            });
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void stopObserving() {
+        if (this.observeRelation != null) {
+            observeRelation.proactiveCancel();
+        }
+        this.observable = false;
+    }
+
+    public void setAutoUpdatePeriod(long period) {
+        this.autoUpdateTimerPeriod = period;
+    }
+
+    public void startAutoUpdate() {
         if (this.autoUpdateTimer == null) {
             this.autoUpdateTimer = new Timer();
         } else {
@@ -132,18 +132,23 @@ public class CoapResourceDescriptor extends ListenablePayloadResource {
             public void run() {
                 sendGET();
             }
-        }, delay, period);
+        }, this.autoUpdateTimerPeriod, 0L);
     }
 
     public void stopAutoUpdate() {
-        autoUpdateTimer.cancel();
-        autoUpdateTimer.purge();
+        if (autoUpdateTimer != null) {
+            autoUpdateTimer.cancel();
+            autoUpdateTimer.purge();
+        }
+        this.autoUpdated = false;
     }
 
     protected Request createRequest(CoAP.Code code) {
         Request request = new Request(code);
 
         OptionSet options = new OptionSet();
+
+        options.setAccept(this.preferredContentType);
 
         request.setOptions(options);
         request.setURI(this.client.getURI());
@@ -160,10 +165,12 @@ public class CoapResourceDescriptor extends ListenablePayloadResource {
             CoapResponse response = client.advanced(request);
 
             if (response != null) {
-                setLastPayload(response.getPayload());
+                setLastPayload(response.getPayload(), response.getOptions().getContentFormat());
             }
         } catch (ConnectorException | IOException e) {
             e.printStackTrace();
         }
     }
+
+    // TODO: Add POST, PUT, DELETE for actuators
 }

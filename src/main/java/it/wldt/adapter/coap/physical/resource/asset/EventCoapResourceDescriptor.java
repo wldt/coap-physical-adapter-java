@@ -17,19 +17,8 @@ import java.util.function.Function;
  * @see PhysicalAssetEventWldtEvent
  */
 public class EventCoapResourceDescriptor<T> extends DigitalTwinCoapResourceDescriptor {
-    public EventCoapResourceDescriptor(String serverUrl, String relativeUri, long autoUpdatePeriod, String propertyKey, Function<byte[], T> eventBodyProducer) {
-        super(serverUrl, relativeUri, autoUpdatePeriod, payload -> {
-            try {
-                return Collections.singletonList(new PhysicalAssetEventWldtEvent<>(propertyKey, eventBodyProducer.apply((byte[]) payload)));
-            } catch (EventBusException e) {
-                e.printStackTrace();
-            }
-            return Collections.emptyList();
-        });
-    }
-
-    public EventCoapResourceDescriptor(String serverUrl, String relativeUri, boolean observable, String propertyKey, Function<byte[], T> eventBodyProducer) {
-        super(serverUrl, relativeUri, observable, payload -> {
+    public EventCoapResourceDescriptor(String serverUrl, String relativeUri, String propertyKey, Function<byte[], T> eventBodyProducer) {
+        super(serverUrl, relativeUri, payload -> {
             try {
                 return Collections.singletonList(new PhysicalAssetEventWldtEvent<>(propertyKey, eventBodyProducer.apply((byte[]) payload)));
             } catch (EventBusException e) {

@@ -10,6 +10,7 @@ import it.wldt.exception.EventBusException;
 import it.wldt.exception.ModelException;
 import it.wldt.exception.WldtConfigurationException;
 import it.wldt.exception.WldtRuntimeException;
+import org.eclipse.californium.core.coap.MediaTypeRegistry;
 
 import java.util.ArrayList;
 import java.util.function.Function;
@@ -29,6 +30,7 @@ public class CoapPhysicalAdapterTest {
                 .setAutoUpdateFlag(true)
                 .setAutoUpdatePeriod(5000)
                 .setResourceDiscoveryFlag(true)
+                .setPreferredContentType(MediaTypeRegistry.APPLICATION_SENML_JSON)
                 .setPropertyBodyProducer(String::new)
                 .setActionBodyProducer(String::new)
                 .setEventBodyProducer(String::new)

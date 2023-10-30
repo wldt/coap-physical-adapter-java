@@ -17,13 +17,8 @@ import java.util.List;
 public class DigitalTwinCoapResourceDescriptor extends CoapResourceDescriptor {
     private final CoapPayloadFunction coapPayloadFunction;
 
-    public DigitalTwinCoapResourceDescriptor(String serverUrl, String relativeUri, long autoUpdatePeriod, CoapPayloadFunction function) {
-        super(serverUrl, relativeUri, autoUpdatePeriod);
-        this.coapPayloadFunction = function;
-    }
-
-    public DigitalTwinCoapResourceDescriptor(String serverUrl, String relativeUri, boolean observable, CoapPayloadFunction function) {
-        super(serverUrl, relativeUri, observable);
+    public DigitalTwinCoapResourceDescriptor(String serverUrl, String relativeUri, CoapPayloadFunction function) {
+        super(serverUrl, relativeUri);
         this.coapPayloadFunction = function;
     }
 

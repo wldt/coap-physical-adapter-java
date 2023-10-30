@@ -7,6 +7,8 @@ import it.wldt.adapter.coap.physical.resource.asset.payload.CoapPayloadFunction;
 import it.wldt.adapter.physical.PhysicalAssetAction;
 import it.wldt.adapter.physical.PhysicalAssetEvent;
 import it.wldt.adapter.physical.PhysicalAssetProperty;
+import org.eclipse.californium.core.coap.CoAP;
+import org.eclipse.californium.core.coap.MediaTypeRegistry;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -47,6 +49,11 @@ public class CoapPhysicalAdapterConfigurationBuilder {
 
     public CoapPhysicalAdapterConfigurationBuilder setResourceDiscoveryFunction(ResourceDiscoveryFunction function) {
         this.configuration.setResourceDiscoveryFunction(function);
+        return this;
+    }
+
+    public CoapPhysicalAdapterConfigurationBuilder setPreferredContentType(int preferredContentType) {
+        this.configuration.setPreferredContentType(preferredContentType);
         return this;
     }
 

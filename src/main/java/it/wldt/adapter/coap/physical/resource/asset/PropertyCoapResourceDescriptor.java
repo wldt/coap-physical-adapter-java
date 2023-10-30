@@ -18,19 +18,8 @@ import java.util.function.Function;
  */
 public class PropertyCoapResourceDescriptor<T> extends DigitalTwinCoapResourceDescriptor {
 
-    public PropertyCoapResourceDescriptor(String serverUrl, String relativeUri, long autoUpdatePeriod, String propertyKey, Function<byte[], T> propertyBodyProducer) {
-        super(serverUrl, relativeUri, autoUpdatePeriod, payload -> {
-            try {
-                return Collections.singletonList(new PhysicalAssetPropertyWldtEvent<>(propertyKey, propertyBodyProducer.apply(payload)));
-            } catch (EventBusException e) {
-                e.printStackTrace();
-            }
-            return Collections.emptyList();
-        });
-    }
-
-    public PropertyCoapResourceDescriptor(String serverUrl, String relativeUri, boolean observable, String propertyKey, Function<byte[], T> propertyBodyProducer) {
-        super(serverUrl, relativeUri, observable, payload -> {
+    public PropertyCoapResourceDescriptor(String serverUrl, String relativeUri, String propertyKey, Function<byte[], T> propertyBodyProducer) {
+        super(serverUrl, relativeUri, payload -> {
             try {
                 return Collections.singletonList(new PhysicalAssetPropertyWldtEvent<>(propertyKey, propertyBodyProducer.apply(payload)));
             } catch (EventBusException e) {

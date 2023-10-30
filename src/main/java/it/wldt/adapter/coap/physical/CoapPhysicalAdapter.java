@@ -12,6 +12,7 @@ import it.wldt.exception.EventBusException;
 import it.wldt.exception.PhysicalAdapterException;
 import org.eclipse.californium.core.CoapClient;
 import org.eclipse.californium.core.WebLink;
+import org.eclipse.californium.core.coap.MediaTypeRegistry;
 import org.eclipse.californium.elements.exception.ConnectorException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,14 +41,13 @@ public class CoapPhysicalAdapter extends ConfigurablePhysicalAdapter<CoapPhysica
 
     @Override
     public void onIncomingPhysicalAction(PhysicalAssetActionWldtEvent<?> physicalAssetActionWldtEvent) {
-        // TODO
-        logger.debug("CoAP Physical Adapter - [START] onIncomingPhysicalAction()");
-        logger.debug("CoAP Physical Adapter - [STOP] onIncomingPhysicalAction()");
+        // TODO: Manage incoming physical action
+        logger.info("CoAP Physical Adapter - Incoming physical action");
     }
 
     @Override
     public void onAdapterStart() {
-        logger.debug("CoAP Physical Adapter - [START] onAdapterStart()");
+        logger.info("CoAP Physical Adapter - Starting");
         try {
             if (getConfiguration().getResourceDiscoveryFlag()) {
                 logger.info("CoAP Physical Adapter - CoAP client discovering resources");
@@ -65,21 +65,20 @@ public class CoapPhysicalAdapter extends ConfigurablePhysicalAdapter<CoapPhysica
             e.printStackTrace();
         }
 
-        logger.debug("CoAP Physical Adapter - [STOP] onAdapterStart()");
+        logger.info("CoAP Physical Adapter - Start sequence completed");
     }
 
     @Override
     public void onAdapterStop() {
-        logger.debug("CoAP Physical Adapter - [START] onAdapterStop()");
-        logger.debug("CoAP Physical Adapter - [STOP] onAdapterStop()");
+        logger.info("CoAP Physical Adapter - Stopping adapter");
     }
 
     public void discoverCoapResources() throws ConnectorException, IOException {
-        logger.debug("CoAP Physical Adapter - [START] discoverCoapResources()");
+        logger.info("CoAP Physical Adapter - Starting resource discovery");
 
         CoapClient coapClient = new CoapClient(getConfiguration().getServerConnectionString());
 
-        // TODO: Is it correct to oblige user to use web-link format?
+        // TODO: Is it correct to oblige user to use web-link format? Is it better to make a wrapper class and use that instead?
 
         Set<WebLink> linkSet;
 
@@ -102,55 +101,53 @@ public class CoapPhysicalAdapter extends ConfigurablePhysicalAdapter<CoapPhysica
 
                 String rtAttr = link.getAttributes().getAttributeValues("rt").get(0);
 
-                logger.debug("CoAP Physical Adapter - Resource discovery found resource '{}'", rtAttr);
+                logger.info("CoAP Physical Adapter - Resource discovery found resource '{}'", rtAttr);
 
                 boolean observable = link.getAttributes().containsAttribute("obs");
 
                 String ifAttr = link.getAttributes().getFirstAttributeValue("if");
 
-                switch (ifAttr) {
-                    case "core.s" -> {      // Sensor -> WLDT Property
-                        if (observable) {
-                            resource = new PropertyCoapResourceDescriptor<>(getConfiguration().getServerConnectionString(), uri, true, rtAttr, getConfiguration().getPropertyBodyProducer());
-                        } else if (getConfiguration().getAutoUpdateFlag()){
-                            resource = new PropertyCoapResourceDescriptor<>(getConfiguration().getServerConnectionString(), uri, getConfiguration().getAutoUpdatePeriod(), rtAttr, getConfiguration().getPropertyBodyProducer());
+                if (ifAttr != null) {
+                    switch (ifAttr) {
+                        case "core.s" -> {      // Sensor -> WLDT Property
+                            resource = new PropertyCoapResourceDescriptor<>(getConfiguration().getServerConnectionString(), uri, rtAttr, getConfiguration().getPropertyBodyProducer());
                         }
-
-                        // if not observable and auto update is disabled the resource is discarded
-                    }
-                    case "core.a" -> {      // Actuator -> WLDT Action
-                        if (observable) {
-                            resource = new ActionCoapResourceDescriptor<>(getConfiguration().getServerConnectionString(), uri, true, rtAttr, getConfiguration().getActionBodyProducer());
-                        } else if (getConfiguration().getAutoUpdateFlag()){
-                            resource = new ActionCoapResourceDescriptor<>(getConfiguration().getServerConnectionString(), uri, getConfiguration().getAutoUpdatePeriod(), rtAttr, getConfiguration().getActionBodyProducer());
+                        case "core.a" -> {      // Actuator -> WLDT Action
+                            resource = new ActionCoapResourceDescriptor<>(getConfiguration().getServerConnectionString(), uri, rtAttr, getConfiguration().getActionBodyProducer());
+                        }
+                        default -> {
+                            // TODO: What if not sensor nor actuator?
                         }
                     }
-                    default -> {
-
-                    }
+                } else {
+                    // TODO: What if field "if" not present
                 }
-                /*
-                // TODO: Manage actuators
-                if (ifList.contains("core.a")) {    // CoAP actuator
-
-                }
-                */
 
                 if (resource != null) {
+                    resource.setPreferredContentType(getConfiguration().getPreferredContentType());
+
+                    if (observable) {
+                        resource.startObserving();
+                    } else if (getConfiguration().getAutoUpdateFlag()){
+                        resource.setAutoUpdatePeriod(getConfiguration().getAutoUpdatePeriod());
+                        resource.startAutoUpdate();
+                    }
+
                     getConfiguration().addResource(resource);
                 }
             }
         }
-        logger.debug("CoAP Physical Adapter - [STOP] discoverCoapResources()");
+        logger.info("CoAP Physical Adapter - Ending resource discovery");
     }
 
     private void manageResourcePayload(DigitalTwinCoapResourceDescriptor resource) {
-        logger.debug("CoAP Physical Adapter - [START] manageResourcePayload()");
+        logger.info("CoAP Physical Adapter - Starting resource {} payload management", resource.getResourceUri());
         resource.addPayloadListener((value) -> {
             List<? extends WldtEvent<?>> wldtEvents = resource.applyPayloadFunction(value);
 
             wldtEvents.forEach(e -> {
                 try {
+                    // TODO: Set content type of published event?
                     if (e instanceof PhysicalAssetPropertyWldtEvent) {
                         publishPhysicalAssetPropertyWldtEvent((PhysicalAssetPropertyWldtEvent<?>) e);
                     } else if (e instanceof PhysicalAssetEventWldtEvent) {
@@ -161,6 +158,6 @@ public class CoapPhysicalAdapter extends ConfigurablePhysicalAdapter<CoapPhysica
                 }
             });
         });
-        logger.debug("CoAP Physical Adapter - [STOP] manageResourcePayload()");
+        logger.info("CoAP Physical Adapter - Ending resource {} payload management", resource.getResourceUri());
     }
 }
