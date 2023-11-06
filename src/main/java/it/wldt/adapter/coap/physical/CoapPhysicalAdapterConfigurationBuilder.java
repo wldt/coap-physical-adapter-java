@@ -72,8 +72,8 @@ public class CoapPhysicalAdapterConfigurationBuilder {
         return this;
     }
 
-    public CoapPhysicalAdapterConfigurationBuilder addCoapResource(DigitalTwinCoapResourceDescriptor resource) {
-        this.configuration.addResource(resource);
+    public CoapPhysicalAdapterConfigurationBuilder addCoapResource(String uri, DigitalTwinCoapResourceDescriptor resource) {
+        this.configuration.addResource(uri, resource);
 
         return this;
     }

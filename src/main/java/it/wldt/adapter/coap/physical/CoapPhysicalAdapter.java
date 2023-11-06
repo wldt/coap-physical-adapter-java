@@ -53,7 +53,7 @@ public class CoapPhysicalAdapter extends ConfigurablePhysicalAdapter<CoapPhysica
                 discoverCoapResources();
             }
 
-            getConfiguration().getResources().forEach(this::manageResourcePayload);
+            getConfiguration().getResources().values().forEach(this::manageResourcePayload);
 
             notifyPhysicalAdapterBound(getConfiguration().getPhysicalAssetDescription());
         } catch (PhysicalAdapterException | EventBusException e) {  // Bind notification exceptions
@@ -72,6 +72,13 @@ public class CoapPhysicalAdapter extends ConfigurablePhysicalAdapter<CoapPhysica
         logger.info("CoAP Physical Adapter - Stopping adapter");
     }
 
+    /**
+     * The method responsible for the resource discovery.
+     * Note that if in the discovery function a resource with {@code Interface.UNKNOWN} is passed it will be ignored by the function
+     *
+     * @throws ConnectorException
+     * @throws IOException
+     */
     public void discoverCoapResources() throws ConnectorException, IOException {
         logger.info("CoAP Physical Adapter - Starting resource discovery");
 
@@ -90,8 +97,16 @@ public class CoapPhysicalAdapter extends ConfigurablePhysicalAdapter<CoapPhysica
             for (WebLink link : linkSet) {
                 String uri = link.getURI();
                 String resourceType = link.getAttributes().getFirstAttributeValue(DiscoveredResource.WKC_ATTR_RESOURCE_TYPE);
-                String resourceInterface = link.getAttributes().getFirstAttributeValue(DiscoveredResource.WKC_ATTR_RESOURCE_INTERFACE);
+                String linkInterface = link.getAttributes().getFirstAttributeValue(DiscoveredResource.WKC_ATTR_RESOURCE_INTERFACE);
                 boolean observable = link.getAttributes().containsAttribute(DiscoveredResource.WKC_ATTR_OBSERVABLE);
+
+                DiscoveredResource.Interface resourceInterface;
+
+                switch (linkInterface) {
+                    case "core.s" -> resourceInterface = DiscoveredResource.Interface.SENSOR;
+                    case "core.a" -> resourceInterface = DiscoveredResource.Interface.ACTUATOR;
+                    default -> resourceInterface = DiscoveredResource.Interface.UNKNOWN;
+                }
 
                 discoveredResources.add(new DiscoveredResource(uri, resourceType, resourceInterface, observable));
             }
@@ -115,9 +130,9 @@ public class CoapPhysicalAdapter extends ConfigurablePhysicalAdapter<CoapPhysica
 
                 logger.info("CoAP Physical Adapter - Resource discovery found resource {}", wldtKey);
 
-                if (dr.resourceInterface() != null && ! dr.resourceInterface().isBlank()) {
+                if (dr.resourceInterface() != null && !(dr.resourceInterface() == DiscoveredResource.Interface.UNKNOWN)) {
                     switch (dr.resourceInterface()) {
-                        case DiscoveredResource.INTERFACE_SENSOR -> {
+                        case SENSOR -> {
                             logger.info("CoAP Physical Adapter - Resource {} is a sensor", wldtKey);
                             if (getConfiguration().getDigitalTwinEventsFlag()) {
                                 resource = new CoapSensorResourceDescriptor<>(getConfiguration().getServerConnectionString(), uri, wldtKey, getConfiguration().getDefaultPropertyBodyProducer(), getConfiguration().getDefaultEventBodyProducer());
@@ -125,7 +140,7 @@ public class CoapPhysicalAdapter extends ConfigurablePhysicalAdapter<CoapPhysica
                                 resource = new CoapSensorResourceDescriptor<>(getConfiguration().getServerConnectionString(), uri, wldtKey, getConfiguration().getDefaultPropertyBodyProducer());
                             }
                         }
-                        case DiscoveredResource.INTERFACE_ACTUATOR -> {
+                        case ACTUATOR -> {
                             logger.info("CoAP Physical Adapter - Resource {} is an actuator", wldtKey);
                         }
                         default -> {
@@ -146,7 +161,7 @@ public class CoapPhysicalAdapter extends ConfigurablePhysicalAdapter<CoapPhysica
                         resource.startAutoUpdate();
                     }
 
-                    getConfiguration().addResource(resource);
+                    getConfiguration().addResource(dr.uri(), resource);
                 }
             }
         }

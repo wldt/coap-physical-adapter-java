@@ -8,8 +8,7 @@ import it.wldt.adapter.physical.PhysicalAssetDescription;
 import it.wldt.adapter.physical.PhysicalAssetEvent;
 import it.wldt.adapter.physical.PhysicalAssetProperty;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 import java.util.function.Function;
 
 public class CoapPhysicalAdapterConfiguration {
@@ -34,7 +33,7 @@ public class CoapPhysicalAdapterConfiguration {
 
     private PhysicalAssetDescription physicalAssetDescription;
 
-    private final List<DigitalTwinCoapResourceDescriptor> resources = new ArrayList<>();
+    private final Map<String, DigitalTwinCoapResourceDescriptor> resources = new HashMap<>();
 
     protected CoapPhysicalAdapterConfiguration(String serverAddress, int serverPort) {
         this.serverAddress = serverAddress;
@@ -83,7 +82,7 @@ public class CoapPhysicalAdapterConfiguration {
         return defaultEventBodyProducer;
     }
 
-    public List<DigitalTwinCoapResourceDescriptor> getResources() {
+    public Map<String, DigitalTwinCoapResourceDescriptor> getResources() {
         return resources;
     }
 
@@ -141,8 +140,14 @@ public class CoapPhysicalAdapterConfiguration {
         this.physicalAssetDescription = new PhysicalAssetDescription(actions, properties, events);
     }
 
-    protected void addResource (DigitalTwinCoapResourceDescriptor resource) {
-        resources.add(resource);
+    protected boolean addResource (String uri, DigitalTwinCoapResourceDescriptor resource) {
+        if (!resources.containsKey(uri)) {
+            resources.put(uri, resource);
+
+            return true;
+        }
+
+        return false;
     }
 
 }
