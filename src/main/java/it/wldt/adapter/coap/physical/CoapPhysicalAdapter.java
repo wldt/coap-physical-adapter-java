@@ -85,8 +85,6 @@ public class CoapPhysicalAdapter extends ConfigurablePhysicalAdapter<CoapPhysica
 
         CoapClient coapClient = new CoapClient(getConfiguration().getServerConnectionString());
 
-        // TODO: Is it correct to force user to use web-link format? Is it better to make a wrapper class and use that instead?
-
         Set<DiscoveredResource> discoveredResources;
 
         if (getConfiguration().getResourceDiscoveryFunction() != null) {
@@ -142,6 +140,9 @@ public class CoapPhysicalAdapter extends ConfigurablePhysicalAdapter<CoapPhysica
                             }
                         }
                         case ACTUATOR -> {
+                            // TODO: How to implement actuator?
+                            if (getConfiguration().getDigitalTwinEventsFlag()) {
+                            }
                             logger.info("CoAP Physical Adapter - Resource {} is an actuator", wldtKey);
                         }
                         default -> {
