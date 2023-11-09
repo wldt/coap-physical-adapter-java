@@ -13,5 +13,6 @@ import java.util.function.Function;
  * @see Function
  */
 @FunctionalInterface
-public interface CoapPropertyFunction extends Function<byte[], List<WldtEvent<?>>> {
+public interface CoapPropertyFunction {
+    List<WldtEvent<?>> apply(byte[] payload, int contentType);
 }

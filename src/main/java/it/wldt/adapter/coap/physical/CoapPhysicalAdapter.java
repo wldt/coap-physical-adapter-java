@@ -12,6 +12,7 @@ import it.wldt.exception.EventBusException;
 import it.wldt.exception.PhysicalAdapterException;
 import org.eclipse.californium.core.CoapClient;
 import org.eclipse.californium.core.WebLink;
+import org.eclipse.californium.core.coap.MediaTypeRegistry;
 import org.eclipse.californium.elements.exception.ConnectorException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -119,12 +120,12 @@ public class CoapPhysicalAdapter extends ConfigurablePhysicalAdapter<CoapPhysica
                 String wldtKey;
 
                 if (dr.resourceType() != null && !dr.resourceType().isBlank()) {
-                    wldtKey = String.format("%s.%s",
-                            dr.resourceType().replaceAll("[^a-zA-Z0-9.]", ""),
-                            uri.replaceAll("[^a-zA-Z0-9.]", ""));
+                    wldtKey = String.format("%s.%s", dr.resourceType(), uri);
                 } else {
                     wldtKey = uri;
                 }
+                wldtKey = wldtKey.replaceAll("[^a-zA-Z0-9.]", "");
+                // Replaces each non-alphanumeric character different from '.'
 
                 DigitalTwinCoapResourceDescriptor resource = null;
 
@@ -179,7 +180,6 @@ public class CoapPhysicalAdapter extends ConfigurablePhysicalAdapter<CoapPhysica
                     if (e instanceof PhysicalAssetPropertyWldtEvent) {
                         publishPhysicalAssetPropertyWldtEvent((PhysicalAssetPropertyWldtEvent<?>) e);
                     }
-                    // TODO: Since actuators can have a GET method and theoretically could be observable, what if event is action event?
                 }catch (EventBusException ex) {
                     ex.printStackTrace();
                 }
@@ -199,6 +199,9 @@ public class CoapPhysicalAdapter extends ConfigurablePhysicalAdapter<CoapPhysica
                 }
             });
         });
+
+        // TODO: Since actuators can have a GET method and theoretically could be observable, what if event is action event?
+
         logger.info("CoAP Physical Adapter - Ending resource {} payload management", resource.getResourceUri());
     }
 }

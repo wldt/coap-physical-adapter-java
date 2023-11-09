@@ -3,6 +3,7 @@ package it.wldt.adapter.coap.physical.resource.asset;
 import it.wldt.adapter.physical.event.PhysicalAssetEventWldtEvent;
 import it.wldt.adapter.physical.event.PhysicalAssetPropertyWldtEvent;
 import it.wldt.exception.EventBusException;
+import org.eclipse.californium.core.coap.MediaTypeRegistry;
 
 import java.util.Collections;
 import java.util.function.Function;
@@ -10,9 +11,12 @@ import java.util.function.Function;
 public class CoapActuatorResourceDescriptor<P, A, E> extends DigitalTwinCoapActionResourceDescriptor {
 
     public CoapActuatorResourceDescriptor(String serverUrl, String relativeUri, String propertyKey, Function<byte[], P> propertyBodyProducer, Function<A, byte[]> actionBodyConsumer) {
-        super(serverUrl, relativeUri, payload -> {
+        super(serverUrl, relativeUri, (payload, ct) -> {
             try {
-                return Collections.singletonList(new PhysicalAssetPropertyWldtEvent<>(propertyKey, propertyBodyProducer.apply(payload)));
+                PhysicalAssetPropertyWldtEvent<?> propertyWldtEvent = new PhysicalAssetPropertyWldtEvent<>(propertyKey, propertyBodyProducer.apply(payload));
+                propertyWldtEvent.setContentType(MediaTypeRegistry.toString(ct));
+
+                return Collections.singletonList(propertyWldtEvent);
             } catch (EventBusException e) {
                 e.printStackTrace();
             }
@@ -21,9 +25,12 @@ public class CoapActuatorResourceDescriptor<P, A, E> extends DigitalTwinCoapActi
     }
 
     public CoapActuatorResourceDescriptor(String serverUrl, String relativeUri, String propertyKey, Function<byte[], P> propertyBodyProducer, Function<String, E> eventBodyProducer, Function<A, byte[]> actionBodyConsumer) {
-        super(serverUrl, relativeUri, payload -> {
+        super(serverUrl, relativeUri, (payload, ct) -> {
             try {
-                return Collections.singletonList(new PhysicalAssetPropertyWldtEvent<>(propertyKey, propertyBodyProducer.apply(payload)));
+                PhysicalAssetPropertyWldtEvent<?> propertyWldtEvent = new PhysicalAssetPropertyWldtEvent<>(propertyKey, propertyBodyProducer.apply(payload));
+                propertyWldtEvent.setContentType(MediaTypeRegistry.toString(ct));
+
+                return Collections.singletonList(propertyWldtEvent);
             } catch (EventBusException e) {
                 e.printStackTrace();
             }

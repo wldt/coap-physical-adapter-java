@@ -33,7 +33,7 @@ public class DigitalTwinCoapResourceDescriptor extends CoapResourceDescriptor {
     }
 
     public List<WldtEvent<?>> applyPayloadFunction(byte[] payload) {
-        return coapPropertyFunction.apply(payload);
+        return coapPropertyFunction.apply(payload, lastPayloadContentType);
     }
 
     public List<WldtEvent<?>> applyErrorFunction(String message) {

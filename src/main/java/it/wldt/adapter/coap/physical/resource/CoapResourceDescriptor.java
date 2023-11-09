@@ -65,6 +65,10 @@ public class CoapResourceDescriptor extends ListenableResource {
         return lastPayload;
     }
 
+    public int getLastPayloadContentType() {
+        return lastPayloadContentType;
+    }
+
     private void setLastPayload(byte[] value, int ct) {
         this.lastPayload = value;
         this.lastPayloadContentType = ct;
