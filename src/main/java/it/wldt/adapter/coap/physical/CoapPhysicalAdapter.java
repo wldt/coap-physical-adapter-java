@@ -42,7 +42,22 @@ public class CoapPhysicalAdapter extends ConfigurablePhysicalAdapter<CoapPhysica
     @Override
     public void onIncomingPhysicalAction(PhysicalAssetActionWldtEvent<?> physicalAssetActionWldtEvent) {
         // TODO: Manage incoming physical action
+        // TODO: How to differentiate between different request methods?
         logger.info("CoAP Physical Adapter - Incoming physical action");
+
+        String id = physicalAssetActionWldtEvent.getId();
+        String key = physicalAssetActionWldtEvent.getActionKey();
+        String ct = physicalAssetActionWldtEvent.getContentType();
+        String resource = physicalAssetActionWldtEvent.getId();
+        long timestamp = physicalAssetActionWldtEvent.getCreationTimestamp();
+
+        if (physicalAssetActionWldtEvent.getBody() instanceof String) {
+            String body = (String) physicalAssetActionWldtEvent.getBody();
+        } else if (physicalAssetActionWldtEvent.getBody() instanceof byte[]) {
+            byte[] body = (byte[]) physicalAssetActionWldtEvent.getBody();
+        } else {
+            logger.error("CoAP Physical Adapter - Received incoming action with unsupported body type");
+        }
     }
 
     @Override
@@ -112,60 +127,62 @@ public class CoapPhysicalAdapter extends ConfigurablePhysicalAdapter<CoapPhysica
         }
 
         for (DiscoveredResource dr : discoveredResources) {
-            if (dr.uri() != null && !dr.uri().isBlank()) {
-                String uri = dr.uri().substring(dr.uri().indexOf('/'));
+            if (dr.uri() == null || dr.uri().isBlank()) {
+                continue;
+            }
 
-                String wldtKey;
+            String uri = dr.uri().substring(dr.uri().indexOf('/'));
 
-                if (dr.resourceType() != null && !dr.resourceType().isBlank()) {
-                    wldtKey = String.format("%s.%s", dr.resourceType(), uri);
-                } else {
-                    wldtKey = uri;
-                }
-                wldtKey = wldtKey.replaceAll("[^a-zA-Z0-9.]", "");
-                // Replaces each non-alphanumeric character different from '.'
+            String wldtKey = (dr.resourceType() == null || dr.resourceType().isBlank()) ?
+                    uri :
+                    String.format("%s.%s", dr.resourceType(), uri);
 
-                DigitalTwinCoapResourceDescriptor resource = null;
+            // Replaces each non-alphanumeric character different from '.' with ''
+            wldtKey = wldtKey.replaceAll("[^a-zA-Z0-9.]", "");
 
-                logger.info("CoAP Physical Adapter - Resource discovery found resource {}", wldtKey);
+            DigitalTwinCoapResourceDescriptor resource = null;
 
-                if (dr.resourceInterface() != null && !(dr.resourceInterface() == DiscoveredResource.Interface.UNKNOWN)) {
-                    switch (dr.resourceInterface()) {
-                        case SENSOR -> {
-                            logger.info("CoAP Physical Adapter - Resource {} is a sensor", wldtKey);
-                            if (getConfiguration().getDigitalTwinEventsFlag()) {
-                                resource = new CoapSensorResourceDescriptor<>(getConfiguration().getServerConnectionString(), uri, wldtKey, getConfiguration().getDefaultPropertyBodyProducer(), getConfiguration().getDefaultEventBodyProducer());
-                            } else {
-                                resource = new CoapSensorResourceDescriptor<>(getConfiguration().getServerConnectionString(), uri, wldtKey, getConfiguration().getDefaultPropertyBodyProducer());
-                            }
-                        }
-                        case ACTUATOR -> {
-                            // TODO: How to implement actuator?
-                            if (getConfiguration().getDigitalTwinEventsFlag()) {
-                            }
-                            logger.info("CoAP Physical Adapter - Resource {} is an actuator", wldtKey);
-                        }
-                        default -> {
-                            // If not in CoRE Interfaces format resource is discarded
-                            logger.warn("CoAP Physical Adapter - Resource {} is not in CoRE Interfaces format. Discarded.", wldtKey);
-                        }
+            logger.info("CoAP Physical Adapter - Resource discovery found resource {}", wldtKey);
+
+            if (dr.resourceInterface() == null || dr.resourceInterface() == DiscoveredResource.Interface.UNKNOWN) {
+                continue;
+            }
+
+            switch (dr.resourceInterface()) {
+                case SENSOR -> {
+                    logger.info("CoAP Physical Adapter - Resource {} is a sensor", wldtKey);
+                    if (getConfiguration().getDigitalTwinEventsFlag()) {
+                        resource = new CoapSensorResourceDescriptor<>(getConfiguration().getServerConnectionString(), uri, wldtKey, getConfiguration().getDefaultPropertyBodyProducer(), getConfiguration().getDefaultEventBodyProducer());
+                    } else {
+                        resource = new CoapSensorResourceDescriptor<>(getConfiguration().getServerConnectionString(), uri, wldtKey, getConfiguration().getDefaultPropertyBodyProducer());
                     }
-
                 }
-
-                if (resource != null) {
-                    resource.setPreferredContentType(getConfiguration().getPreferredContentFormat());
-
-                    if (dr.observable()) {
-                        resource.startObserving();
-                    } else if (getConfiguration().getAutoUpdateFlag()){
-                        resource.setAutoUpdatePeriod(getConfiguration().getAutoUpdatePeriod());
-                        resource.startAutoUpdate();
+                case ACTUATOR -> {
+                    // TODO: How to implement actuator?
+                    if (getConfiguration().getDigitalTwinEventsFlag()) {
                     }
-
-                    getConfiguration().addResource(dr.uri(), resource);
+                    logger.info("CoAP Physical Adapter - Resource {} is an actuator", wldtKey);
+                }
+                default -> {
+                    // If not in CoRE Interfaces format resource is discarded
+                    logger.warn("CoAP Physical Adapter - Resource {} is not in CoRE Interfaces format. Discarded.", wldtKey);
                 }
             }
+
+            if (resource == null) {
+                continue;
+            }
+
+            resource.setPreferredContentType(getConfiguration().getPreferredContentFormat());
+
+            if (dr.observable()) {
+                resource.startObserving();
+            } else if (getConfiguration().getAutoUpdateFlag()){
+                resource.setAutoUpdatePeriod(getConfiguration().getAutoUpdatePeriod());
+                resource.startAutoUpdate();
+            }
+
+            getConfiguration().addResource(dr.uri(), resource);
         }
         logger.info("CoAP Physical Adapter - Ending resource discovery");
     }
@@ -180,6 +197,10 @@ public class CoapPhysicalAdapter extends ConfigurablePhysicalAdapter<CoapPhysica
                     // TODO: Set content type of published event? Could be impossible since payload can be modified with body producers in specific resource classes
                     if (e instanceof PhysicalAssetPropertyWldtEvent) {
                         publishPhysicalAssetPropertyWldtEvent((PhysicalAssetPropertyWldtEvent<?>) e);
+                    }
+                    if (e instanceof PhysicalAssetActionWldtEvent) {
+                        // TODO: Manage if physical asset action
+
                     }
                 }catch (EventBusException ex) {
                     ex.printStackTrace();
@@ -200,8 +221,6 @@ public class CoapPhysicalAdapter extends ConfigurablePhysicalAdapter<CoapPhysica
                 }
             });
         });
-
-        // TODO: Since actuators can have a GET method and theoretically could be observable, what if event is action event?
 
         logger.info("CoAP Physical Adapter - Ending resource {} payload management", resource.getResourceUri());
     }
