@@ -2,7 +2,10 @@ package it.wldt.adapter.coap.physical;
 
 import it.wldt.adapter.coap.physical.discovery.ResourceDiscoveryFunction;
 import it.wldt.adapter.coap.physical.exception.CoapPhysicalAdapterConfigurationException;
-import it.wldt.adapter.coap.physical.resource.asset.DigitalTwinCoapResourceDescriptor;
+import it.wldt.adapter.coap.physical.resource.asset.DigitalTwinCoapResource;
+import it.wldt.adapter.coap.physical.resource.asset.functions.body.ActionBodyConsumer;
+import it.wldt.adapter.coap.physical.resource.asset.functions.body.EventBodyProducer;
+import it.wldt.adapter.coap.physical.resource.asset.functions.body.PropertyBodyProducer;
 import it.wldt.adapter.physical.PhysicalAssetAction;
 import it.wldt.adapter.physical.PhysicalAssetDescription;
 import it.wldt.adapter.physical.PhysicalAssetEvent;
@@ -27,13 +30,13 @@ public class CoapPhysicalAdapterConfiguration {
     private ResourceDiscoveryFunction resourceDiscoveryFunction;
 
 
-    private Function<byte[], ?> defaultPropertyBodyProducer;
-    private Function<byte[], ?> defaultActionBodyProducer;
-    private Function<String, ?> defaultEventBodyProducer;
+    private PropertyBodyProducer<?> defaultPropertyBodyProducer;
+    private ActionBodyConsumer<?> defaultActionBodyConsumer;
+    private EventBodyProducer<?> defaultEventBodyProducer;
 
     private PhysicalAssetDescription physicalAssetDescription;
 
-    private final Map<String, DigitalTwinCoapResourceDescriptor> resources = new HashMap<>();
+    private final Map<String, DigitalTwinCoapResource> resources = new HashMap<>();
 
     protected CoapPhysicalAdapterConfiguration(String serverAddress, int serverPort) {
         this.serverAddress = serverAddress;
@@ -72,17 +75,17 @@ public class CoapPhysicalAdapterConfiguration {
         return autoUpdatePeriod;
     }
 
-    public Function<byte[], ?> getDefaultPropertyBodyProducer() {
+    public PropertyBodyProducer<?> getDefaultPropertyBodyProducer() {
         return defaultPropertyBodyProducer;
     }
-    public Function<byte[], ?> getDefaultActionBodyProducer() {
-        return defaultActionBodyProducer;
+    public ActionBodyConsumer<?> getDefaultActionBodyConsumer() {
+        return defaultActionBodyConsumer;
     }
-    public Function<String, ?> getDefaultEventBodyProducer() {
+    public EventBodyProducer<?> getDefaultEventBodyProducer() {
         return defaultEventBodyProducer;
     }
 
-    public Map<String, DigitalTwinCoapResourceDescriptor> getResources() {
+    public Map<String, DigitalTwinCoapResource> getResources() {
         return resources;
     }
 
@@ -122,15 +125,15 @@ public class CoapPhysicalAdapterConfiguration {
         this.preferredContentFormat = preferredContentFormat;
     }
 
-    protected void setDefaultPropertyBodyProducer(Function<byte[], ?> defaultPropertyBodyProducer) {
+    protected void setDefaultPropertyBodyProducer(PropertyBodyProducer<?> defaultPropertyBodyProducer) {
         this.defaultPropertyBodyProducer = defaultPropertyBodyProducer;
     }
 
-    protected void setDefaultActionBodyProducer(Function<byte[], ?> defaultActionBodyProducer) {
-        this.defaultActionBodyProducer = defaultActionBodyProducer;
+    protected void setDefaultActionBodyConsumer(ActionBodyConsumer<?> defaultActionBodyConsumer) {
+        this.defaultActionBodyConsumer = defaultActionBodyConsumer;
     }
 
-    protected void setDefaultEventBodyProducer(Function<String, ?> defaultEventBodyProducer) {
+    protected void setDefaultEventBodyProducer(EventBodyProducer<?> defaultEventBodyProducer) {
         this.defaultEventBodyProducer = defaultEventBodyProducer;
     }
 
@@ -140,7 +143,7 @@ public class CoapPhysicalAdapterConfiguration {
         this.physicalAssetDescription = new PhysicalAssetDescription(actions, properties, events);
     }
 
-    protected boolean addResource (String uri, DigitalTwinCoapResourceDescriptor resource) {
+    protected boolean addResource (String uri, DigitalTwinCoapResource resource) {
         if (!resources.containsKey(uri)) {
             resources.put(uri, resource);
 

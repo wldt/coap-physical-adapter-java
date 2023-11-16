@@ -16,8 +16,42 @@ public record DiscoveredResource (String uri, String resourceType, Interface res
      *
      */
     public enum Interface {
+        /*
+        From Iana CoRE parameters:
+        https://www.iana.org/assignments/core-parameters/core-parameters.xhtml#if-link-target-att-value
+
+            +----------------------------+----------------+------------+
+            |                      Range |	 Registration | Procedures |
+            +----------------------------+----------------+------------+
+            |   value starts with "core" |	  IETF Review |            |
+            |           all other values |	Specification |   Required |
+            +----------------------------+----------------+------------+
+
+        From IETF CoRE Interfaces:
+        https://datatracker.ietf.org/doc/html/draft-ietf-core-interfaces-01
+
+            +-------------------+----------+------------------------------------+
+            |         Interface | if=      | Methods                            |
+            +-------------------+----------+------------------------------------+
+            |         Link List | core.ll  | GET                                |
+            |             Batch | core.b   | GET, PUT, POST (where applicable)  |
+            |      Linked Batch | core.lb  | GET, PUT, POST, DELETE (where      |
+            |                   |          | applicable)                        |
+            |            Sensor | core.s   | GET                                | *
+            |         Parameter | core.p   | GET, PUT                           | *
+            |         Read-only | core.rp  | GET                                | *
+            |         Parameter |          |                                    |
+            |          Actuator | core.a   | GET, PUT, POST                     | *
+            |           Binding | core.bnd | GET, POST, DELETE                  |
+            +-------------------+----------+------------------------------------+
+
+        * The ones we are interested in
+         */
+
         SENSOR("core.s"),
         ACTUATOR("core.a"),
+        PARAMETER("core.p"),
+        READ_ONLY("core.rp"),
         UNKNOWN("");
 
         private final String value;
@@ -26,8 +60,17 @@ public record DiscoveredResource (String uri, String resourceType, Interface res
             this.value = value;
         }
 
-        public String getValueString() {
-            return value;
+        public static Interface fromString(String value) {
+            if (SENSOR.value.equals(value)) {
+                return SENSOR;
+            } else if (ACTUATOR.value.equals(value)) {
+                return ACTUATOR;
+            } else if (PARAMETER.value.equals(value)) {
+                return PARAMETER;
+            } else if (READ_ONLY.value.equals(value)) {
+                return READ_ONLY;
+            }
+            return UNKNOWN;
         }
 
         @Override

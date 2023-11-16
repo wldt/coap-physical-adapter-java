@@ -95,7 +95,7 @@ public class CoapResourceDescriptor extends ListenableResource {
 
         this.observable = true;
 
-        Request request = this.createRequest(CoAP.Code.GET);
+        Request request = this.getRequestOptionsBase(CoAP.Code.GET);
 
         request.setObserve();
 
@@ -124,6 +124,13 @@ public class CoapResourceDescriptor extends ListenableResource {
         this.observable = false;
     }
 
+    /**
+     * Sets the new auto update timer period.
+     * If the resource is already in observation mode this method does not turn off the observation, but it has to be shut down manually.
+     * Notice that after invoking this method the timer does NOT start/restart automatically, but it has to be done MANUALLY.
+     *
+     * @param period the new timer update period
+     */
     public void setAutoUpdatePeriod(long period) {
         this.autoUpdateTimerPeriod = period;
     }
@@ -153,7 +160,7 @@ public class CoapResourceDescriptor extends ListenableResource {
         this.autoUpdated = false;
     }
 
-    protected Request createRequest(CoAP.Code code) {
+    protected Request getRequestOptionsBase(CoAP.Code code) {
         Request request = new Request(code);
 
         OptionSet options = new OptionSet();
@@ -178,8 +185,13 @@ public class CoapResourceDescriptor extends ListenableResource {
         }
     }
 
+    /**
+     * Sends a CoAP GET request to the client.
+     * This method is not implemented via a {@code resource.methods} package's interface but in the resource descriptor
+     * since it's expected by each CoRE interface
+     */
     private void sendGET() {
-        Request request = this.createRequest(CoAP.Code.GET);
+        Request request = this.getRequestOptionsBase(CoAP.Code.GET);
 
         try {
             CoapResponse response = client.advanced(request);
