@@ -21,7 +21,8 @@ import java.util.TimerTask;
  * @see ListenableResource
  * @see it.wldt.adapter.coap.physical.resource.event.PayloadListener
  */
-public class CoapResourceDescriptor extends ListenableResource {
+public class CoapResourceDescriptor
+        extends ListenableResource {
     private transient Logger logger = LoggerFactory.getLogger(CoapResourceDescriptor.class);
 
     protected final CoapClient client;
@@ -37,18 +38,18 @@ public class CoapResourceDescriptor extends ListenableResource {
     protected int lastPayloadContentType = MediaTypeRegistry.TEXT_PLAIN;
     protected byte[] lastPayload = "".getBytes();
 
-    protected String lastError = "";
-    protected Boolean notifyErrors;
+    protected String lastEvent = "";
+    protected Boolean notifyEvents;
 
     private Boolean autoUpdated;
     private long autoUpdateTimerPeriod;
     private Timer autoUpdateTimer;
 
 
-    public CoapResourceDescriptor(String serverUrl, String resourceUri, boolean notifyErrors) {
+    public CoapResourceDescriptor(String serverUrl, String resourceUri, boolean notifyEvents) {
         this.serverUrl = serverUrl;
         this.resourceUri = resourceUri;
-        this.notifyErrors = notifyErrors;
+        this.notifyEvents = notifyEvents;
 
         this.client = new CoapClient(serverUrl);
     }
@@ -69,16 +70,16 @@ public class CoapResourceDescriptor extends ListenableResource {
         return lastPayloadContentType;
     }
 
-    private void setLastPayload(byte[] value, int ct) {
+    protected void setLastPayload(byte[] value, int ct) {
         this.lastPayload = value;
         this.lastPayloadContentType = ct;
         notifyPayloadListeners(value);
     }
 
-    private void setLastError(String value) {
-        this.lastError = value;
-        if (notifyErrors)
-            notifyErrorListeners(value);
+    protected void setLastEvent(String value) {
+        this.lastEvent = value;
+        if (notifyEvents)
+            notifyEventListeners(value);
     }
 
     public void setPreferredContentType(int preferredContentType) {
@@ -103,13 +104,13 @@ public class CoapResourceDescriptor extends ListenableResource {
             observeRelation = client.observe(request, new CoapHandler() {
                 @Override
                 public void onLoad(CoapResponse coapResponse) {
-                    manageResponse(coapResponse);
+                    manageGetResponse(coapResponse);
                 }
 
                 @Override
                 public void onError() {
                     logger.error("CoapResourceDescriptor - {}: observation error", getResourceUri());
-                    setLastError("Notification error");
+                    setLastEvent("Notification error");
                 }
             });
         } catch (Exception e) {
@@ -175,11 +176,11 @@ public class CoapResourceDescriptor extends ListenableResource {
         return request;
     }
 
-    private void manageResponse(CoapResponse response) {
+    private void manageGetResponse(CoapResponse response) {
         if (response == null) {
-            setLastError("Response is null");
+            setLastEvent("Response is null");
         } else if (!response.isSuccess()) {
-            setLastError("Response code: " + response.getCode());
+            setLastEvent("Response code: " + response.getCode());
         } else {
             setLastPayload(response.getPayload(), response.getOptions().getContentFormat());
         }
@@ -196,11 +197,10 @@ public class CoapResourceDescriptor extends ListenableResource {
         try {
             CoapResponse response = client.advanced(request);
 
-            manageResponse(response);
+            manageGetResponse(response);
         } catch (ConnectorException | IOException e) {
+            setLastEvent(e.toString());
             e.printStackTrace();
         }
     }
-
-    // TODO: Add POST, PUT, DELETE for actuators
 }

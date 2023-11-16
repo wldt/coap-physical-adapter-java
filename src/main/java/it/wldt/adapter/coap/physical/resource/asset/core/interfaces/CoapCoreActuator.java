@@ -1,6 +1,5 @@
 package it.wldt.adapter.coap.physical.resource.asset.core.interfaces;
 
-import it.wldt.adapter.coap.physical.resource.CoapResourceDescriptor;
 import it.wldt.adapter.coap.physical.resource.asset.DigitalTwinCoapActionResource;
 import it.wldt.adapter.coap.physical.resource.asset.functions.body.ActionBodyConsumer;
 import it.wldt.adapter.coap.physical.resource.asset.functions.body.EventBodyProducer;
@@ -10,14 +9,19 @@ import it.wldt.adapter.coap.physical.resource.methods.CoapPutMethod;
 import it.wldt.adapter.physical.event.PhysicalAssetEventWldtEvent;
 import it.wldt.adapter.physical.event.PhysicalAssetPropertyWldtEvent;
 import it.wldt.exception.EventBusException;
+import org.eclipse.californium.core.CoapResponse;
+import org.eclipse.californium.core.coap.CoAP;
 import org.eclipse.californium.core.coap.MediaTypeRegistry;
+import org.eclipse.californium.core.coap.Request;
+import org.eclipse.californium.elements.exception.ConnectorException;
 
+import java.io.IOException;
 import java.util.Collections;
-import java.util.function.Function;
 
 public class CoapCoreActuator <P, E, A>
         extends DigitalTwinCoapActionResource
         implements CoapPostMethod, CoapPutMethod {
+    // TODO: Custom POST and PUT methods
 
     public CoapCoreActuator(String serverUrl, String relativeUri, String propertyKey, PropertyBodyProducer<P> propertyBodyProducer, ActionBodyConsumer<A> actionBodyConsumer) {
         super(serverUrl, relativeUri, (payload, ct) -> {
@@ -74,12 +78,62 @@ public class CoapCoreActuator <P, E, A>
     }
 
     @Override
-    public void sendPOST() {
-        // TODO
+    public void sendPOST(byte[] payload, String ct) {
+        // TODO: Custom POST function
+
+        if (payload != null && payload.length > 0) {
+            setLastEvent("Body not supported for default POST operations");
+            return;
+        }
+
+        Request request = getRequestOptionsBase(CoAP.Code.POST);
+
+        try {
+            CoapResponse response = client.advanced(request);
+
+            if (response == null) {
+                setLastEvent("Response is null");
+            } else if (!response.isSuccess()) {
+                setLastEvent("Response code: " + response.getCode());
+            } else if (response.getPayload() != null && response.getPayload().length > 0) {
+                setLastEvent(new String(response.getPayload()));
+            } else {
+                setLastEvent("Response code: " + response.getCode());
+            }
+        } catch (ConnectorException | IOException e) {
+            setLastEvent(e.toString());
+            e.printStackTrace();
+        }
     }
 
     @Override
-    public void sendPUT(byte[] payload) {
-        // TODO
+    public void sendPUT(byte[] payload, String ct) {
+        // TODO: Custom PUT
+
+        if (payload == null || payload.length < 1) {
+            setLastEvent("Body is necessary for default PUT operations");
+            return;
+        }
+
+        Request request = getRequestOptionsBase(CoAP.Code.PUT);
+        request.setPayload(payload);
+        request.getOptions().setContentFormat(MediaTypeRegistry.parse(ct));
+
+        try {
+            CoapResponse response = client.advanced(request);
+
+            if (response == null) {
+                setLastEvent("Response is null");
+            } else if (!response.isSuccess()) {
+                setLastEvent("Response code: " + response.getCode());
+            } else if (response.getPayload() != null && response.getPayload().length > 0) {
+                setLastEvent(new String(response.getPayload()));
+            } else {
+                setLastEvent("Response code: " + response.getCode());
+            }
+        } catch (ConnectorException | IOException e) {
+            setLastEvent(e.toString());
+            e.printStackTrace();
+        }
     }
 }

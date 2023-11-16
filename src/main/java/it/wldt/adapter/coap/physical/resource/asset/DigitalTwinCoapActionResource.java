@@ -18,7 +18,7 @@ public class DigitalTwinCoapActionResource extends DigitalTwinCoapResource {
         this.coapWldtActionFunction = coapWldtActionFunction;
     }
 
-    public byte[] applyPayloadFunction(PhysicalAssetActionWldtEvent<?> actionWldtEvent) {
+    public byte[] applyActionFunction(PhysicalAssetActionWldtEvent<?> actionWldtEvent) {
         return coapWldtActionFunction.apply(actionWldtEvent);
     }
 

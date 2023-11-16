@@ -11,11 +11,11 @@ import java.util.Set;
  */
 public abstract class ListenableResource {
     protected Set<PayloadListener> payloadListeners;
-    protected Set<ErrorListener> errorListeners;
+    protected Set<EventListener> eventListeners;
 
     public ListenableResource() {
         this.payloadListeners = new HashSet<>();
-        this.errorListeners = new HashSet<>();
+        this.eventListeners = new HashSet<>();
     }
 
     public ListenableResource(boolean listenErrorsFlag) {
@@ -36,17 +36,17 @@ public abstract class ListenableResource {
         }
     }
 
-    public void addErrorListener(ErrorListener listener) {
-        this.errorListeners.add(listener);
+    public void addEventListener(EventListener listener) {
+        this.eventListeners.add(listener);
     }
 
-    public void removeErrorListener(ErrorListener listener) {
-        errorListeners.remove(listener);
+    public void removeEventListener(EventListener listener) {
+        eventListeners.remove(listener);
     }
 
-    protected void notifyErrorListeners(String message) {
-        for (ErrorListener listener : this.errorListeners) {
-            listener.onError(message);
+    protected void notifyEventListeners(String message) {
+        for (EventListener listener : this.eventListeners) {
+            listener.onEvent(message);
         }
     }
 }

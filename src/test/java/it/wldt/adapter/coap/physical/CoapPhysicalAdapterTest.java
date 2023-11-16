@@ -1,6 +1,7 @@
 package it.wldt.adapter.coap.physical;
 
 import it.wldt.adapter.coap.physical.exception.CoapPhysicalAdapterConfigurationException;
+import it.wldt.adapter.coap.physical.resource.asset.functions.body.ActionBodyConsumer;
 import it.wldt.adapter.coap.physical.resource.asset.functions.body.EventBodyProducer;
 import it.wldt.adapter.coap.physical.resource.asset.functions.body.PropertyBodyProducer;
 import it.wldt.adapter.coap.physical.utils.CoapTestShadowingFunction;
@@ -11,6 +12,9 @@ import it.wldt.exception.ModelException;
 import it.wldt.exception.WldtConfigurationException;
 import it.wldt.exception.WldtRuntimeException;
 import org.eclipse.californium.core.coap.MediaTypeRegistry;
+
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class CoapPhysicalAdapterTest {
     public static void main(String[] args) throws ModelException, WldtRuntimeException, EventBusException, WldtConfigurationException, CoapPhysicalAdapterConfigurationException, InterruptedException {
@@ -30,15 +34,22 @@ public class CoapPhysicalAdapterTest {
                 .setPreferredContentFormat(MediaTypeRegistry.APPLICATION_SENML_JSON)
                 .setDefaultPropertyBodyProducer(new PropertyBodyProducer<>(String::new))
                 .setDefaultEventBodyProducer(new EventBodyProducer<>(String::new))
-                //.setDigitalTwinEventsFlag(true)
+                .setDigitalTwinEventsFlag(true)
                 .build();
 
+        CoapPhysicalAdapter physicalAdapter = new CoapPhysicalAdapter("coap-test-physical-adapter", configuration);
 
-
-        // configuration.addResource(new PropertyCoapResourceDescriptor<>(configuration.getServerConnectionString(), "temperature", configuration.getAutoUpdatePeriod(), "wldt.test.property.temperature", String::new));
-
-        dt.addPhysicalAdapter(new CoapPhysicalAdapter("coap-test-physical-adapter", configuration));
+        dt.addPhysicalAdapter(physicalAdapter);
 
         dt.startLifeCycle();
+
+        Timer timer = new Timer();
+
+        timer.schedule(new TimerTask() {
+                           @Override
+                           public void run() {
+                               digitalAdapter.invokeAction("change temperature-actuator", "", "text/plain");
+                           }
+                       }, 2000, 10000);
     }
 }

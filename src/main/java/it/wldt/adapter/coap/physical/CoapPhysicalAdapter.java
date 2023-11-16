@@ -1,11 +1,14 @@
 package it.wldt.adapter.coap.physical;
 
 import it.wldt.adapter.coap.physical.discovery.DiscoveredResource;
+import it.wldt.adapter.coap.physical.resource.CoapResourceDescriptor;
 import it.wldt.adapter.coap.physical.resource.asset.DigitalTwinCoapResource;
 import it.wldt.adapter.coap.physical.resource.asset.core.interfaces.CoapCoreActuator;
 import it.wldt.adapter.coap.physical.resource.asset.core.interfaces.CoapCoreParameter;
 import it.wldt.adapter.coap.physical.resource.asset.core.interfaces.CoapCoreReadOnly;
 import it.wldt.adapter.coap.physical.resource.asset.core.interfaces.CoapCoreSensor;
+import it.wldt.adapter.coap.physical.resource.methods.CoapPostMethod;
+import it.wldt.adapter.coap.physical.resource.methods.CoapPutMethod;
 import it.wldt.adapter.physical.ConfigurablePhysicalAdapter;
 import it.wldt.adapter.physical.event.PhysicalAssetActionWldtEvent;
 import it.wldt.adapter.physical.event.PhysicalAssetEventWldtEvent;
@@ -37,28 +40,66 @@ import java.util.Set;
 public class CoapPhysicalAdapter extends ConfigurablePhysicalAdapter<CoapPhysicalAdapterConfiguration> {
     private static final Logger logger = LoggerFactory.getLogger(CoapPhysicalAdapter.class);
 
+    public static final String INCOMING_ACTION_POST_KEY = "change";
+    public static final String INCOMING_ACTION_PUT_KEY = "update";
+
     public CoapPhysicalAdapter(String id, CoapPhysicalAdapterConfiguration configuration) {
         super(id, configuration);
     }
 
     @Override
     public void onIncomingPhysicalAction(PhysicalAssetActionWldtEvent<?> physicalAssetActionWldtEvent) {
-        // TODO: Manage incoming physical action
-        // TODO: How to differentiate between different request methods?
-        logger.info("CoAP Physical Adapter - Incoming physical action");
+        // TODO: Check why it's not entering the function
+        logger.info("CoAP Physical Adapter - Incoming physical action: {}", physicalAssetActionWldtEvent);
 
-        String id = physicalAssetActionWldtEvent.getId();
-        String key = physicalAssetActionWldtEvent.getActionKey();
+        String[] splittedActionKey = physicalAssetActionWldtEvent.getActionKey().split(" ");
         String ct = physicalAssetActionWldtEvent.getContentType();
-        String resource = physicalAssetActionWldtEvent.getId();
-        long timestamp = physicalAssetActionWldtEvent.getCreationTimestamp();
+
+        String method = splittedActionKey[0];
+        CoapResourceDescriptor resource = getConfiguration().getResources().get(splittedActionKey[1]);
+
+        if (resource == null) {
+            logger.error("CoAP Physical Adapter - Incoming action directed to unregistered resource: {}", physicalAssetActionWldtEvent);
+
+            System.out.println("Unregistered resource: " + splittedActionKey[1]);
+            return;
+        }
+
+        byte[] body;
 
         if (physicalAssetActionWldtEvent.getBody() instanceof String) {
-            String body = (String) physicalAssetActionWldtEvent.getBody();
+            body = ((String) physicalAssetActionWldtEvent.getBody()).getBytes();
         } else if (physicalAssetActionWldtEvent.getBody() instanceof byte[]) {
-            byte[] body = (byte[]) physicalAssetActionWldtEvent.getBody();
+            body = (byte[]) physicalAssetActionWldtEvent.getBody();
         } else {
-            logger.error("CoAP Physical Adapter - Received incoming action with unsupported body type");
+            logger.error("CoAP Physical Adapter - Incoming action has unsupported body type: {}", physicalAssetActionWldtEvent);
+
+            System.out.println("Unsupported body type: " + physicalAssetActionWldtEvent.getBody());
+            return;
+        }
+
+        switch (method) {
+            case INCOMING_ACTION_POST_KEY -> {
+                if (resource instanceof CoapPostMethod) {
+                    ((CoapPostMethod) resource).sendPOST(body, ct);
+                } else {
+                    System.out.println("POST unsupported");
+                    logger.error("CoAP Physical Adapter - Incoming action method is not supported by resource: {}", physicalAssetActionWldtEvent);
+                }
+            }
+            case INCOMING_ACTION_PUT_KEY -> {
+                if (resource instanceof CoapPutMethod) {
+                    ((CoapPutMethod) resource).sendPUT(body, ct);
+                }
+                else {
+                    System.out.println("PUT unsupported");
+                    logger.error("CoAP Physical Adapter - Incoming action method is not supported by resource: {}", physicalAssetActionWldtEvent);
+                }
+            }
+            default -> {
+                System.out.println("Method unsupported: " + method);
+                logger.error("CoAP Physical Adapter - Incoming action has unsupported key method: {}", physicalAssetActionWldtEvent);
+            }
         }
     }
 
@@ -222,7 +263,7 @@ public class CoapPhysicalAdapter extends ConfigurablePhysicalAdapter<CoapPhysica
     private void manageResourcePayload(DigitalTwinCoapResource resource) {
         logger.info("CoAP Physical Adapter - Starting resource {} payload management", resource.getResourceUri());
         resource.addPayloadListener(value -> {
-            List<? extends WldtEvent<?>> wldtEvents = resource.applyPayloadFunction(value);
+            List<? extends WldtEvent<?>> wldtEvents = resource.applyPropertyFunction(value);
 
             wldtEvents.forEach(e -> {
                 try {
@@ -240,7 +281,7 @@ public class CoapPhysicalAdapter extends ConfigurablePhysicalAdapter<CoapPhysica
             });
         });
 
-        resource.addErrorListener(message -> {
+        resource.addEventListener(message -> {
             List<? extends WldtEvent<?>> wldtEvents = resource.applyEventFunction(message);
 
             wldtEvents.forEach(e -> {

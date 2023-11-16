@@ -2,10 +2,7 @@ package it.wldt.adapter.coap.physical.utils;
 
 import it.wldt.adapter.digital.event.DigitalActionWldtEvent;
 import it.wldt.adapter.physical.PhysicalAssetDescription;
-import it.wldt.adapter.physical.event.PhysicalAssetEventWldtEvent;
-import it.wldt.adapter.physical.event.PhysicalAssetPropertyWldtEvent;
-import it.wldt.adapter.physical.event.PhysicalAssetRelationshipInstanceCreatedWldtEvent;
-import it.wldt.adapter.physical.event.PhysicalAssetRelationshipInstanceDeletedWldtEvent;
+import it.wldt.adapter.physical.event.*;
 import it.wldt.core.model.ShadowingModelFunction;
 import it.wldt.core.state.DigitalTwinStateAction;
 import it.wldt.core.state.DigitalTwinStateEvent;

@@ -1,6 +1,8 @@
 package it.wldt.adapter.coap.physical.server;
 
+import it.wldt.adapter.coap.physical.server.model.TemperatureActuator;
 import it.wldt.adapter.coap.physical.server.model.TemperatureSensor;
+import it.wldt.adapter.coap.physical.server.resource.TemperatureActuatorResource;
 import it.wldt.adapter.coap.physical.server.resource.TemperatureSensorResource;
 import org.eclipse.californium.core.CoapServer;
 import org.eclipse.californium.core.server.resources.Resource;
@@ -14,6 +16,7 @@ public class CoapTestServer extends CoapServer {
         super(SERVER_PORT);
 
         this.add(new TemperatureSensorResource(DEVICE_ID, "temperature-sensor", new TemperatureSensor()));
+        this.add(new TemperatureActuatorResource(DEVICE_ID, "temperature-actuator", new TemperatureActuator()));
     }
 
     private static void logResource(Resource resource) {

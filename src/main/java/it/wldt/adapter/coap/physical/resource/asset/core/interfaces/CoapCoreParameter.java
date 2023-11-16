@@ -8,10 +8,14 @@ import it.wldt.adapter.coap.physical.resource.methods.CoapPutMethod;
 import it.wldt.adapter.physical.event.PhysicalAssetEventWldtEvent;
 import it.wldt.adapter.physical.event.PhysicalAssetPropertyWldtEvent;
 import it.wldt.exception.EventBusException;
+import org.eclipse.californium.core.CoapResponse;
+import org.eclipse.californium.core.coap.CoAP;
 import org.eclipse.californium.core.coap.MediaTypeRegistry;
+import org.eclipse.californium.core.coap.Request;
+import org.eclipse.californium.elements.exception.ConnectorException;
 
+import java.io.IOException;
 import java.util.Collections;
-import java.util.function.Function;
 
 /**
  *
@@ -22,6 +26,8 @@ import java.util.function.Function;
 public class CoapCoreParameter <P, E, A>
         extends DigitalTwinCoapActionResource
         implements CoapPutMethod {
+    // TODO: Custom PUT method
+
     public CoapCoreParameter(String serverUrl, String relativeUri, String propertyKey, PropertyBodyProducer<P> propertyBodyProducer, ActionBodyConsumer<A> actionBodyConsumer) {
         super(serverUrl, relativeUri, (payload, ct) -> {
             try {
@@ -78,7 +84,33 @@ public class CoapCoreParameter <P, E, A>
 
 
     @Override
-    public void sendPUT(byte[] payload) {
-        // TODO
+    public void sendPUT(byte[] payload, String ct) {
+        // TODO: Custom PUT
+
+        if (payload == null || payload.length < 1) {
+            setLastEvent("Body is necessary for default PUT operations");
+            return;
+        }
+
+        Request request = getRequestOptionsBase(CoAP.Code.PUT);
+        request.setPayload(payload);
+        request.getOptions().setContentFormat(MediaTypeRegistry.parse(ct));
+
+        try {
+            CoapResponse response = client.advanced(request);
+
+            if (response == null) {
+                setLastEvent("Response is null");
+            } else if (!response.isSuccess()) {
+                setLastEvent("Response code: " + response.getCode());
+            } else if (response.getPayload() != null && response.getPayload().length > 0) {
+                setLastEvent(new String(response.getPayload()));
+            } else {
+                setLastEvent("Response code: " + response.getCode());
+            }
+        } catch (ConnectorException | IOException e) {
+            setLastEvent(e.toString());
+            e.printStackTrace();
+        }
     }
 }

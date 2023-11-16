@@ -32,7 +32,7 @@ public class DigitalTwinCoapResource extends CoapResourceDescriptor {
         this.coapWldtEventFunction = errorFunction;
     }
 
-    public List<WldtEvent<?>> applyPayloadFunction(byte[] payload) {
+    public List<WldtEvent<?>> applyPropertyFunction(byte[] payload) {
         return coapWldtPropertyFunction.apply(payload, lastPayloadContentType);
     }
 
@@ -43,11 +43,11 @@ public class DigitalTwinCoapResource extends CoapResourceDescriptor {
         return Collections.emptyList();
     }
 
-    public CoapWldtPropertyFunction getPayloadFunction() {
+    public CoapWldtPropertyFunction getPropertyFunction() {
         return coapWldtPropertyFunction;
     }
 
-    public CoapWldtEventFunction getCoapErrorFunction() {
+    public CoapWldtEventFunction getEventFunction() {
         return coapWldtEventFunction;
     }
 }

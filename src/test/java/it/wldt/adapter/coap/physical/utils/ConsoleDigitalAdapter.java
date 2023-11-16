@@ -1,6 +1,7 @@
 package it.wldt.adapter.coap.physical.utils;
 
 import it.wldt.adapter.digital.DigitalAdapter;
+import it.wldt.adapter.digital.event.DigitalActionWldtEvent;
 import it.wldt.core.state.*;
 import it.wldt.exception.EventBusException;
 import it.wldt.exception.WldtDigitalTwinStateEventException;
@@ -146,9 +147,12 @@ public class ConsoleDigitalAdapter extends DigitalAdapter<String> {
 
     }
 
-    public <T> void invokeAction(String actionKey, T body){
+    public <T> void invokeAction(String actionKey, T body, String contentType){
         try {
-            publishDigitalActionWldtEvent(actionKey, body);
+            DigitalActionWldtEvent<T> event = new DigitalActionWldtEvent<>(actionKey, body);
+            event.setContentType(contentType);
+
+            publishDigitalActionWldtEvent(event);
         } catch (EventBusException e) {
             e.printStackTrace();
         }
