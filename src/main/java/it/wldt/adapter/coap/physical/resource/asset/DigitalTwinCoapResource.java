@@ -1,0 +1,53 @@
+package it.wldt.adapter.coap.physical.resource.asset;
+
+import it.wldt.adapter.coap.physical.resource.CoapResourceDescriptor;
+import it.wldt.adapter.coap.physical.resource.asset.functions.CoapWldtEventFunction;
+import it.wldt.adapter.coap.physical.resource.asset.functions.CoapWldtPropertyFunction;
+import it.wldt.core.event.WldtEvent;
+
+import java.util.Collections;
+import java.util.List;
+
+/**
+ * Represents a CoAP resource in a WLDT Digital Twin context.
+ * It makes possible to apply a custom function to the incoming payloads.
+ *
+ * @see CoapResourceDescriptor
+ * @see CoapWldtPropertyFunction
+ * @see WldtEvent
+ */
+public class DigitalTwinCoapResource extends CoapResourceDescriptor {
+    private final CoapWldtPropertyFunction coapWldtPropertyFunction;
+    private final CoapWldtEventFunction coapWldtEventFunction;
+
+    public DigitalTwinCoapResource(String serverUrl, String relativeUri, CoapWldtPropertyFunction function) {
+        super(serverUrl, relativeUri, false);
+        this.coapWldtPropertyFunction = function;
+        this.coapWldtEventFunction = null;
+    }
+
+    public DigitalTwinCoapResource(String serverUrl, String relativeUri, CoapWldtPropertyFunction payloadFunction, CoapWldtEventFunction errorFunction) {
+        super(serverUrl, relativeUri, true);
+        this.coapWldtPropertyFunction = payloadFunction;
+        this.coapWldtEventFunction = errorFunction;
+    }
+
+    public List<WldtEvent<?>> applyPayloadFunction(byte[] payload) {
+        return coapWldtPropertyFunction.apply(payload, lastPayloadContentType);
+    }
+
+    public List<WldtEvent<?>> applyEventFunction(String message) {
+        if (this.coapWldtEventFunction != null) {
+            return coapWldtEventFunction.apply(message);
+        }
+        return Collections.emptyList();
+    }
+
+    public CoapWldtPropertyFunction getPayloadFunction() {
+        return coapWldtPropertyFunction;
+    }
+
+    public CoapWldtEventFunction getCoapErrorFunction() {
+        return coapWldtEventFunction;
+    }
+}

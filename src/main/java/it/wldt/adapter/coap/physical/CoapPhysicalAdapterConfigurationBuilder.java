@@ -2,7 +2,10 @@ package it.wldt.adapter.coap.physical;
 
 import it.wldt.adapter.coap.physical.discovery.ResourceDiscoveryFunction;
 import it.wldt.adapter.coap.physical.exception.CoapPhysicalAdapterConfigurationException;
-import it.wldt.adapter.coap.physical.resource.asset.DigitalTwinCoapResourceDescriptor;
+import it.wldt.adapter.coap.physical.resource.asset.DigitalTwinCoapResource;
+import it.wldt.adapter.coap.physical.resource.asset.functions.body.ActionBodyConsumer;
+import it.wldt.adapter.coap.physical.resource.asset.functions.body.EventBodyProducer;
+import it.wldt.adapter.coap.physical.resource.asset.functions.body.PropertyBodyProducer;
 import it.wldt.adapter.physical.PhysicalAssetAction;
 import it.wldt.adapter.physical.PhysicalAssetEvent;
 import it.wldt.adapter.physical.PhysicalAssetProperty;
@@ -59,20 +62,20 @@ public class CoapPhysicalAdapterConfigurationBuilder {
         return this;
     }
 
-    public CoapPhysicalAdapterConfigurationBuilder setDefaultPropertyBodyProducer(Function<byte[], ?> defaultPropertyBodyProducer) {
+    public CoapPhysicalAdapterConfigurationBuilder setDefaultPropertyBodyProducer(PropertyBodyProducer defaultPropertyBodyProducer) {
         this.configuration.setDefaultPropertyBodyProducer(defaultPropertyBodyProducer);
         return this;
     }
-    public CoapPhysicalAdapterConfigurationBuilder setDefaultActionBodyProducer(Function<byte[], ?> defaultActionBodyProducer) {
-        this.configuration.setDefaultActionBodyProducer(defaultActionBodyProducer);
+    public CoapPhysicalAdapterConfigurationBuilder setDefaultActionBodyConsumer(ActionBodyConsumer<?> defaultActionBodyConsumer) {
+        this.configuration.setDefaultActionBodyConsumer(defaultActionBodyConsumer);
         return this;
     }
-    public CoapPhysicalAdapterConfigurationBuilder setDefaultEventBodyProducer(Function<String, ?> defaultEventBodyProducer) {
+    public CoapPhysicalAdapterConfigurationBuilder setDefaultEventBodyProducer(EventBodyProducer<?> defaultEventBodyProducer) {
         this.configuration.setDefaultEventBodyProducer(defaultEventBodyProducer);
         return this;
     }
 
-    public CoapPhysicalAdapterConfigurationBuilder addCoapResource(String uri, DigitalTwinCoapResourceDescriptor resource) {
+    public CoapPhysicalAdapterConfigurationBuilder addCoapResource(String uri, DigitalTwinCoapResource resource) {
         this.configuration.addResource(uri, resource);
 
         return this;
@@ -84,13 +87,13 @@ public class CoapPhysicalAdapterConfigurationBuilder {
         }
 
         if (this.configuration.getResourceDiscoveryFlag() && this.configuration.getDefaultPropertyBodyProducer() == null) {
-            this.configuration.setDefaultPropertyBodyProducer(Function.identity());
+            this.configuration.setDefaultPropertyBodyProducer(new PropertyBodyProducer<>(Function.identity()));
         }
-        if (this.configuration.getResourceDiscoveryFlag() && this.configuration.getDefaultActionBodyProducer() == null) {
-            this.configuration.setDefaultActionBodyProducer(Function.identity());
+        if (this.configuration.getResourceDiscoveryFlag() && this.configuration.getDefaultActionBodyConsumer() == null) {
+            this.configuration.setDefaultActionBodyConsumer(new ActionBodyConsumer<>(Function.identity()));
         }
         if (this.configuration.getResourceDiscoveryFlag() && this.configuration.getDefaultEventBodyProducer() == null) {
-            this.configuration.setDefaultEventBodyProducer(Function.identity());
+            this.configuration.setDefaultEventBodyProducer(new EventBodyProducer<>(Function.identity()));
         }
 
         this.configuration.setPhysicalAssetDescription(this.actions, this.properties, this.events);

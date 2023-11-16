@@ -1,6 +1,8 @@
 package it.wldt.adapter.coap.physical;
 
 import it.wldt.adapter.coap.physical.exception.CoapPhysicalAdapterConfigurationException;
+import it.wldt.adapter.coap.physical.resource.asset.functions.body.EventBodyProducer;
+import it.wldt.adapter.coap.physical.resource.asset.functions.body.PropertyBodyProducer;
 import it.wldt.adapter.coap.physical.utils.CoapTestShadowingFunction;
 import it.wldt.adapter.coap.physical.utils.ConsoleDigitalAdapter;
 import it.wldt.core.engine.WldtEngine;
@@ -26,11 +28,12 @@ public class CoapPhysicalAdapterTest {
                 .setAutoUpdatePeriod(5000)
                 .setResourceDiscoveryFlag(true)
                 .setPreferredContentFormat(MediaTypeRegistry.APPLICATION_SENML_JSON)
-                .setDefaultPropertyBodyProducer(String::new)
-                .setDefaultActionBodyProducer(String::new)
-                .setDefaultEventBodyProducer(String::new)
+                .setDefaultPropertyBodyProducer(new PropertyBodyProducer<>(String::new))
+                .setDefaultEventBodyProducer(new EventBodyProducer<>(String::new))
                 //.setDigitalTwinEventsFlag(true)
                 .build();
+
+
 
         // configuration.addResource(new PropertyCoapResourceDescriptor<>(configuration.getServerConnectionString(), "temperature", configuration.getAutoUpdatePeriod(), "wldt.test.property.temperature", String::new));
 
