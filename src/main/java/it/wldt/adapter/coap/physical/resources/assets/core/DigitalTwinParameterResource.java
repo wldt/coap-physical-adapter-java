@@ -1,10 +1,9 @@
-package it.wldt.adapter.coap.physical.resources.assets.core.interfaces;
+package it.wldt.adapter.coap.physical.resources.assets.core;
 
-import it.wldt.adapter.coap.physical.resources.assets.DigitalTwinCoapActionResource;
+import it.wldt.adapter.coap.physical.resources.assets.DigitalTwinActionResource;
 import it.wldt.adapter.coap.physical.resources.assets.functions.body.ActionBodyConsumer;
 import it.wldt.adapter.coap.physical.resources.assets.functions.body.EventBodyProducer;
 import it.wldt.adapter.coap.physical.resources.assets.functions.body.PropertyBodyProducer;
-import it.wldt.adapter.coap.physical.resources.methods.CoapPostMethod;
 import it.wldt.adapter.coap.physical.resources.methods.CoapPutMethod;
 import it.wldt.adapter.physical.event.PhysicalAssetEventWldtEvent;
 import it.wldt.adapter.physical.event.PhysicalAssetPropertyWldtEvent;
@@ -18,12 +17,18 @@ import org.eclipse.californium.elements.exception.ConnectorException;
 import java.io.IOException;
 import java.util.Collections;
 
-public class CoapCoreActuator <P, E, A>
-        extends DigitalTwinCoapActionResource
-        implements CoapPostMethod, CoapPutMethod {
-    // TODO: Custom POST and PUT methods
+/**
+ *
+ * @param <P>
+ * @param <E>
+ * @param <A>
+ */
+public class DigitalTwinParameterResource<P, E, A>
+        extends DigitalTwinActionResource
+        implements CoapPutMethod {
+    // TODO: Custom PUT method
 
-    public CoapCoreActuator(String serverUrl, String relativeUri, String propertyKey, PropertyBodyProducer<P> propertyBodyProducer, ActionBodyConsumer<A> actionBodyConsumer) {
+    public DigitalTwinParameterResource(String serverUrl, String relativeUri, String propertyKey, PropertyBodyProducer<P> propertyBodyProducer, ActionBodyConsumer<A> actionBodyConsumer) {
         super(serverUrl, relativeUri, (payload, ct) -> {
             try {
                 PhysicalAssetPropertyWldtEvent<?> propertyWldtEvent = new PhysicalAssetPropertyWldtEvent<>(propertyKey, propertyBodyProducer.getProducer().apply(payload));
@@ -42,7 +47,7 @@ public class CoapCoreActuator <P, E, A>
         }, actionWldtEvent -> actionBodyConsumer.getConsumer().apply((A) actionWldtEvent.getBody()));
     }
 
-    public CoapCoreActuator(String serverUrl, String relativeUri, String propertyKey, PropertyBodyProducer<P> propertyBodyProducer, EventBodyProducer<E> eventBodyProducer, ActionBodyConsumer<A> actionBodyConsumer) {
+    public DigitalTwinParameterResource(String serverUrl, String relativeUri, String propertyKey, PropertyBodyProducer<P> propertyBodyProducer, EventBodyProducer<E> eventBodyProducer, ActionBodyConsumer<A> actionBodyConsumer) {
         super(serverUrl, relativeUri, (payload, ct) -> {
             try {
                 PhysicalAssetPropertyWldtEvent<?> propertyWldtEvent = new PhysicalAssetPropertyWldtEvent<>(propertyKey, propertyBodyProducer.getProducer().apply(payload));
@@ -77,34 +82,6 @@ public class CoapCoreActuator <P, E, A>
         }, actionWldtEvent -> actionBodyConsumer.getConsumer().apply((A) actionWldtEvent.getBody()));
     }
 
-    @Override
-    public void sendPOST(byte[] payload, String ct) {
-        // TODO: Custom POST function
-
-        if (payload != null && payload.length > 0) {
-            setLastEvent("Body not supported for default POST operations");
-            return;
-        }
-
-        Request request = getRequestOptionsBase(CoAP.Code.POST);
-
-        try {
-            CoapResponse response = client.advanced(request);
-
-            if (response == null) {
-                setLastEvent("Response is null");
-            } else if (!response.isSuccess()) {
-                setLastEvent("Response code: " + response.getCode());
-            } else if (response.getPayload() != null && response.getPayload().length > 0) {
-                setLastEvent(new String(response.getPayload()));
-            } else {
-                setLastEvent("Response code: " + response.getCode());
-            }
-        } catch (ConnectorException | IOException e) {
-            setLastEvent(e.toString());
-            e.printStackTrace();
-        }
-    }
 
     @Override
     public void sendPUT(byte[] payload, String ct) {

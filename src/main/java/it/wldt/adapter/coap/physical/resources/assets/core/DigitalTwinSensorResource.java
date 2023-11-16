@@ -1,6 +1,6 @@
-package it.wldt.adapter.coap.physical.resources.assets.core.interfaces;
+package it.wldt.adapter.coap.physical.resources.assets.core;
 
-import it.wldt.adapter.coap.physical.resources.assets.DigitalTwinCoapResource;
+import it.wldt.adapter.coap.physical.resources.assets.DigitalTwinResource;
 import it.wldt.adapter.coap.physical.resources.assets.functions.body.EventBodyProducer;
 import it.wldt.adapter.coap.physical.resources.assets.functions.body.PropertyBodyProducer;
 import it.wldt.adapter.physical.event.PhysicalAssetEventWldtEvent;
@@ -10,9 +10,9 @@ import org.eclipse.californium.core.coap.MediaTypeRegistry;
 
 import java.util.Collections;
 
-public class CoapCoreSensor <P, E>
-        extends DigitalTwinCoapResource {
-    public CoapCoreSensor(String serverUrl, String resourceUri, String propertyKey, PropertyBodyProducer<P> propertyBodyProducer) {
+public class DigitalTwinSensorResource<P, E>
+        extends DigitalTwinResource {
+    public DigitalTwinSensorResource(String serverUrl, String resourceUri, String propertyKey, PropertyBodyProducer<P> propertyBodyProducer) {
         super(serverUrl, resourceUri, (payload, ct) -> {
             try {
                 PhysicalAssetPropertyWldtEvent<?> propertyWldtEvent = new PhysicalAssetPropertyWldtEvent<>(propertyKey, propertyBodyProducer.getProducer().apply(payload));
@@ -31,7 +31,7 @@ public class CoapCoreSensor <P, E>
         });
     }
 
-    public CoapCoreSensor(String serverUrl, String resourceUri, String propertyKey, PropertyBodyProducer<P> propertyBodyProducer, EventBodyProducer<E> eventBodyProducer) {
+    public DigitalTwinSensorResource(String serverUrl, String resourceUri, String propertyKey, PropertyBodyProducer<P> propertyBodyProducer, EventBodyProducer<E> eventBodyProducer) {
         super(serverUrl, resourceUri, (payload, ct) -> {
             try {
                 PhysicalAssetPropertyWldtEvent<?> propertyWldtEvent = new PhysicalAssetPropertyWldtEvent<>(propertyKey, propertyBodyProducer.getProducer().apply(payload));

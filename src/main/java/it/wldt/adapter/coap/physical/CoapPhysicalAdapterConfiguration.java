@@ -1,8 +1,8 @@
 package it.wldt.adapter.coap.physical;
 
-import it.wldt.adapter.coap.physical.discovery.ResourceDiscoveryFunction;
+import it.wldt.adapter.coap.physical.resources.discovery.ResourceDiscoveryFunction;
 import it.wldt.adapter.coap.physical.exceptions.CoapPhysicalAdapterConfigurationException;
-import it.wldt.adapter.coap.physical.resources.assets.DigitalTwinCoapResource;
+import it.wldt.adapter.coap.physical.resources.assets.DigitalTwinResource;
 import it.wldt.adapter.coap.physical.resources.assets.functions.body.ActionBodyConsumer;
 import it.wldt.adapter.coap.physical.resources.assets.functions.body.EventBodyProducer;
 import it.wldt.adapter.coap.physical.resources.assets.functions.body.PropertyBodyProducer;
@@ -35,7 +35,7 @@ public class CoapPhysicalAdapterConfiguration {
 
     private PhysicalAssetDescription physicalAssetDescription;
 
-    private final Map<String, DigitalTwinCoapResource> resources = new HashMap<>();
+    private final Map<String, DigitalTwinResource> resources = new HashMap<>();
 
     protected CoapPhysicalAdapterConfiguration(String serverAddress, int serverPort) {
         this.serverAddress = serverAddress;
@@ -84,7 +84,7 @@ public class CoapPhysicalAdapterConfiguration {
         return defaultEventBodyProducer;
     }
 
-    public Map<String, DigitalTwinCoapResource> getResources() {
+    public Map<String, DigitalTwinResource> getResources() {
         return resources;
     }
 
@@ -142,7 +142,7 @@ public class CoapPhysicalAdapterConfiguration {
         this.physicalAssetDescription = new PhysicalAssetDescription(actions, properties, events);
     }
 
-    protected boolean addResource (String uri, DigitalTwinCoapResource resource) {
+    protected boolean addResource (String uri, DigitalTwinResource resource) {
         if (!resources.containsKey(uri)) {
             resources.put(uri, resource);
 

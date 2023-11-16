@@ -16,17 +16,17 @@ import java.util.List;
  * @see CoapWldtPropertyFunction
  * @see WldtEvent
  */
-public class DigitalTwinCoapResource extends CoapResourceDescriptor {
+public class DigitalTwinResource extends CoapResourceDescriptor {
     private final CoapWldtPropertyFunction coapWldtPropertyFunction;
     private final CoapWldtEventFunction coapWldtEventFunction;
 
-    public DigitalTwinCoapResource(String serverUrl, String relativeUri, CoapWldtPropertyFunction function) {
+    public DigitalTwinResource(String serverUrl, String relativeUri, CoapWldtPropertyFunction function) {
         super(serverUrl, relativeUri, false);
         this.coapWldtPropertyFunction = function;
         this.coapWldtEventFunction = null;
     }
 
-    public DigitalTwinCoapResource(String serverUrl, String relativeUri, CoapWldtPropertyFunction payloadFunction, CoapWldtEventFunction errorFunction) {
+    public DigitalTwinResource(String serverUrl, String relativeUri, CoapWldtPropertyFunction payloadFunction, CoapWldtEventFunction errorFunction) {
         super(serverUrl, relativeUri, true);
         this.coapWldtPropertyFunction = payloadFunction;
         this.coapWldtEventFunction = errorFunction;

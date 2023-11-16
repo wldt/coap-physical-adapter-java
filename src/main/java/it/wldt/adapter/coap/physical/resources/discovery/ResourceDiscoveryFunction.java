@@ -1,7 +1,6 @@
-package it.wldt.adapter.coap.physical.discovery;
+package it.wldt.adapter.coap.physical.resources.discovery;
 
 import org.eclipse.californium.core.CoapClient;
-import org.eclipse.californium.core.WebLink;
 
 import java.util.Set;
 

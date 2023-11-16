@@ -1,4 +1,4 @@
-package it.wldt.adapter.coap.physical.discovery;
+package it.wldt.adapter.coap.physical.resources.discovery;
 
 /**
  * A wrapper record used to represent a discovered CoAP resource.

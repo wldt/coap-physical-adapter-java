@@ -5,15 +5,15 @@ import it.wldt.adapter.coap.physical.resources.assets.functions.CoapWldtEventFun
 import it.wldt.adapter.coap.physical.resources.assets.functions.CoapWldtPropertyFunction;
 import it.wldt.adapter.physical.event.PhysicalAssetActionWldtEvent;
 
-public class DigitalTwinCoapActionResource extends DigitalTwinCoapResource {
+public class DigitalTwinActionResource extends DigitalTwinResource {
     private final CoapWldtActionFunction coapWldtActionFunction;
 
-    public DigitalTwinCoapActionResource(String serverUrl, String relativeUri, CoapWldtPropertyFunction propertyFunction, CoapWldtActionFunction coapWldtActionFunction) {
+    public DigitalTwinActionResource(String serverUrl, String relativeUri, CoapWldtPropertyFunction propertyFunction, CoapWldtActionFunction coapWldtActionFunction) {
         super(serverUrl, relativeUri, propertyFunction);
         this.coapWldtActionFunction = coapWldtActionFunction;
     }
 
-    public DigitalTwinCoapActionResource(String serverUrl, String relativeUri, CoapWldtPropertyFunction propertyFunction, CoapWldtEventFunction errorFunction, CoapWldtActionFunction coapWldtActionFunction) {
+    public DigitalTwinActionResource(String serverUrl, String relativeUri, CoapWldtPropertyFunction propertyFunction, CoapWldtEventFunction errorFunction, CoapWldtActionFunction coapWldtActionFunction) {
         super(serverUrl, relativeUri, propertyFunction, errorFunction);
         this.coapWldtActionFunction = coapWldtActionFunction;
     }

@@ -1,12 +1,12 @@
 package it.wldt.adapter.coap.physical;
 
-import it.wldt.adapter.coap.physical.discovery.DiscoveredResource;
+import it.wldt.adapter.coap.physical.resources.discovery.DiscoveredResource;
 import it.wldt.adapter.coap.physical.resources.CoapResourceDescriptor;
-import it.wldt.adapter.coap.physical.resources.assets.DigitalTwinCoapResource;
-import it.wldt.adapter.coap.physical.resources.assets.core.interfaces.CoapCoreActuator;
-import it.wldt.adapter.coap.physical.resources.assets.core.interfaces.CoapCoreParameter;
-import it.wldt.adapter.coap.physical.resources.assets.core.interfaces.CoapCoreReadOnly;
-import it.wldt.adapter.coap.physical.resources.assets.core.interfaces.CoapCoreSensor;
+import it.wldt.adapter.coap.physical.resources.assets.DigitalTwinResource;
+import it.wldt.adapter.coap.physical.resources.assets.core.DigitalTwinActuatorResource;
+import it.wldt.adapter.coap.physical.resources.assets.core.DigitalTwinParameterResource;
+import it.wldt.adapter.coap.physical.resources.assets.core.DigitalTwinReadOnlyResource;
+import it.wldt.adapter.coap.physical.resources.assets.core.DigitalTwinSensorResource;
 import it.wldt.adapter.coap.physical.resources.methods.CoapPostMethod;
 import it.wldt.adapter.coap.physical.resources.methods.CoapPutMethod;
 import it.wldt.adapter.physical.ConfigurablePhysicalAdapter;
@@ -35,7 +35,7 @@ import java.util.Set;
  *
  * @see ConfigurablePhysicalAdapter
  * @see CoapPhysicalAdapterConfiguration
- * @see DigitalTwinCoapResource
+ * @see DigitalTwinResource
  */
 public class CoapPhysicalAdapter extends ConfigurablePhysicalAdapter<CoapPhysicalAdapterConfiguration> {
     private static final Logger logger = LoggerFactory.getLogger(CoapPhysicalAdapter.class);
@@ -179,7 +179,7 @@ public class CoapPhysicalAdapter extends ConfigurablePhysicalAdapter<CoapPhysica
             // Replaces each non-alphanumeric character different from '.' with ''
             wldtKey = wldtKey.replaceAll("[^a-zA-Z0-9.]", "");
 
-            DigitalTwinCoapResource resource = null;
+            DigitalTwinResource resource = null;
 
             logger.info("CoAP Physical Adapter - Resource discovery found resource {}", wldtKey);
 
@@ -191,23 +191,23 @@ public class CoapPhysicalAdapter extends ConfigurablePhysicalAdapter<CoapPhysica
                 case SENSOR -> {
                     logger.info("CoAP Physical Adapter - Resource {} is a sensor", wldtKey);
                     if (getConfiguration().getDigitalTwinEventsFlag()) {
-                        resource = new CoapCoreSensor<>(getConfiguration().getServerConnectionString(), uri, wldtKey,
+                        resource = new DigitalTwinSensorResource<>(getConfiguration().getServerConnectionString(), uri, wldtKey,
                                 getConfiguration().getDefaultPropertyBodyProducer(),
                                 getConfiguration().getDefaultEventBodyProducer());
                     } else {
-                        resource = new CoapCoreSensor<>(getConfiguration().getServerConnectionString(), uri, wldtKey,
+                        resource = new DigitalTwinSensorResource<>(getConfiguration().getServerConnectionString(), uri, wldtKey,
                                 getConfiguration().getDefaultPropertyBodyProducer());
                     }
                 }
                 case ACTUATOR -> {
                     logger.info("CoAP Physical Adapter - Resource {} is an actuator", wldtKey);
                     if (getConfiguration().getDigitalTwinEventsFlag()) {
-                        resource = new CoapCoreActuator<>(getConfiguration().getServerConnectionString(), uri, wldtKey,
+                        resource = new DigitalTwinActuatorResource<>(getConfiguration().getServerConnectionString(), uri, wldtKey,
                                 getConfiguration().getDefaultPropertyBodyProducer(),
                                 getConfiguration().getDefaultEventBodyProducer(),
                                 getConfiguration().getDefaultActionBodyConsumer());
                     } else {
-                        resource = new CoapCoreActuator<>(getConfiguration().getServerConnectionString(), uri, wldtKey,
+                        resource = new DigitalTwinActuatorResource<>(getConfiguration().getServerConnectionString(), uri, wldtKey,
                                 getConfiguration().getDefaultPropertyBodyProducer(),
                                 getConfiguration().getDefaultActionBodyConsumer());
                     }
@@ -215,12 +215,12 @@ public class CoapPhysicalAdapter extends ConfigurablePhysicalAdapter<CoapPhysica
                 case PARAMETER -> {
                     logger.info("CoAP Physical Adapter - Resource {} is a parameter", wldtKey);
                     if (getConfiguration().getDigitalTwinEventsFlag()) {
-                        resource = new CoapCoreParameter<>(getConfiguration().getServerConnectionString(), uri, wldtKey,
+                        resource = new DigitalTwinParameterResource<>(getConfiguration().getServerConnectionString(), uri, wldtKey,
                                 getConfiguration().getDefaultPropertyBodyProducer(),
                                 getConfiguration().getDefaultEventBodyProducer(),
                                 getConfiguration().getDefaultActionBodyConsumer());
                     } else {
-                        resource = new CoapCoreActuator<>(getConfiguration().getServerConnectionString(), uri, wldtKey,
+                        resource = new DigitalTwinActuatorResource<>(getConfiguration().getServerConnectionString(), uri, wldtKey,
                                 getConfiguration().getDefaultPropertyBodyProducer(),
                                 getConfiguration().getDefaultActionBodyConsumer());
                     }
@@ -228,11 +228,11 @@ public class CoapPhysicalAdapter extends ConfigurablePhysicalAdapter<CoapPhysica
                 case READ_ONLY -> {
                     logger.info("CoAP Physical Adapter - Resource {} is a read-only", wldtKey);
                     if (getConfiguration().getDigitalTwinEventsFlag()) {
-                        resource = new CoapCoreReadOnly<>(getConfiguration().getServerConnectionString(), uri, wldtKey,
+                        resource = new DigitalTwinReadOnlyResource<>(getConfiguration().getServerConnectionString(), uri, wldtKey,
                                 getConfiguration().getDefaultPropertyBodyProducer(),
                                 getConfiguration().getDefaultEventBodyProducer());
                     } else {
-                        resource = new CoapCoreReadOnly<>(getConfiguration().getServerConnectionString(), uri, wldtKey,
+                        resource = new DigitalTwinReadOnlyResource<>(getConfiguration().getServerConnectionString(), uri, wldtKey,
                                 getConfiguration().getDefaultPropertyBodyProducer());
                     }
                 }
@@ -260,7 +260,7 @@ public class CoapPhysicalAdapter extends ConfigurablePhysicalAdapter<CoapPhysica
         logger.info("CoAP Physical Adapter - Ending resource discovery");
     }
 
-    private void manageResourcePayload(DigitalTwinCoapResource resource) {
+    private void manageResourcePayload(DigitalTwinResource resource) {
         logger.info("CoAP Physical Adapter - Starting resource {} payload management", resource.getResourceUri());
         resource.addPayloadListener(value -> {
             List<? extends WldtEvent<?>> wldtEvents = resource.applyPropertyFunction(value);

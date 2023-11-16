@@ -1,8 +1,8 @@
 package it.wldt.adapter.coap.physical;
 
-import it.wldt.adapter.coap.physical.discovery.ResourceDiscoveryFunction;
+import it.wldt.adapter.coap.physical.resources.discovery.ResourceDiscoveryFunction;
 import it.wldt.adapter.coap.physical.exceptions.CoapPhysicalAdapterConfigurationException;
-import it.wldt.adapter.coap.physical.resources.assets.DigitalTwinCoapResource;
+import it.wldt.adapter.coap.physical.resources.assets.DigitalTwinResource;
 import it.wldt.adapter.coap.physical.resources.assets.functions.body.ActionBodyConsumer;
 import it.wldt.adapter.coap.physical.resources.assets.functions.body.EventBodyProducer;
 import it.wldt.adapter.coap.physical.resources.assets.functions.body.PropertyBodyProducer;
@@ -75,7 +75,7 @@ public class CoapPhysicalAdapterConfigurationBuilder {
         return this;
     }
 
-    public CoapPhysicalAdapterConfigurationBuilder addCoapResource(String uri, DigitalTwinCoapResource resource) {
+    public CoapPhysicalAdapterConfigurationBuilder addCoapResource(String uri, DigitalTwinResource resource) {
         this.configuration.addResource(uri, resource);
 
         return this;
