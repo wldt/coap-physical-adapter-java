@@ -1,4 +1,4 @@
-package it.wldt.adapter.coap.physical.resource.event;
+package it.wldt.adapter.coap.physical.resources.events;
 
 import java.util.HashSet;
 import java.util.Set;

@@ -1,9 +1,8 @@
 package it.wldt.adapter.coap.physical;
 
-import it.wldt.adapter.coap.physical.exception.CoapPhysicalAdapterConfigurationException;
-import it.wldt.adapter.coap.physical.resource.asset.functions.body.ActionBodyConsumer;
-import it.wldt.adapter.coap.physical.resource.asset.functions.body.EventBodyProducer;
-import it.wldt.adapter.coap.physical.resource.asset.functions.body.PropertyBodyProducer;
+import it.wldt.adapter.coap.physical.exceptions.CoapPhysicalAdapterConfigurationException;
+import it.wldt.adapter.coap.physical.resources.assets.functions.body.EventBodyProducer;
+import it.wldt.adapter.coap.physical.resources.assets.functions.body.PropertyBodyProducer;
 import it.wldt.adapter.coap.physical.utils.CoapTestShadowingFunction;
 import it.wldt.adapter.coap.physical.utils.ConsoleDigitalAdapter;
 import it.wldt.core.engine.WldtEngine;

@@ -1,18 +1,17 @@
 package it.wldt.adapter.coap.physical;
 
 import it.wldt.adapter.coap.physical.discovery.ResourceDiscoveryFunction;
-import it.wldt.adapter.coap.physical.exception.CoapPhysicalAdapterConfigurationException;
-import it.wldt.adapter.coap.physical.resource.asset.DigitalTwinCoapResource;
-import it.wldt.adapter.coap.physical.resource.asset.functions.body.ActionBodyConsumer;
-import it.wldt.adapter.coap.physical.resource.asset.functions.body.EventBodyProducer;
-import it.wldt.adapter.coap.physical.resource.asset.functions.body.PropertyBodyProducer;
+import it.wldt.adapter.coap.physical.exceptions.CoapPhysicalAdapterConfigurationException;
+import it.wldt.adapter.coap.physical.resources.assets.DigitalTwinCoapResource;
+import it.wldt.adapter.coap.physical.resources.assets.functions.body.ActionBodyConsumer;
+import it.wldt.adapter.coap.physical.resources.assets.functions.body.EventBodyProducer;
+import it.wldt.adapter.coap.physical.resources.assets.functions.body.PropertyBodyProducer;
 import it.wldt.adapter.physical.PhysicalAssetAction;
 import it.wldt.adapter.physical.PhysicalAssetDescription;
 import it.wldt.adapter.physical.PhysicalAssetEvent;
 import it.wldt.adapter.physical.PhysicalAssetProperty;
 
 import java.util.*;
-import java.util.function.Function;
 
 public class CoapPhysicalAdapterConfiguration {
     private final String serverAddress;

@@ -1,14 +1,14 @@
 package it.wldt.adapter.coap.physical;
 
 import it.wldt.adapter.coap.physical.discovery.DiscoveredResource;
-import it.wldt.adapter.coap.physical.resource.CoapResourceDescriptor;
-import it.wldt.adapter.coap.physical.resource.asset.DigitalTwinCoapResource;
-import it.wldt.adapter.coap.physical.resource.asset.core.interfaces.CoapCoreActuator;
-import it.wldt.adapter.coap.physical.resource.asset.core.interfaces.CoapCoreParameter;
-import it.wldt.adapter.coap.physical.resource.asset.core.interfaces.CoapCoreReadOnly;
-import it.wldt.adapter.coap.physical.resource.asset.core.interfaces.CoapCoreSensor;
-import it.wldt.adapter.coap.physical.resource.methods.CoapPostMethod;
-import it.wldt.adapter.coap.physical.resource.methods.CoapPutMethod;
+import it.wldt.adapter.coap.physical.resources.CoapResourceDescriptor;
+import it.wldt.adapter.coap.physical.resources.assets.DigitalTwinCoapResource;
+import it.wldt.adapter.coap.physical.resources.assets.core.interfaces.CoapCoreActuator;
+import it.wldt.adapter.coap.physical.resources.assets.core.interfaces.CoapCoreParameter;
+import it.wldt.adapter.coap.physical.resources.assets.core.interfaces.CoapCoreReadOnly;
+import it.wldt.adapter.coap.physical.resources.assets.core.interfaces.CoapCoreSensor;
+import it.wldt.adapter.coap.physical.resources.methods.CoapPostMethod;
+import it.wldt.adapter.coap.physical.resources.methods.CoapPutMethod;
 import it.wldt.adapter.physical.ConfigurablePhysicalAdapter;
 import it.wldt.adapter.physical.event.PhysicalAssetActionWldtEvent;
 import it.wldt.adapter.physical.event.PhysicalAssetEventWldtEvent;

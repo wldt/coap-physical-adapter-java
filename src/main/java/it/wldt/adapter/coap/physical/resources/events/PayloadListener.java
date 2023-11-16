@@ -1,4 +1,4 @@
-package it.wldt.adapter.coap.physical.resource.event;
+package it.wldt.adapter.coap.physical.resources.events;
 
 /**
  * Represents a listener whose callback function gets called whenever the listened resource's payload gets changed.

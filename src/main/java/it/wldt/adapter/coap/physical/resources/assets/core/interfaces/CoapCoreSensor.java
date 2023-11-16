@@ -1,15 +1,14 @@
-package it.wldt.adapter.coap.physical.resource.asset.core.interfaces;
+package it.wldt.adapter.coap.physical.resources.assets.core.interfaces;
 
-import it.wldt.adapter.coap.physical.resource.asset.DigitalTwinCoapResource;
-import it.wldt.adapter.coap.physical.resource.asset.functions.body.EventBodyProducer;
-import it.wldt.adapter.coap.physical.resource.asset.functions.body.PropertyBodyProducer;
+import it.wldt.adapter.coap.physical.resources.assets.DigitalTwinCoapResource;
+import it.wldt.adapter.coap.physical.resources.assets.functions.body.EventBodyProducer;
+import it.wldt.adapter.coap.physical.resources.assets.functions.body.PropertyBodyProducer;
 import it.wldt.adapter.physical.event.PhysicalAssetEventWldtEvent;
 import it.wldt.adapter.physical.event.PhysicalAssetPropertyWldtEvent;
 import it.wldt.exception.EventBusException;
 import org.eclipse.californium.core.coap.MediaTypeRegistry;
 
 import java.util.Collections;
-import java.util.function.Function;
 
 public class CoapCoreSensor <P, E>
         extends DigitalTwinCoapResource {

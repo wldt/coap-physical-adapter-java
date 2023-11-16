@@ -1,6 +1,6 @@
-package it.wldt.adapter.coap.physical.resource;
+package it.wldt.adapter.coap.physical.resources;
 
-import it.wldt.adapter.coap.physical.resource.event.ListenableResource;
+import it.wldt.adapter.coap.physical.resources.events.ListenableResource;
 import org.eclipse.californium.core.*;
 import org.eclipse.californium.core.coap.CoAP;
 import org.eclipse.californium.core.coap.MediaTypeRegistry;
@@ -19,7 +19,7 @@ import java.util.TimerTask;
  * Payload changes can be listened via the use of a {@code PayloadListener} implementation.
  *
  * @see ListenableResource
- * @see it.wldt.adapter.coap.physical.resource.event.PayloadListener
+ * @see it.wldt.adapter.coap.physical.resources.events.PayloadListener
  */
 public class CoapResourceDescriptor
         extends ListenableResource {

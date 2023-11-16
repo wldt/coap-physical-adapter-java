@@ -1,4 +1,4 @@
-package it.wldt.adapter.coap.physical.resource.event;
+package it.wldt.adapter.coap.physical.resources.events;
 
 public interface EventListener {
     void onEvent(String message);

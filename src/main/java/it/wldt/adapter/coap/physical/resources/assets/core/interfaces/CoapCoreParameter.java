@@ -1,10 +1,10 @@
-package it.wldt.adapter.coap.physical.resource.asset.core.interfaces;
+package it.wldt.adapter.coap.physical.resources.assets.core.interfaces;
 
-import it.wldt.adapter.coap.physical.resource.asset.DigitalTwinCoapActionResource;
-import it.wldt.adapter.coap.physical.resource.asset.functions.body.ActionBodyConsumer;
-import it.wldt.adapter.coap.physical.resource.asset.functions.body.EventBodyProducer;
-import it.wldt.adapter.coap.physical.resource.asset.functions.body.PropertyBodyProducer;
-import it.wldt.adapter.coap.physical.resource.methods.CoapPutMethod;
+import it.wldt.adapter.coap.physical.resources.assets.DigitalTwinCoapActionResource;
+import it.wldt.adapter.coap.physical.resources.assets.functions.body.ActionBodyConsumer;
+import it.wldt.adapter.coap.physical.resources.assets.functions.body.EventBodyProducer;
+import it.wldt.adapter.coap.physical.resources.assets.functions.body.PropertyBodyProducer;
+import it.wldt.adapter.coap.physical.resources.methods.CoapPutMethod;
 import it.wldt.adapter.physical.event.PhysicalAssetEventWldtEvent;
 import it.wldt.adapter.physical.event.PhysicalAssetPropertyWldtEvent;
 import it.wldt.exception.EventBusException;

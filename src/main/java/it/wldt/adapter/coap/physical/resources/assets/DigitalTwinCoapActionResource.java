@@ -1,8 +1,8 @@
-package it.wldt.adapter.coap.physical.resource.asset;
+package it.wldt.adapter.coap.physical.resources.assets;
 
-import it.wldt.adapter.coap.physical.resource.asset.functions.CoapWldtActionFunction;
-import it.wldt.adapter.coap.physical.resource.asset.functions.CoapWldtEventFunction;
-import it.wldt.adapter.coap.physical.resource.asset.functions.CoapWldtPropertyFunction;
+import it.wldt.adapter.coap.physical.resources.assets.functions.CoapWldtActionFunction;
+import it.wldt.adapter.coap.physical.resources.assets.functions.CoapWldtEventFunction;
+import it.wldt.adapter.coap.physical.resources.assets.functions.CoapWldtPropertyFunction;
 import it.wldt.adapter.physical.event.PhysicalAssetActionWldtEvent;
 
 public class DigitalTwinCoapActionResource extends DigitalTwinCoapResource {

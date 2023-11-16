@@ -1,4 +1,4 @@
-package it.wldt.adapter.coap.physical.resource.asset.functions;
+package it.wldt.adapter.coap.physical.resources.assets.functions;
 
 import it.wldt.core.event.WldtEvent;
 
