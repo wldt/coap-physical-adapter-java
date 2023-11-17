@@ -66,6 +66,8 @@ public class CoapResourceDescriptor
         return lastPayload;
     }
 
+    public String getLastEvent() { return lastEvent; }
+
     public int getLastPayloadContentType() {
         return lastPayloadContentType;
     }
