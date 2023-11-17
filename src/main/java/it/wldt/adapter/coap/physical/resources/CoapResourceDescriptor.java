@@ -68,6 +68,18 @@ public class CoapResourceDescriptor
 
     public String getLastEvent() { return lastEvent; }
 
+    public Boolean isObservable() {
+        return observable;
+    }
+
+    public Boolean isAutoUpdated() {
+        return autoUpdated;
+    }
+
+    public long getAutoUpdateTimerPeriod() {
+        return autoUpdateTimerPeriod;
+    }
+
     public int getLastPayloadContentType() {
         return lastPayloadContentType;
     }
