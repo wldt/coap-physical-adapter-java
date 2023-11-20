@@ -44,7 +44,8 @@ public class DigitalTwinParameterResource<P, E, A>
                 e.printStackTrace();
             }
             return Collections.emptyList();
-        }, actionWldtEvent -> actionBodyConsumer.getConsumer().apply((A) actionWldtEvent.getBody()));
+        }, actionWldtEvent -> actionBodyConsumer.getConsumer().apply((A) actionWldtEvent.getBody()),
+                actionBodyConsumer.getContentMimeType());
     }
 
     public DigitalTwinParameterResource(String serverUrl, String relativeUri, String propertyKey, PropertyBodyProducer<P> propertyBodyProducer, EventBodyProducer<E> eventBodyProducer, ActionBodyConsumer<A> actionBodyConsumer) {
@@ -79,7 +80,8 @@ public class DigitalTwinParameterResource<P, E, A>
                 e.printStackTrace();
             }
             return Collections.emptyList();
-        }, actionWldtEvent -> actionBodyConsumer.getConsumer().apply((A) actionWldtEvent.getBody()));
+        }, actionWldtEvent -> actionBodyConsumer.getConsumer().apply((A) actionWldtEvent.getBody()),
+                actionBodyConsumer.getContentMimeType());
     }
 
 

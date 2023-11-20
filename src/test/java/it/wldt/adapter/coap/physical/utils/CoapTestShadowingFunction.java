@@ -119,7 +119,7 @@ public class CoapTestShadowingFunction extends ShadowingModelFunction {
             this.digitalTwinState.notifyDigitalTwinStateEvent(new DigitalTwinStateEventNotification<>(
                     physicalAssetEventWldtEvent.getPhysicalEventKey(),
                     (String) physicalAssetEventWldtEvent.getBody(),
-                    System.currentTimeMillis()));
+                    physicalAssetEventWldtEvent.getCreationTimestamp()));
         } catch (WldtDigitalTwinStateEventNotificationException | EventBusException e) {
             e.printStackTrace();
         }
@@ -139,7 +139,9 @@ public class CoapTestShadowingFunction extends ShadowingModelFunction {
     protected void onDigitalActionEvent(DigitalActionWldtEvent<?> digitalActionWldtEvent) {
         logger.info("Shadowing - onDigitalActionEvent - received:{}", digitalActionWldtEvent);
         try {
-            publishPhysicalAssetActionWldtEvent(digitalActionWldtEvent.getActionKey(), digitalActionWldtEvent.getBody());
+            publishPhysicalAssetActionWldtEvent(
+                    digitalActionWldtEvent.getActionKey(),
+                    digitalActionWldtEvent.getBody());
         } catch (EventBusException e) {
             e.printStackTrace();
         }

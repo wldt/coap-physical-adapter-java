@@ -1,5 +1,6 @@
 package it.wldt.adapter.coap.physical;
 
+import it.wldt.adapter.coap.physical.resources.assets.DigitalTwinActionResource;
 import it.wldt.adapter.coap.physical.resources.discovery.DiscoveredResource;
 import it.wldt.adapter.coap.physical.resources.CoapResourceDescriptor;
 import it.wldt.adapter.coap.physical.resources.assets.DigitalTwinResource;
@@ -50,10 +51,14 @@ public class CoapPhysicalAdapter extends ConfigurablePhysicalAdapter<CoapPhysica
     @Override
     public void onIncomingPhysicalAction(PhysicalAssetActionWldtEvent<?> physicalAssetActionWldtEvent) {
         // TODO: Check why it's not entering the function
+        if (physicalAssetActionWldtEvent == null) {
+            logger.info("CoAP Physical Adapter - Received null action");
+            return;
+        }
+
         logger.info("CoAP Physical Adapter - Incoming physical action: {}", physicalAssetActionWldtEvent);
 
         String[] splittedActionKey = physicalAssetActionWldtEvent.getActionKey().split(" ");
-        String ct = physicalAssetActionWldtEvent.getContentType();
 
         String method = splittedActionKey[0];
         CoapResourceDescriptor resource = getConfiguration().getResources().get(splittedActionKey[1]);
@@ -65,18 +70,8 @@ public class CoapPhysicalAdapter extends ConfigurablePhysicalAdapter<CoapPhysica
             return;
         }
 
-        byte[] body;
-
-        if (physicalAssetActionWldtEvent.getBody() instanceof String) {
-            body = ((String) physicalAssetActionWldtEvent.getBody()).getBytes();
-        } else if (physicalAssetActionWldtEvent.getBody() instanceof byte[]) {
-            body = (byte[]) physicalAssetActionWldtEvent.getBody();
-        } else {
-            logger.error("CoAP Physical Adapter - Incoming action has unsupported body type: {}", physicalAssetActionWldtEvent);
-
-            System.out.println("Unsupported body type: " + physicalAssetActionWldtEvent.getBody());
-            return;
-        }
+        byte[] body = ((DigitalTwinActionResource) resource).applyActionFunction(physicalAssetActionWldtEvent);
+        String ct = ((DigitalTwinActionResource) resource).getActionContentType();
 
         switch (method) {
             case INCOMING_ACTION_POST_KEY -> {
@@ -267,13 +262,11 @@ public class CoapPhysicalAdapter extends ConfigurablePhysicalAdapter<CoapPhysica
 
             wldtEvents.forEach(e -> {
                 try {
-                    // TODO: Set content type of published event? Could be impossible since payload can be modified with body producers in specific resource classes
                     if (e instanceof PhysicalAssetPropertyWldtEvent) {
                         publishPhysicalAssetPropertyWldtEvent((PhysicalAssetPropertyWldtEvent<?>) e);
                     }
                     if (e instanceof PhysicalAssetActionWldtEvent) {
                         // TODO: Manage if physical asset action
-
                     }
                 }catch (EventBusException ex) {
                     ex.printStackTrace();

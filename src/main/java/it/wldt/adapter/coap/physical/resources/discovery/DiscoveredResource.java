@@ -11,7 +11,12 @@ package it.wldt.adapter.coap.physical.resources.discovery;
  *
  * @see Interface
  */
-public record DiscoveredResource (String uri, String resourceType, Interface resourceInterface, boolean observable) {
+public record DiscoveredResource (
+        String uri,
+        String resourceType,
+        Interface resourceInterface,
+        boolean observable
+) {
     /**
      *
      */
