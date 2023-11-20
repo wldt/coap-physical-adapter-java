@@ -1,9 +1,9 @@
 package it.wldt.adapter.coap.physical.resources.assets.core;
 
 import it.wldt.adapter.coap.physical.resources.assets.DigitalTwinActionResource;
-import it.wldt.adapter.coap.physical.resources.assets.functions.body.ActionBodyConsumer;
-import it.wldt.adapter.coap.physical.resources.assets.functions.body.EventBodyProducer;
-import it.wldt.adapter.coap.physical.resources.assets.functions.body.PropertyBodyProducer;
+import it.wldt.adapter.coap.physical.resources.assets.functions.preprocessing.ActionBodyConsumer;
+import it.wldt.adapter.coap.physical.resources.assets.functions.preprocessing.EventBodyProducer;
+import it.wldt.adapter.coap.physical.resources.assets.functions.preprocessing.PropertyBodyProducer;
 import it.wldt.adapter.coap.physical.resources.methods.CoapPostMethod;
 import it.wldt.adapter.coap.physical.resources.methods.CoapPutMethod;
 import it.wldt.adapter.physical.event.PhysicalAssetEventWldtEvent;

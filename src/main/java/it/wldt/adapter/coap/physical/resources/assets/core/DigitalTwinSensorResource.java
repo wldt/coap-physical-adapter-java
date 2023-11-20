@@ -1,8 +1,8 @@
 package it.wldt.adapter.coap.physical.resources.assets.core;
 
 import it.wldt.adapter.coap.physical.resources.assets.DigitalTwinResource;
-import it.wldt.adapter.coap.physical.resources.assets.functions.body.EventBodyProducer;
-import it.wldt.adapter.coap.physical.resources.assets.functions.body.PropertyBodyProducer;
+import it.wldt.adapter.coap.physical.resources.assets.functions.preprocessing.EventBodyProducer;
+import it.wldt.adapter.coap.physical.resources.assets.functions.preprocessing.PropertyBodyProducer;
 import it.wldt.adapter.physical.event.PhysicalAssetEventWldtEvent;
 import it.wldt.adapter.physical.event.PhysicalAssetPropertyWldtEvent;
 import it.wldt.exception.EventBusException;

@@ -1,4 +1,4 @@
-package it.wldt.adapter.coap.physical.resources.assets.functions.body;
+package it.wldt.adapter.coap.physical.resources.assets.functions.preprocessing;
 
 import java.util.function.Function;
 
