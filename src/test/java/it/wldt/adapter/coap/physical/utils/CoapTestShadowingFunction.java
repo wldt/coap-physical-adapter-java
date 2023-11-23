@@ -137,12 +137,18 @@ public class CoapTestShadowingFunction extends ShadowingModelFunction {
 
     @Override
     protected void onDigitalActionEvent(DigitalActionWldtEvent<?> digitalActionWldtEvent) {
-        logger.info("Shadowing - onDigitalActionEvent - received:{}", digitalActionWldtEvent);
+        logger.info("Shadowing - onDigitalActionEvent - Received:{}", digitalActionWldtEvent);
         try {
+            /*
+            if (!this.digitalTwinState.containsAction(digitalActionWldtEvent.getActionKey()))
+                this.digitalTwinState.enableAction(new DigitalTwinStateAction(digitalActionWldtEvent.getActionKey(), digitalActionWldtEvent.getType(), digitalActionWldtEvent.getContentType()));
+             */
             publishPhysicalAssetActionWldtEvent(
                     digitalActionWldtEvent.getActionKey(),
                     digitalActionWldtEvent.getBody());
+            logger.info("Shadowing - onDigitalActionEvent - Published");
         } catch (EventBusException e) {
+            logger.error("Shadowing - onDigitalActionEvent - Error publishing");
             e.printStackTrace();
         }
     }

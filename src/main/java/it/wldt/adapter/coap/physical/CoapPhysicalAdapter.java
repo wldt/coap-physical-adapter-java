@@ -41,15 +41,15 @@ import java.util.Set;
 public class CoapPhysicalAdapter extends ConfigurablePhysicalAdapter<CoapPhysicalAdapterConfiguration> {
     private static final Logger logger = LoggerFactory.getLogger(CoapPhysicalAdapter.class);
 
-    public static final String INCOMING_ACTION_POST_KEY = "change";
-    public static final String INCOMING_ACTION_PUT_KEY = "update";
-
     public CoapPhysicalAdapter(String id, CoapPhysicalAdapterConfiguration configuration) {
         super(id, configuration);
     }
 
     @Override
     public void onIncomingPhysicalAction(PhysicalAssetActionWldtEvent<?> physicalAssetActionWldtEvent) {
+        System.out.println("OK");
+        logger.info("CoAP Physical Adapter - Received incoming physical action: {}", physicalAssetActionWldtEvent);
+
         // TODO: Check why it's not entering the function
         if (physicalAssetActionWldtEvent == null) {
             logger.info("CoAP Physical Adapter - Received null action");
@@ -74,7 +74,7 @@ public class CoapPhysicalAdapter extends ConfigurablePhysicalAdapter<CoapPhysica
         String ct = ((DigitalTwinActionResource) resource).getActionContentType();
 
         switch (method) {
-            case INCOMING_ACTION_POST_KEY -> {
+            case CoapPostMethod.ACTION_KEY -> {
                 if (resource instanceof CoapPostMethod) {
                     ((CoapPostMethod) resource).sendPOST(body, ct);
                 } else {
@@ -82,7 +82,7 @@ public class CoapPhysicalAdapter extends ConfigurablePhysicalAdapter<CoapPhysica
                     logger.error("CoAP Physical Adapter - Incoming action method is not supported by resource: {}", physicalAssetActionWldtEvent);
                 }
             }
-            case INCOMING_ACTION_PUT_KEY -> {
+            case CoapPutMethod.ACTION_KEY -> {
                 if (resource instanceof CoapPutMethod) {
                     ((CoapPutMethod) resource).sendPUT(body, ct);
                 }
