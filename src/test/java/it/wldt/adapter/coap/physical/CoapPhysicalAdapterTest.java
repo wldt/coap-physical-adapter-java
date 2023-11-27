@@ -49,6 +49,6 @@ public class CoapPhysicalAdapterTest {
                            public void run() {
                                digitalAdapter.invokeAction("change temperature-actuator", "", "text/plain");
                            }
-                       }, 2000, 10000);
+                       }, 5000, 10000);
     }
 }
