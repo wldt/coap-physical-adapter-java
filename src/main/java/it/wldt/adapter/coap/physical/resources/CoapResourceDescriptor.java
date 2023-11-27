@@ -217,4 +217,16 @@ public class CoapResourceDescriptor
             e.printStackTrace();
         }
     }
+
+    @Override
+    public String toString() {
+        return "CoapResourceDescriptor{" +
+                "serverUrl='" + serverUrl + '\'' +
+                ", resourceUri='" + resourceUri + '\'' +
+                ", preferredContentType=" + preferredContentType +
+                ", observable=" + observable +
+                ", autoUpdated=" + autoUpdated +
+                ", autoUpdateTimerPeriod=" + autoUpdateTimerPeriod +
+                '}';
+    }
 }

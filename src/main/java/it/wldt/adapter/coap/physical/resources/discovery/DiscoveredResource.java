@@ -14,6 +14,7 @@ package it.wldt.adapter.coap.physical.resources.discovery;
 public record DiscoveredResource (
         String uri,
         String resourceType,
+        int contentType,
         Interface resourceInterface,
         boolean observable
 ) {
@@ -86,5 +87,6 @@ public record DiscoveredResource (
 
     public static final String WKC_ATTR_RESOURCE_TYPE = "rt";
     public static final String WKC_ATTR_RESOURCE_INTERFACE = "if";
+    public static final String WKC_ATTR_CONTENT_TYPE = "ct";
     public static final String WKC_ATTR_OBSERVABLE = "obs";
 }

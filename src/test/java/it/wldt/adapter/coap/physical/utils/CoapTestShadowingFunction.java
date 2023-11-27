@@ -143,6 +143,8 @@ public class CoapTestShadowingFunction extends ShadowingModelFunction {
             if (!this.digitalTwinState.containsAction(digitalActionWldtEvent.getActionKey()))
                 this.digitalTwinState.enableAction(new DigitalTwinStateAction(digitalActionWldtEvent.getActionKey(), digitalActionWldtEvent.getType(), digitalActionWldtEvent.getContentType()));
              */
+            System.out.println(digitalActionWldtEvent);
+            System.out.println(digitalActionWldtEvent.getActionKey());
             publishPhysicalAssetActionWldtEvent(
                     digitalActionWldtEvent.getActionKey(),
                     digitalActionWldtEvent.getBody());
