@@ -46,6 +46,8 @@ public class DigitalTwinParameterResource<P, E, A>
             return Collections.emptyList();
         }, actionWldtEvent -> actionBodyConsumer.getConsumer().apply((A) actionWldtEvent.getBody()),
                 actionBodyConsumer.getContentMimeType());
+
+        setPropertyKey(propertyKey);
     }
 
     public DigitalTwinParameterResource(String serverUrl, String relativeUri, String propertyKey, PropertyBodyProducer<P> propertyBodyProducer, EventBodyProducer<E> eventBodyProducer, ActionBodyConsumer<A> actionBodyConsumer) {
@@ -82,6 +84,8 @@ public class DigitalTwinParameterResource<P, E, A>
             return Collections.emptyList();
         }, actionWldtEvent -> actionBodyConsumer.getConsumer().apply((A) actionWldtEvent.getBody()),
                 actionBodyConsumer.getContentMimeType());
+
+        setPropertyKey(propertyKey);
     }
 
 

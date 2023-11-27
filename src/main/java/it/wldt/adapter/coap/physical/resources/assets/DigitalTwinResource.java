@@ -20,6 +20,8 @@ public class DigitalTwinResource extends CoapResourceDescriptor {
     private final CoapWldtPropertyFunction coapWldtPropertyFunction;
     private final CoapWldtEventFunction coapWldtEventFunction;
 
+    private String propertyKey;
+
     public DigitalTwinResource(String serverUrl, String relativeUri, CoapWldtPropertyFunction function) {
         super(serverUrl, relativeUri, false);
         this.coapWldtPropertyFunction = function;
@@ -49,5 +51,13 @@ public class DigitalTwinResource extends CoapResourceDescriptor {
 
     public CoapWldtEventFunction getEventFunction() {
         return coapWldtEventFunction;
+    }
+
+    protected void setPropertyKey(String propertyKey) {
+        this.propertyKey = propertyKey;
+    }
+
+    public String getPropertyKey() {
+        return propertyKey;
     }
 }

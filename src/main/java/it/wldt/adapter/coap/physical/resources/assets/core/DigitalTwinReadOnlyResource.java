@@ -30,6 +30,8 @@ public class DigitalTwinReadOnlyResource<P, E>
             }
             return Collections.emptyList();
         });
+
+        setPropertyKey(propertyKey);
     }
 
     public DigitalTwinReadOnlyResource(String serverUrl, String resourceUri, String propertyKey, PropertyBodyProducer<P> propertyBodyProducer, EventBodyProducer<E> eventBodyProducer) {
@@ -65,5 +67,7 @@ public class DigitalTwinReadOnlyResource<P, E>
             }
             return Collections.emptyList();
         });
+
+        setPropertyKey(propertyKey);
     }
 }

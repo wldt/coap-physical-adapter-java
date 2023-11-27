@@ -41,6 +41,7 @@ public class DigitalTwinActuatorResource<P, E, A>
             return Collections.emptyList();
         }, actionWldtEvent -> actionBodyConsumer.getConsumer().apply((A) actionWldtEvent.getBody()),
                 actionBodyConsumer.getContentMimeType());
+        setPropertyKey(propertyKey);
     }
 
     public DigitalTwinActuatorResource(String serverUrl, String relativeUri, String propertyKey, PropertyBodyProducer<P> propertyBodyProducer, EventBodyProducer<E> eventBodyProducer, ActionBodyConsumer<A> actionBodyConsumer) {
@@ -77,6 +78,7 @@ public class DigitalTwinActuatorResource<P, E, A>
             return Collections.emptyList();
         }, actionWldtEvent -> actionBodyConsumer.getConsumer().apply((A) actionWldtEvent.getBody()),
                 actionBodyConsumer.getContentMimeType());
+        setPropertyKey(propertyKey);
     }
 
     @Override

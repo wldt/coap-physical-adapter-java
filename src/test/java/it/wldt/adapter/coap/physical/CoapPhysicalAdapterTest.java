@@ -47,7 +47,7 @@ public class CoapPhysicalAdapterTest {
         timer.schedule(new TimerTask() {
                            @Override
                            public void run() {
-                               digitalAdapter.invokeAction("change temperature-actuator", "", "text/plain");
+                               digitalAdapter.invokeAction("change /temperature-actuator", "", "text/plain");
                            }
                        }, 5000, 10000);
     }

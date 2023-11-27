@@ -29,6 +29,8 @@ public class DigitalTwinSensorResource<P, E>
             }
             return Collections.emptyList();
         });
+
+        setPropertyKey(propertyKey);
     }
 
     public DigitalTwinSensorResource(String serverUrl, String resourceUri, String propertyKey, PropertyBodyProducer<P> propertyBodyProducer, EventBodyProducer<E> eventBodyProducer) {
@@ -64,5 +66,7 @@ public class DigitalTwinSensorResource<P, E>
             }
             return Collections.emptyList();
         });
+
+        setPropertyKey(propertyKey);
     }
 }
