@@ -1,5 +1,7 @@
 package it.wldt.adapter.coap.physical;
 
+import it.wldt.adapter.coap.physical.resources.assets.functions.methods.CustomPostRequestFunction;
+import it.wldt.adapter.coap.physical.resources.assets.functions.methods.CustomPutRequestFunction;
 import it.wldt.adapter.coap.physical.resources.discovery.ResourceDiscoveryFunction;
 import it.wldt.adapter.coap.physical.exceptions.CoapPhysicalAdapterConfigurationException;
 import it.wldt.adapter.coap.physical.resources.assets.DigitalTwinResource;
@@ -18,7 +20,7 @@ public class CoapPhysicalAdapterConfiguration {
     private final Integer serverPort;
 
     private Boolean enableAutoUpdate;
-    private Long autoUpdatePeriod;
+    private Long autoUpdatePeriod = 5000L;
 
     private int preferredContentFormat;
 
@@ -28,6 +30,8 @@ public class CoapPhysicalAdapterConfiguration {
 
     private ResourceDiscoveryFunction resourceDiscoveryFunction;
 
+    private CustomPostRequestFunction defaultPostRequestFunction;
+    private CustomPutRequestFunction defaultPutRequestFunction;
 
     private PropertyBodyProducer<?> defaultPropertyBodyProducer;
     private ActionBodyConsumer<?> defaultActionBodyConsumer;
@@ -84,6 +88,14 @@ public class CoapPhysicalAdapterConfiguration {
         return defaultEventBodyProducer;
     }
 
+    public CustomPostRequestFunction getDefaultPostRequestFunction() {
+        return defaultPostRequestFunction;
+    }
+
+    public CustomPutRequestFunction getDefaultPutRequestFunction() {
+        return defaultPutRequestFunction;
+    }
+
     public Map<String, DigitalTwinResource> getResources() {
         return resources;
     }
@@ -136,20 +148,24 @@ public class CoapPhysicalAdapterConfiguration {
         this.defaultEventBodyProducer = defaultEventBodyProducer;
     }
 
+    public void setDefaultPostRequestFunction(CustomPostRequestFunction defaultPostRequestFunction) {
+        this.defaultPostRequestFunction = defaultPostRequestFunction;
+    }
+
+    public void setDefaultPutRequestFunction(CustomPutRequestFunction defaultPutRequestFunction) {
+        this.defaultPutRequestFunction = defaultPutRequestFunction;
+    }
+
     protected void setPhysicalAssetDescription(List<PhysicalAssetAction> actions,
-                       List<PhysicalAssetProperty<?>> properties,
-                       List<PhysicalAssetEvent> events) {
+                                               List<PhysicalAssetProperty<?>> properties,
+                                               List<PhysicalAssetEvent> events) {
         this.physicalAssetDescription = new PhysicalAssetDescription(actions, properties, events);
     }
 
-    protected boolean addResource (String uri, DigitalTwinResource resource) {
+    protected void addResource (String uri, DigitalTwinResource resource) {
         if (!resources.containsKey(uri)) {
             resources.put(uri, resource);
-
-            return true;
         }
-
-        return false;
     }
 
 }

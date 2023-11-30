@@ -23,6 +23,6 @@ public abstract class CoapSenmlActuatorResource<T_ACTUATOR extends GenericActuat
         getAttributes().addAttribute("rt", this.senmlRt);
         getAttributes().addAttribute("if", CoreInterfaces.CORE_A.getValue());
         getAttributes().addAttribute("ct", Integer.toString(MediaTypeRegistry.APPLICATION_SENML_JSON));
-        getAttributes().addAttribute("ct", Integer.toString(MediaTypeRegistry.TEXT_PLAIN));
+        getAttributes().addAttribute("ct", Integer.toString(MediaTypeRegistry.APPLICATION_JSON));
     }
 }

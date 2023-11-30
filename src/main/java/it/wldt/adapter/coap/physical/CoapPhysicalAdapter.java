@@ -8,8 +8,8 @@ import it.wldt.adapter.coap.physical.resources.assets.core.DigitalTwinActuatorRe
 import it.wldt.adapter.coap.physical.resources.assets.core.DigitalTwinParameterResource;
 import it.wldt.adapter.coap.physical.resources.assets.core.DigitalTwinReadOnlyResource;
 import it.wldt.adapter.coap.physical.resources.assets.core.DigitalTwinSensorResource;
-import it.wldt.adapter.coap.physical.resources.methods.CoapPostMethod;
-import it.wldt.adapter.coap.physical.resources.methods.CoapPutMethod;
+import it.wldt.adapter.coap.physical.resources.methods.CoapPostSupport;
+import it.wldt.adapter.coap.physical.resources.methods.CoapPutSupport;
 import it.wldt.adapter.physical.ConfigurablePhysicalAdapter;
 import it.wldt.adapter.physical.PhysicalAssetAction;
 import it.wldt.adapter.physical.PhysicalAssetEvent;
@@ -70,21 +70,20 @@ public class CoapPhysicalAdapter extends ConfigurablePhysicalAdapter<CoapPhysica
             return;
         }
 
-        // TODO: Modify action consumer (can't cast to byte[])
         byte[] body = ((DigitalTwinActionResource) resource).applyActionFunction(physicalAssetActionWldtEvent);
         String ct = ((DigitalTwinActionResource) resource).getActionContentType();
 
         switch (method) {
-            case CoapPostMethod.ACTION_KEY -> {
-                if (resource instanceof CoapPostMethod) {
-                    ((CoapPostMethod) resource).sendPOST(body, ct);
+            case CoapPostSupport.ACTION_KEY -> {
+                if (resource instanceof CoapPostSupport) {
+                    ((CoapPostSupport) resource).sendPOST(body, ct);
                 } else {
                     logger.error("CoAP Physical Adapter - Incoming action method is not supported by resource: {}", physicalAssetActionWldtEvent);
                 }
             }
-            case CoapPutMethod.ACTION_KEY -> {
-                if (resource instanceof CoapPutMethod) {
-                    ((CoapPutMethod) resource).sendPUT(body, ct);
+            case CoapPutSupport.ACTION_KEY -> {
+                if (resource instanceof CoapPutSupport) {
+                    ((CoapPutSupport) resource).sendPUT(body, ct);
                 }
                 else {
                     logger.error("CoAP Physical Adapter - Incoming action method is not supported by resource: {}", physicalAssetActionWldtEvent);
@@ -151,9 +150,16 @@ public class CoapPhysicalAdapter extends ConfigurablePhysicalAdapter<CoapPhysica
             for (WebLink link : linkSet) {
                 String uri = link.getURI();
                 String resourceType = link.getAttributes().getFirstAttributeValue(DiscoveredResource.WKC_ATTR_RESOURCE_TYPE);
-                int contentType = MediaTypeRegistry.parse(link.getAttributes().getFirstAttributeValue(DiscoveredResource.WKC_ATTR_CONTENT_TYPE));;
+                List<String> supportedContentTypes = link.getAttributes().getAttributeValues(DiscoveredResource.WKC_ATTR_CONTENT_TYPE);
                 String linkInterface = link.getAttributes().getFirstAttributeValue(DiscoveredResource.WKC_ATTR_RESOURCE_INTERFACE);
                 boolean observable = link.getAttributes().containsAttribute(DiscoveredResource.WKC_ATTR_OBSERVABLE);
+
+                int contentType = -1;
+                for (String ct: supportedContentTypes) {
+                    if (getConfiguration().getPreferredContentFormat() == Integer.parseInt(ct)) {
+                        contentType = Integer.parseInt(ct);
+                    }
+                }
 
                 DiscoveredResource.Interface resourceInterface = DiscoveredResource.Interface.fromString(linkInterface);
 
@@ -327,19 +333,19 @@ public class CoapPhysicalAdapter extends ConfigurablePhysicalAdapter<CoapPhysica
         PhysicalAssetEvent event = new PhysicalAssetEvent(resource.getPropertyKey(), MediaTypeRegistry.toString(MediaTypeRegistry.TEXT_PLAIN));
         getConfiguration().getPhysicalAssetDescription().getEvents().add(event);
 
-        if (resource instanceof CoapPostMethod) {
+        if (resource instanceof CoapPostSupport) {
             // If resource can receive "change" action events create the action asset and add it to the PAD
             PhysicalAssetAction action = new PhysicalAssetAction(
-                    String.format("%s %s", CoapPostMethod.ACTION_KEY, resource.getResourceUri()),
+                    String.format("%s %s", CoapPostSupport.ACTION_KEY, resource.getResourceUri()),
                     resource.getPropertyKey(),
                     MediaTypeRegistry.toString(resource.getPreferredContentType()));
 
             getConfiguration().getPhysicalAssetDescription().getActions().add(action);
         }
-        if (resource instanceof CoapPutMethod) {
+        if (resource instanceof CoapPutSupport) {
             // If resource can receive "update" action events create the action asset and add it to the PAD
             PhysicalAssetAction action = new PhysicalAssetAction(
-                    String.format("%s %s", CoapPutMethod.ACTION_KEY, resource.getResourceUri()),
+                    String.format("%s %s", CoapPutSupport.ACTION_KEY, resource.getResourceUri()),
                     resource.getPropertyKey(),
                     MediaTypeRegistry.toString(resource.getPreferredContentType()));
 

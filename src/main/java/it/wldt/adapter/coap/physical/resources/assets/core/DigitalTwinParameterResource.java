@@ -1,10 +1,11 @@
 package it.wldt.adapter.coap.physical.resources.assets.core;
 
 import it.wldt.adapter.coap.physical.resources.assets.DigitalTwinActionResource;
+import it.wldt.adapter.coap.physical.resources.assets.functions.methods.CustomPutRequestFunction;
 import it.wldt.adapter.coap.physical.resources.assets.functions.preprocessing.ActionBodyConsumer;
 import it.wldt.adapter.coap.physical.resources.assets.functions.preprocessing.EventBodyProducer;
 import it.wldt.adapter.coap.physical.resources.assets.functions.preprocessing.PropertyBodyProducer;
-import it.wldt.adapter.coap.physical.resources.methods.CoapPutMethod;
+import it.wldt.adapter.coap.physical.resources.methods.CoapPutSupport;
 import it.wldt.adapter.physical.event.PhysicalAssetEventWldtEvent;
 import it.wldt.adapter.physical.event.PhysicalAssetPropertyWldtEvent;
 import it.wldt.exception.EventBusException;
@@ -25,8 +26,8 @@ import java.util.Collections;
  */
 public class DigitalTwinParameterResource<P, E, A>
         extends DigitalTwinActionResource
-        implements CoapPutMethod {
-    // TODO: Custom PUT method
+        implements CoapPutSupport {
+    private CustomPutRequestFunction putRequestFunction;
 
     public DigitalTwinParameterResource(String serverUrl, String relativeUri, String propertyKey, PropertyBodyProducer<P> propertyBodyProducer, ActionBodyConsumer<A> actionBodyConsumer) {
         super(serverUrl, relativeUri, (payload, ct) -> {
@@ -88,35 +89,36 @@ public class DigitalTwinParameterResource<P, E, A>
         setPropertyKey(propertyKey);
     }
 
+    public CustomPutRequestFunction getPutRequestFunction() {
+        return putRequestFunction;
+    }
+
+    public void setPutRequestFunction(CustomPutRequestFunction putRequestFunction) {
+        this.putRequestFunction = putRequestFunction;
+    }
 
     @Override
     public void sendPUT(byte[] payload, String ct) {
-        // TODO: Custom PUT
-
-        if (payload == null || payload.length < 1) {
+        if (putRequestFunction != null) {
+            setLastEvent(putRequestFunction.send(this, payload, ct));
+        } else if (payload == null || payload.length < 1) {
             setLastEvent("Body is necessary for default PUT operations");
-            return;
-        }
+        } else {
 
-        Request request = getRequestOptionsBase(CoAP.Code.PUT);
-        request.setPayload(payload);
-        request.getOptions().setContentFormat(MediaTypeRegistry.parse(ct));
+            Request request = getRequestOptionsBase(CoAP.Code.PUT);
+            request.setPayload(payload);
+            request.getOptions().setContentFormat(MediaTypeRegistry.parse(ct));
 
-        try {
-            CoapResponse response = client.advanced(request);
+            try {
+                CoapResponse response = client.advanced(request);
 
-            if (response == null) {
-                setLastEvent("Response is null");
-            } else if (!response.isSuccess()) {
-                setLastEvent("Response code: " + response.getCode());
-            } else if (response.getPayload() != null && response.getPayload().length > 0) {
-                setLastEvent(new String(response.getPayload()));
-            } else {
-                setLastEvent("Response code: " + response.getCode());
+                if (response.getPayload() != null && response.getPayload().length > 0) {
+                    setLastEvent(new String(response.getPayload()));
+                }
+            } catch (ConnectorException | IOException e) {
+                setLastEvent(e.toString());
+                e.printStackTrace();
             }
-        } catch (ConnectorException | IOException e) {
-            setLastEvent(e.toString());
-            e.printStackTrace();
         }
     }
 }

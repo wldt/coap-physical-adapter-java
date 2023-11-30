@@ -42,6 +42,5 @@ public class TemperatureSensor extends GenericSensor<Double> {
         }
 
         setValue(nVal);
-        System.out.println(String.format("[SENSOR][UPDATE] -> Temperature: %f", this.getValue()));
     }
 }

@@ -54,7 +54,7 @@ public class TemperatureSensorResource extends CoapSenmlSensorResource<Temperatu
 
     @Override
     public void handleGET(CoapExchange exchange) {
-        System.out.println(String.format("[REQUEST][GET] -> %s", this.getName()));
+        System.out.println(String.format("%s -> GET", this.getName()));
 
         exchange.setMaxAge(sensor.getTimerUpdatePeriod());
 
@@ -63,13 +63,16 @@ public class TemperatureSensorResource extends CoapSenmlSensorResource<Temperatu
             Optional<String> payload = getJsonSenmlResponse();
 
             if (payload.isPresent()) {
+                System.out.println(String.format("\t2.05 CONTENT - %s", payload.get()));
                 exchange.respond(CoAP.ResponseCode.CONTENT, payload.get(), exchange.getRequestOptions().getAccept());
             }
             else {
+                System.out.println("\t5.00 INTERNAL SERVER ERROR");
                 exchange.respond(CoAP.ResponseCode.INTERNAL_SERVER_ERROR);
             }
         }
         else {
+            System.out.println(String.format("\t2.00 OK - %s", updatedValue));
             exchange.respond(CoAP.ResponseCode.CONTENT, String.valueOf(updatedValue), MediaTypeRegistry.TEXT_PLAIN);
         }
     }

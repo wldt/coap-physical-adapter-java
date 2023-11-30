@@ -54,6 +54,10 @@ public class CoapResourceDescriptor
         this.client = new CoapClient(serverUrl);
     }
 
+    public CoapClient getClient() {
+        return client;
+    }
+
     public String getServerUrl() {
         return serverUrl;
     }
@@ -164,7 +168,7 @@ public class CoapResourceDescriptor
             public void run() {
                 sendGET();
             }
-        }, this.autoUpdateTimerPeriod, 0L);
+        }, 0L, this.autoUpdateTimerPeriod);
     }
 
     public void stopAutoUpdate() {
@@ -175,7 +179,7 @@ public class CoapResourceDescriptor
         this.autoUpdated = false;
     }
 
-    protected Request getRequestOptionsBase(CoAP.Code code) {
+    public Request getRequestOptionsBase(CoAP.Code code) {
         Request request = new Request(code);
 
         OptionSet options = new OptionSet();
@@ -206,6 +210,8 @@ public class CoapResourceDescriptor
      * since it's expected by each CoRE interface
      */
     private void sendGET() {
+        // TODO: Custom GET function?
+
         Request request = this.getRequestOptionsBase(CoAP.Code.GET);
 
         try {

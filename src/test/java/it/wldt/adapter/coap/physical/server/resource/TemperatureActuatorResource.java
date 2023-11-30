@@ -58,7 +58,7 @@ public class TemperatureActuatorResource extends CoapSenmlActuatorResource<Tempe
 
     @Override
     public void handleGET(CoapExchange exchange) {
-        System.out.println(String.format("[REQUEST][GET] -> %s", this.getName()));
+        System.out.println(String.format("%s -> GET", this.getName()));
         /*
         GET REQUEST
 
@@ -70,23 +70,27 @@ public class TemperatureActuatorResource extends CoapSenmlActuatorResource<Tempe
                 Optional<String> payload = getJsonSenmlResponse();
 
                 if (payload.isPresent()) {
+                    System.out.println(String.format("\t2.05 CONTENT - %s", payload.get()));
                     exchange.respond(CoAP.ResponseCode.CONTENT, payload.get(), exchange.getRequestOptions().getAccept());
                 }
                 else {
+                    System.out.println("\t5.00 INTERNAL SERVER ERROR");
                     exchange.respond(CoAP.ResponseCode.INTERNAL_SERVER_ERROR);
                 }
             }
             else {
+                System.out.println(String.format("\t2.05 CONTENT - %d", this.actuator.getStatus()));
                 exchange.respond(CoAP.ResponseCode.CONTENT, String.valueOf(this.actuator.getStatus()), MediaTypeRegistry.TEXT_PLAIN);
             }
         } catch (Exception e) {
+            System.out.println("\t5.00 INTERNAL SERVER ERROR");
             exchange.respond(CoAP.ResponseCode.INTERNAL_SERVER_ERROR);
         }
     }
 
     @Override
     public void handlePOST(CoapExchange exchange) {
-        System.out.println(String.format("[REQUEST][POST] -> %s", this.getName()));
+        System.out.println(String.format("%s -> POST", this.getName()));
         /*
         POST REQUEST
 
@@ -96,14 +100,16 @@ public class TemperatureActuatorResource extends CoapSenmlActuatorResource<Tempe
             this.actuator.toggleActive();
 
             exchange.respond(CoAP.ResponseCode.CHANGED);
+            System.out.println("\t2.04 CHANGED");
         } catch (Exception e) {
+            System.out.println("\t5.00 INTERNAL SERVER ERROR");
             exchange.respond(CoAP.ResponseCode.INTERNAL_SERVER_ERROR);
         }
     }
 
     @Override
     public void handlePUT(CoapExchange exchange) {
-        System.out.println(String.format("[REQUEST][PUT] -> %s", this.getName()));
+        System.out.println(String.format("%s -> PUT", this.getName()));
         /*
         PUT REQUEST
 
@@ -111,16 +117,20 @@ public class TemperatureActuatorResource extends CoapSenmlActuatorResource<Tempe
          */
         try {
             if (exchange.getRequestPayload() != null) {
+                System.out.println("\tPayload: " + new String(exchange.getRequestPayload()));
                 String payload = new String(exchange.getRequestPayload());
-                System.out.println(String.format("[REQUEST][PUT][PAYLOAD] -> %s: %s", this.getName(), payload));
 
                 this.actuator.setWantedTemperature(Double.parseDouble(payload));
 
                 exchange.respond(CoAP.ResponseCode.CHANGED);
+                System.out.println("\t2.04 CHANGED");
             } else {
+                System.out.println("\t4.00 BAD REQUEST");
                 exchange.respond(CoAP.ResponseCode.BAD_REQUEST);
             }
         } catch (Exception e) {
+            e.printStackTrace();
+            System.out.println("\t5.00 INTERNAL SERVER ERROR");
             exchange.respond(CoAP.ResponseCode.INTERNAL_SERVER_ERROR);
         }
     }

@@ -29,6 +29,8 @@ public class TemperatureActuator extends GenericActuator<Double, Integer> {
     public TemperatureActuator(double wantedTemperature, double temperatureDelta) {
         this.wantedTemperature = wantedTemperature;
         this.delta = temperatureDelta;
+
+        setStatus(STATUS_OFF);
     }
 
     public double getWantedTemperature() {

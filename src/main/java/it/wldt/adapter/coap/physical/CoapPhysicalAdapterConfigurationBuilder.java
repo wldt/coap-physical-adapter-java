@@ -1,5 +1,7 @@
 package it.wldt.adapter.coap.physical;
 
+import it.wldt.adapter.coap.physical.resources.assets.functions.methods.CustomPostRequestFunction;
+import it.wldt.adapter.coap.physical.resources.assets.functions.methods.CustomPutRequestFunction;
 import it.wldt.adapter.coap.physical.resources.discovery.ResourceDiscoveryFunction;
 import it.wldt.adapter.coap.physical.exceptions.CoapPhysicalAdapterConfigurationException;
 import it.wldt.adapter.coap.physical.resources.assets.DigitalTwinResource;
@@ -38,7 +40,8 @@ public class CoapPhysicalAdapterConfigurationBuilder {
     }
 
     public CoapPhysicalAdapterConfigurationBuilder setAutoUpdatePeriod(long period) {
-        this.configuration.setAutoUpdatePeriod(period);
+        if (period > 0)
+            this.configuration.setAutoUpdatePeriod(period);
         return this;
     }
 
@@ -72,6 +75,16 @@ public class CoapPhysicalAdapterConfigurationBuilder {
     }
     public CoapPhysicalAdapterConfigurationBuilder setDefaultEventBodyProducer(EventBodyProducer<?> defaultEventBodyProducer) {
         this.configuration.setDefaultEventBodyProducer(defaultEventBodyProducer);
+        return this;
+    }
+
+    public CoapPhysicalAdapterConfigurationBuilder setDefaultPostRequestFunction(CustomPostRequestFunction defaultPostRequestFunction) {
+        this.configuration.setDefaultPostRequestFunction(defaultPostRequestFunction);
+        return this;
+    }
+
+    public CoapPhysicalAdapterConfigurationBuilder setDefaultPutRequestFunction(CustomPutRequestFunction defaultPutRequestFunction) {
+        this.configuration.setDefaultPutRequestFunction(defaultPutRequestFunction);
         return this;
     }
 

@@ -3,6 +3,7 @@ package it.wldt.adapter.coap.physical.server.resource;
 import it.wldt.adapter.coap.physical.server.model.GenericActuator;
 import org.eclipse.californium.core.CoapResource;
 import org.eclipse.californium.core.coap.CoAP;
+import org.eclipse.californium.core.coap.MediaTypeRegistry;
 
 public abstract class CoapActuatorResource<T_ACTUATOR extends GenericActuator<?, ?>> extends CoapResource {
     protected final String objectTitle;
@@ -17,7 +18,7 @@ public abstract class CoapActuatorResource<T_ACTUATOR extends GenericActuator<?,
 
     public CoapActuatorResource(String deviceId, String objectTitle, String name,
                                 Number actuatorVersion, T_ACTUATOR actuator) {
-        this(deviceId, objectTitle, name, actuatorVersion, actuator, true);
+        this(deviceId, objectTitle, name, actuatorVersion, actuator, false);
     }
 
     public CoapActuatorResource(String deviceId, String objectTitle, String name,
@@ -34,6 +35,7 @@ public abstract class CoapActuatorResource<T_ACTUATOR extends GenericActuator<?,
 
     private void init() {
         getAttributes().setTitle(objectTitle);
+        getAttributes().addAttribute("ct", Integer.toString(MediaTypeRegistry.TEXT_PLAIN));
 
         if (observable) {
             setObservable(true);

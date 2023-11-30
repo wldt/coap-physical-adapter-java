@@ -89,4 +89,15 @@ public record DiscoveredResource (
     public static final String WKC_ATTR_RESOURCE_INTERFACE = "if";
     public static final String WKC_ATTR_CONTENT_TYPE = "ct";
     public static final String WKC_ATTR_OBSERVABLE = "obs";
+
+    @Override
+    public String toString() {
+        return "DiscoveredResource{" +
+                "uri='" + uri + '\'' +
+                ", resourceType='" + resourceType + '\'' +
+                ", contentType=" + contentType +
+                ", resourceInterface=" + resourceInterface +
+                ", observable=" + observable +
+                '}';
+    }
 }

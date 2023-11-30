@@ -1,11 +1,13 @@
 package it.wldt.adapter.coap.physical.resources.assets.core;
 
 import it.wldt.adapter.coap.physical.resources.assets.DigitalTwinActionResource;
+import it.wldt.adapter.coap.physical.resources.assets.functions.methods.CustomPostRequestFunction;
+import it.wldt.adapter.coap.physical.resources.assets.functions.methods.CustomPutRequestFunction;
 import it.wldt.adapter.coap.physical.resources.assets.functions.preprocessing.ActionBodyConsumer;
 import it.wldt.adapter.coap.physical.resources.assets.functions.preprocessing.EventBodyProducer;
 import it.wldt.adapter.coap.physical.resources.assets.functions.preprocessing.PropertyBodyProducer;
-import it.wldt.adapter.coap.physical.resources.methods.CoapPostMethod;
-import it.wldt.adapter.coap.physical.resources.methods.CoapPutMethod;
+import it.wldt.adapter.coap.physical.resources.methods.CoapPostSupport;
+import it.wldt.adapter.coap.physical.resources.methods.CoapPutSupport;
 import it.wldt.adapter.physical.event.PhysicalAssetEventWldtEvent;
 import it.wldt.adapter.physical.event.PhysicalAssetPropertyWldtEvent;
 import it.wldt.exception.EventBusException;
@@ -20,8 +22,9 @@ import java.util.Collections;
 
 public class DigitalTwinActuatorResource<P, E, A>
         extends DigitalTwinActionResource
-        implements CoapPostMethod, CoapPutMethod {
-    // TODO: Custom POST and PUT methods
+        implements CoapPostSupport, CoapPutSupport {
+    private CustomPostRequestFunction postRequestFunction;
+    private CustomPutRequestFunction putRequestFunction;
 
     public DigitalTwinActuatorResource(String serverUrl, String relativeUri, String propertyKey, PropertyBodyProducer<P> propertyBodyProducer, ActionBodyConsumer<A> actionBodyConsumer) {
         super(serverUrl, relativeUri, (payload, ct) -> {
@@ -81,65 +84,65 @@ public class DigitalTwinActuatorResource<P, E, A>
         setPropertyKey(propertyKey);
     }
 
+    public CustomPostRequestFunction getPostRequestFunction() {
+        return postRequestFunction;
+    }
+
+    public void setPostRequestFunction(CustomPostRequestFunction postRequestFunction) {
+        this.postRequestFunction = postRequestFunction;
+    }
+
+    public CustomPutRequestFunction getPutRequestFunction() {
+        return putRequestFunction;
+    }
+
+    public void setPutRequestFunction(CustomPutRequestFunction putRequestFunction) {
+        this.putRequestFunction = putRequestFunction;
+    }
+
     @Override
     public void sendPOST(byte[] payload, String ct) {
-        // TODO: Custom POST function
-
-        if (payload != null && payload.length > 0) {
+        if (postRequestFunction != null) {
+            setLastEvent(postRequestFunction.send(this, payload, ct));
+        } else if (payload != null && payload.length > 0) {
             setLastEvent("Body not supported for default POST operations");
-            return;
-        }
+        } else {
+            Request request = getRequestOptionsBase(CoAP.Code.POST);
 
-        Request request = getRequestOptionsBase(CoAP.Code.POST);
+            try {
+                CoapResponse response = client.advanced(request);
 
-        try {
-            CoapResponse response = client.advanced(request);
-
-            if (response == null) {
-                setLastEvent("Response is null");
-            } else if (!response.isSuccess()) {
-                setLastEvent("Response code: " + response.getCode());
-            } else if (response.getPayload() != null && response.getPayload().length > 0) {
-                setLastEvent(new String(response.getPayload()));
-            } else {
-                setLastEvent("Response code: " + response.getCode());
+                if (response.getPayload() != null && response.getPayload().length > 0) {
+                    setLastEvent(new String(response.getPayload()));
+                }
+            } catch (ConnectorException | IOException e) {
+                setLastEvent(e.toString());
+                e.printStackTrace();
             }
-        } catch (ConnectorException | IOException e) {
-            setLastEvent(e.toString());
-            e.printStackTrace();
         }
     }
 
     @Override
     public void sendPUT(byte[] payload, String ct) {
-        // TODO: Custom PUT
-
-        if (payload == null || payload.length < 1) {
+        if (putRequestFunction != null) {
+            setLastEvent(putRequestFunction.send(this, payload, ct));
+        } else if (payload == null || payload.length < 1) {
             setLastEvent("Body is necessary for default PUT operations");
-            return;
-        }
+        } else {
+            Request request = getRequestOptionsBase(CoAP.Code.PUT);
+            request.setPayload(payload);
+            request.getOptions().setContentFormat(MediaTypeRegistry.parse(ct));
 
-        Request request = getRequestOptionsBase(CoAP.Code.PUT);
-        request.setPayload(payload);
-        request.getOptions().setContentFormat(MediaTypeRegistry.parse(ct));
+            try {
+                CoapResponse response = client.advanced(request);
 
-        try {
-            CoapResponse response = client.advanced(request);
-
-            if (response == null) {
-                setLastEvent("Response is null");
-            } else if (!response.isSuccess()) {
-                setLastEvent("Response code: " + response.getCode());
-            } else if (response.getPayload() != null && response.getPayload().length > 0) {
-                setLastEvent(new String(response.getPayload()));
-            } else {
-                setLastEvent("Response code: " + response.getCode());
+                if (response.getPayload() != null && response.getPayload().length > 0) {
+                    setLastEvent(new String(response.getPayload()));
+                }
+            } catch (ConnectorException | IOException e) {
+                setLastEvent(e.toString());
+                e.printStackTrace();
             }
-        } catch (ConnectorException | IOException e) {
-            setLastEvent(e.toString());
-            e.printStackTrace();
         }
-
-
     }
 }

@@ -1,5 +1,7 @@
 package it.wldt.adapter.coap.physical.resources.assets.functions.preprocessing;
 
+import org.eclipse.californium.core.coap.MediaTypeRegistry;
+
 import java.util.function.Function;
 
 public class ActionBodyConsumer <A> {
@@ -7,7 +9,11 @@ public class ActionBodyConsumer <A> {
     private String contentMimeType;
 
     public ActionBodyConsumer(Function<A, byte[]> consumer) {
-        this(consumer, "");
+        this(consumer, MediaTypeRegistry.toString(MediaTypeRegistry.TEXT_PLAIN));
+    }
+
+    public ActionBodyConsumer(Function<A, byte[]> consumer, int contentMimeType) {
+        this(consumer, MediaTypeRegistry.toString(contentMimeType));
     }
 
     public ActionBodyConsumer(Function<A, byte[]> consumer, String contentMimeType) {
