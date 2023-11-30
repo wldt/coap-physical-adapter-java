@@ -273,6 +273,17 @@ public class CoapPhysicalAdapter extends ConfigurablePhysicalAdapter<CoapPhysica
                 continue;
             }
 
+            if (resource instanceof DigitalTwinActuatorResource && getConfiguration().getDefaultPutRequestFunction() != null) {
+                ((DigitalTwinActuatorResource<?,?,?>) resource).setPutRequestFunction(getConfiguration().getDefaultPutRequestFunction());
+            }
+            if (resource instanceof DigitalTwinParameterResource && getConfiguration().getDefaultPutRequestFunction() != null) {
+                ((DigitalTwinParameterResource<?,?,?>) resource).setPutRequestFunction(getConfiguration().getDefaultPutRequestFunction());
+            }
+
+            if (resource instanceof DigitalTwinActuatorResource && getConfiguration().getDefaultPostRequestFunction() != null) {
+                ((DigitalTwinActuatorResource<?,?,?>) resource).setPostRequestFunction(getConfiguration().getDefaultPostRequestFunction());
+            }
+
             // Set resource content type and start observing or auto updating
             resource.setPreferredContentType(dr.contentType());
 

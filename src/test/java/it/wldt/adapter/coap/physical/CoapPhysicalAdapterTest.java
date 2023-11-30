@@ -36,29 +36,26 @@ public class CoapPhysicalAdapterTest {
         String serverAddress = "127.0.0.1";
         int serverPort = 5683;
 
-        CustomPutRequestFunction customPutRequestFunction = new CustomPutRequestFunction() {
-            @Override
-            public String send(DigitalTwinActionResource resource, byte[] payload, String ct) {
-                Request request = resource.getRequestOptionsBase(CoAP.Code.PUT);
-                request.setPayload(payload);
-                request.getOptions().setContentFormat(MediaTypeRegistry.parse(ct));
+        CustomPutRequestFunction customPutRequestFunction = (resource, payload, ct) -> {
+            Request request = resource.getRequestOptionsBase(CoAP.Code.PUT);
+            request.setPayload(payload);
+            request.getOptions().setContentFormat(MediaTypeRegistry.parse(ct));
 
-                try {
-                    CoapResponse response = resource.getClient().advanced(request);
+            try {
+                CoapResponse response = resource.getClient().advanced(request);
 
-                    if (response == null) {
-                        return "Response:null";
-                    } else if (!response.isSuccess()) {
-                        return "Response:" + response.getCode();
-                    } else if (response.getPayload() != null && response.getPayload().length > 0) {
-                        return String.format("Response:%s", new String(response.getPayload()));
-                    } else {
-                        return "Response:" + response.getCode();
-                    }
-                } catch (ConnectorException | IOException e) {
-                    e.printStackTrace();
-                    return e.toString();
+                if (response == null) {
+                    return "Response:null";
+                } else if (!response.isSuccess()) {
+                    return "Response:" + response.getCode();
+                } else if (response.getPayload() != null && response.getPayload().length > 0) {
+                    return String.format("Response:%s", new String(response.getPayload()));
+                } else {
+                    return "Response:" + response.getCode();
                 }
+            } catch (ConnectorException | IOException e) {
+                e.printStackTrace();
+                return e.toString();
             }
         };
 
@@ -69,6 +66,7 @@ public class CoapPhysicalAdapterTest {
                 .setPreferredContentFormat(MediaTypeRegistry.APPLICATION_SENML_JSON)
                 .setDefaultPropertyBodyProducer(new PropertyBodyProducer<>(String::new))
                 .setDefaultEventBodyProducer(new EventBodyProducer<>(String::new))
+                .setDefaultPutRequestFunction(customPutRequestFunction)
                 .setDefaultActionBodyConsumer(new ActionBodyConsumer<String>(String::getBytes))
                 .setDigitalTwinEventsFlag(true)
                 .build();
