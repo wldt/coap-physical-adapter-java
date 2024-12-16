@@ -1,171 +1,271 @@
 package it.wldt.adapter.coap.physical;
 
-import it.wldt.adapter.coap.physical.resources.assets.functions.methods.CustomPostRequestFunction;
-import it.wldt.adapter.coap.physical.resources.assets.functions.methods.CustomPutRequestFunction;
-import it.wldt.adapter.coap.physical.resources.discovery.ResourceDiscoveryFunction;
-import it.wldt.adapter.coap.physical.exceptions.CoapPhysicalAdapterConfigurationException;
-import it.wldt.adapter.coap.physical.resources.assets.DigitalTwinResource;
-import it.wldt.adapter.coap.physical.resources.assets.functions.preprocessing.ActionBodyConsumer;
-import it.wldt.adapter.coap.physical.resources.assets.functions.preprocessing.EventBodyProducer;
-import it.wldt.adapter.coap.physical.resources.assets.functions.preprocessing.PropertyBodyProducer;
-import it.wldt.adapter.physical.PhysicalAssetAction;
+import it.wldt.adapter.coap.physical.model.PhysicalAssetResource;
+import it.wldt.adapter.coap.physical.model.PhysicalAssetResourceListener;
 import it.wldt.adapter.physical.PhysicalAssetDescription;
-import it.wldt.adapter.physical.PhysicalAssetEvent;
-import it.wldt.adapter.physical.PhysicalAssetProperty;
+import it.wldt.adapter.physical.event.PhysicalAssetActionWldtEvent;
+import it.wldt.core.event.WldtEvent;
+import org.eclipse.californium.core.CoapResponse;
+import org.eclipse.californium.core.coap.MediaTypeRegistry;
+import org.eclipse.californium.core.coap.Request;
 
 import java.util.*;
+import java.util.function.BiFunction;
+import java.util.function.Function;
+import java.util.function.Supplier;
 
 public class CoapPhysicalAdapterConfiguration {
-    private final String serverAddress;
-    private final Integer serverPort;
+    private PhysicalAssetDescription pad = new PhysicalAssetDescription();
 
-    private Boolean enableAutoUpdate;
-    private Long autoUpdatePeriod = 5000L;
+    private String ip;
+    private int port;
 
-    private int preferredContentFormat;
+    private int preferredContentFormat = MediaTypeRegistry.TEXT_PLAIN;
 
-    private boolean enableDigitalTwinEvents;
+    private String eventType = "EVENT";
+    private String postActionType = "POST";
+    private String putActionType = "PUT";
 
-    private Boolean enableResourceDiscovery;
+    private String postActionContentType = MediaTypeRegistry.toString(MediaTypeRegistry.TEXT_PLAIN);
+    private String putActionContentType = MediaTypeRegistry.toString(MediaTypeRegistry.TEXT_PLAIN);
 
-    private ResourceDiscoveryFunction resourceDiscoveryFunction;
+    private Set<PhysicalAssetResource> resources = new HashSet<>();
 
-    private CustomPostRequestFunction defaultPostRequestFunction;
-    private CustomPutRequestFunction defaultPutRequestFunction;
+    private boolean enableObservability = true;
+    private boolean enableAutoUpdateTimer = true;
+    private long autoUpdateInterval = 5000;
 
-    private PropertyBodyProducer<?> defaultPropertyBodyProducer;
-    private ActionBodyConsumer<?> defaultActionBodyConsumer;
-    private EventBodyProducer<?> defaultEventBodyProducer;
+    private boolean enableAutomaticResourceListening = true;
+    private Map<String, PhysicalAssetResourceListener.ListenerType> customResourceListeningMap = new TreeMap<>();
 
-    private PhysicalAssetDescription physicalAssetDescription;
+    private boolean enableResourceDiscoverySupport;
+    private Supplier<Set<PhysicalAssetResource>> customResourceDiscoveryFunction;
+    private List<String> ignoredResources = new ArrayList<>();
 
-    private final Map<String, DigitalTwinResource> resources = new HashMap<>();
+    private BiFunction<String, byte[], List<? extends WldtEvent<?>>> defaultPropertyBodyTranslator;
+    private Function<PhysicalAssetActionWldtEvent<?>, Request> defaultActionEventTranslator;
+    private BiFunction<String, String, List<? extends WldtEvent<?>>> defaultEventTranslator;
 
-    protected CoapPhysicalAdapterConfiguration(String serverAddress, int serverPort) {
-        this.serverAddress = serverAddress;
-        this.serverPort = serverPort;
+    private Map<String, BiFunction<String, byte[], List<? extends WldtEvent<?>>>> customPropertyBodyTranslators = new TreeMap<>();
+    private Map<String, Function<PhysicalAssetActionWldtEvent<?>, Request>> customActionEventTranslators = new TreeMap<>();
+    private Map<String, BiFunction<String, String, List<? extends WldtEvent<?>>>> customEventTranslators = new TreeMap<>();
+
+    private Function<Request, CoapResponse> customPropertyRequestFunction;
+    private Function<Request, CoapResponse> customActionRequestFunction;
+
+    protected CoapPhysicalAdapterConfiguration(String ip, int port) {
+        this.ip = ip;
+        this.port = port;
     }
 
-    public static CoapPhysicalAdapterConfigurationBuilder builder(String serverAddress, int serverPort) throws CoapPhysicalAdapterConfigurationException {
-        return new CoapPhysicalAdapterConfigurationBuilder(serverAddress, serverPort);
+    public static CoapPhysicalAdapterConfigurationBuilder builder(String ip, int port) {
+        return new CoapPhysicalAdapterConfigurationBuilder(ip, port);
     }
 
-    public String getServerAddress() {
-        return serverAddress;
+    public String getIp() {
+        return ip;
     }
 
-    public int getServerPort() {
-        return serverPort;
-    }
-
-    public boolean getResourceDiscoveryFlag() {
-        return enableResourceDiscovery;
-    }
-
-    public boolean getDigitalTwinEventsFlag() {
-        return enableDigitalTwinEvents;
+    public int getPort() {
+        return port;
     }
 
     public String getServerConnectionString() {
-        return String.format("coap://%s:%d", serverAddress, serverPort);
+        return String.format("coap://%s:%d", ip, port);
     }
 
-    public boolean getAutoUpdateFlag() {
-        return enableAutoUpdate;
+    public boolean isResourceDiscoveryEnabled() {
+        return enableResourceDiscoverySupport;
     }
 
-    public long getAutoUpdatePeriod() {
-        return autoUpdatePeriod;
-    }
-
-    public PropertyBodyProducer<?> getDefaultPropertyBodyProducer() {
-        return defaultPropertyBodyProducer;
-    }
-    public ActionBodyConsumer<?> getDefaultActionBodyConsumer() {
-        return defaultActionBodyConsumer;
-    }
-    public EventBodyProducer<?> getDefaultEventBodyProducer() {
-        return defaultEventBodyProducer;
-    }
-
-    public CustomPostRequestFunction getDefaultPostRequestFunction() {
-        return defaultPostRequestFunction;
-    }
-
-    public CustomPutRequestFunction getDefaultPutRequestFunction() {
-        return defaultPutRequestFunction;
-    }
-
-    public Map<String, DigitalTwinResource> getResources() {
-        return resources;
-    }
-
-    public PhysicalAssetDescription getPhysicalAssetDescription() {
-        return physicalAssetDescription;
-    }
-
-    public ResourceDiscoveryFunction getResourceDiscoveryFunction() {
-        return resourceDiscoveryFunction;
+    public Supplier<Set<PhysicalAssetResource>> getCustomResourceDiscoveryFunction() {
+        return this.customResourceDiscoveryFunction;
     }
 
     public int getPreferredContentFormat() {
         return preferredContentFormat;
     }
 
-    protected void setAutoUpdateFlag(boolean enableAutoUpdate) {
-        this.enableAutoUpdate = enableAutoUpdate;
+    public void addResources(Set<PhysicalAssetResource> discoveredResources) {
+        this.resources.addAll(discoveredResources);
     }
 
-    protected void setAutoUpdatePeriod(long autoUpdatePeriod) {
-        this.autoUpdatePeriod = autoUpdatePeriod;
+    public Map<String, BiFunction<String, byte[], List<? extends WldtEvent<?>>>> getCustomPropertyBodyTranslators() {
+        return this.customPropertyBodyTranslators;
+    }
+    public Map<String, BiFunction<String, String, List<? extends WldtEvent<?>>>> getCustomEventTranslatorsMap() {
+        return customEventTranslators;
     }
 
-    protected void setResourceDiscoveryFlag(boolean enableResourceDiscovery) {
-        this.enableResourceDiscovery = enableResourceDiscovery;
+    public BiFunction<String, byte[], List<? extends WldtEvent<?>>> getDefaultPropertyBodyTranslator() {
+        return defaultPropertyBodyTranslator;
     }
 
-    protected void setResourceDiscoveryFunction(ResourceDiscoveryFunction function) {
-        this.resourceDiscoveryFunction = function;
+    public BiFunction<String, String, List<? extends WldtEvent<?>>> getDefaultEventTranslator() {
+        return defaultEventTranslator;
     }
 
-    protected void setDigitalTwinEventsFlag (boolean enableDigitalTwinEvents) {
-        this.enableDigitalTwinEvents = enableDigitalTwinEvents;
+    public Set<PhysicalAssetResource> getResources() {
+        return resources;
+    }
+
+    public PhysicalAssetDescription getPhysicalAssetDescription() {
+        return pad;
+    }
+
+    public List<String> getIgnoredResources() {
+        return ignoredResources;
+    }
+
+    public boolean isAutomaticResourceListeningEnabled() {
+        return enableAutomaticResourceListening;
+    }
+
+    public Map<String, PhysicalAssetResourceListener.ListenerType> getCustomResourceListeningMap() {
+        return customResourceListeningMap;
+    }
+
+    public String getEventType() {
+        return eventType;
+    }
+
+    public String getPostActionType() {
+        return postActionType;
+    }
+
+    public String getPutActionType() {
+        return putActionType;
+    }
+
+    public String getPostActionContentType() {
+        return postActionContentType;
+    }
+
+    public String getPutActionContentType() {
+        return putActionContentType;
+    }
+
+    public boolean isObservabilityEnabled() {
+        return enableObservability;
+    }
+
+    public boolean isAutoUpdateTimerEnabled() {
+        return enableAutoUpdateTimer;
+    }
+
+    public long getAutoUpdateInterval() {
+        return autoUpdateInterval;
+    }
+
+    public Function<Request, CoapResponse> getCustomPropertyRequestFunction() {
+        return customPropertyRequestFunction;
+    }
+
+    public Function<Request, CoapResponse> getCustomActionRequestFunction() {
+        return customActionRequestFunction;
+    }
+
+    public Map<String, Function<PhysicalAssetActionWldtEvent<?>, Request>> getCustomActionEventTranslators() {
+        return customActionEventTranslators;
+    }
+
+    public Function<PhysicalAssetActionWldtEvent<?>, Request> getDefaultActionEventTranslator() {
+        return defaultActionEventTranslator;
     }
 
     protected void setPreferredContentFormat(int preferredContentFormat) {
         this.preferredContentFormat = preferredContentFormat;
     }
 
-    protected void setDefaultPropertyBodyProducer(PropertyBodyProducer<?> defaultPropertyBodyProducer) {
-        this.defaultPropertyBodyProducer = defaultPropertyBodyProducer;
+    protected void setEventType(String eventType) {
+        this.eventType = eventType;
     }
 
-    protected void setDefaultActionBodyConsumer(ActionBodyConsumer<?> defaultActionBodyConsumer) {
-        this.defaultActionBodyConsumer = defaultActionBodyConsumer;
+    protected void setPostActionType(String postActionType) {
+        this.postActionType = postActionType;
     }
 
-    protected void setDefaultEventBodyProducer(EventBodyProducer<?> defaultEventBodyProducer) {
-        this.defaultEventBodyProducer = defaultEventBodyProducer;
+    protected void setPutActionType(String putActionType) {
+        this.putActionType = putActionType;
     }
 
-    public void setDefaultPostRequestFunction(CustomPostRequestFunction defaultPostRequestFunction) {
-        this.defaultPostRequestFunction = defaultPostRequestFunction;
+    protected void setPostActionContentType(String postActionContentType) {
+        this.postActionContentType = postActionContentType;
     }
 
-    public void setDefaultPutRequestFunction(CustomPutRequestFunction defaultPutRequestFunction) {
-        this.defaultPutRequestFunction = defaultPutRequestFunction;
+    protected void setPutActionContentType(String putActionContentType) {
+        this.putActionContentType = putActionContentType;
     }
 
-    protected void setPhysicalAssetDescription(List<PhysicalAssetAction> actions,
-                                               List<PhysicalAssetProperty<?>> properties,
-                                               List<PhysicalAssetEvent> events) {
-        this.physicalAssetDescription = new PhysicalAssetDescription(actions, properties, events);
+    protected void setResources(Set<PhysicalAssetResource> resources) {
+        this.resources = resources;
     }
 
-    protected void addResource (String uri, DigitalTwinResource resource) {
-        if (!resources.containsKey(uri)) {
-            resources.put(uri, resource);
-        }
+    protected void enableObservability(boolean enable) {
+        this.enableObservability = enable;
     }
 
+    protected void enableAutoUpdateTimer(boolean enable) {
+        this.enableAutoUpdateTimer = enable;
+    }
+
+    protected void setAutoUpdateInterval(long autoUpdateInterval) {
+        this.autoUpdateInterval = autoUpdateInterval;
+    }
+
+    protected void enableAutomaticResourceListening(boolean enable) {
+        this.enableAutomaticResourceListening = enable;
+    }
+
+    protected void setCustomResourceListeningMap(Map<String, PhysicalAssetResourceListener.ListenerType> customResourceListeningMap) {
+        this.customResourceListeningMap = customResourceListeningMap;
+    }
+
+    protected void enableResourceDiscoverySupport(boolean enable) {
+        this.enableResourceDiscoverySupport = enable;
+    }
+
+    protected void setCustomResourceDiscoveryFunction(Supplier<Set<PhysicalAssetResource>> customResourceDiscoveryFunction) {
+        this.customResourceDiscoveryFunction = customResourceDiscoveryFunction;
+    }
+
+    protected void setIgnoredResources(List<String> ignoredResources) {
+        this.ignoredResources = ignoredResources;
+    }
+
+    protected void ignoreResource(String name) {
+        this.ignoredResources.add(name);
+    }
+
+    protected void setDefaultPropertyBodyTranslator(BiFunction<String, byte[], List<? extends WldtEvent<?>>> defaultPropertyBodyTranslator) {
+        this.defaultPropertyBodyTranslator = defaultPropertyBodyTranslator;
+    }
+
+    protected void setDefaultActionEventTranslator(Function<PhysicalAssetActionWldtEvent<?>, Request> defaultActionEventTranslator) {
+        this.defaultActionEventTranslator = defaultActionEventTranslator;
+    }
+
+    protected void setDefaultEventTranslator(BiFunction<String, String, List<? extends WldtEvent<?>>> defaultEventTranslator) {
+        this.defaultEventTranslator = defaultEventTranslator;
+    }
+
+    protected void setCustomPropertyBodyTranslators(Map<String, BiFunction<String, byte[], List<? extends WldtEvent<?>>>> customPropertyBodyTranslators) {
+        this.customPropertyBodyTranslators = customPropertyBodyTranslators;
+    }
+
+    protected void setCustomActionEventTranslators(Map<String, Function<PhysicalAssetActionWldtEvent<?>, Request>> customActionEventTranslators) {
+        this.customActionEventTranslators = customActionEventTranslators;
+    }
+
+    protected void setCustomEventTranslators(Map<String, BiFunction<String, String, List<? extends WldtEvent<?>>>> customEventTranslators) {
+        this.customEventTranslators = customEventTranslators;
+    }
+
+    protected void setCustomPropertyRequestFunction(Function<Request, CoapResponse> customPropertyRequestFunction) {
+        this.customPropertyRequestFunction = customPropertyRequestFunction;
+    }
+
+    protected void setCustomActionRequestFunction(Function<Request, CoapResponse> customActionRequestFunction) {
+        this.customActionRequestFunction = customActionRequestFunction;
+    }
 }

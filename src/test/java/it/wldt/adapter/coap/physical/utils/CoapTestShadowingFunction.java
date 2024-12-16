@@ -3,7 +3,7 @@ package it.wldt.adapter.coap.physical.utils;
 import it.wldt.adapter.digital.event.DigitalActionWldtEvent;
 import it.wldt.adapter.physical.PhysicalAssetDescription;
 import it.wldt.adapter.physical.event.*;
-import it.wldt.core.model.ShadowingModelFunction;
+import it.wldt.core.model.ShadowingFunction;
 import it.wldt.core.state.DigitalTwinStateAction;
 import it.wldt.core.state.DigitalTwinStateEvent;
 import it.wldt.core.state.DigitalTwinStateEventNotification;
@@ -15,7 +15,7 @@ import org.slf4j.LoggerFactory;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-public class CoapTestShadowingFunction extends ShadowingModelFunction {
+public class CoapTestShadowingFunction extends ShadowingFunction {
     private static final Logger logger = LoggerFactory.getLogger(CoapTestShadowingFunction.class);
 
     public CoapTestShadowingFunction() {
@@ -62,24 +62,28 @@ public class CoapTestShadowingFunction extends ShadowingModelFunction {
             pad.getProperties()
                     .forEach(p -> {
                         try {
-                            this.digitalTwinState.createProperty(new DigitalTwinStateProperty<>(p.getKey(), p.getInitialValue()));
-                        } catch (WldtDigitalTwinStateException | WldtDigitalTwinStatePropertyBadRequestException
-                                 | WldtDigitalTwinStatePropertyConflictException | WldtDigitalTwinStatePropertyException e) {
+                            this.digitalTwinStateManager.startStateTransaction();
+                            this.digitalTwinStateManager.createProperty(new DigitalTwinStateProperty<>(p.getKey(), p.getInitialValue()));
+                            this.digitalTwinStateManager.commitStateTransaction();
+                        } catch (WldtDigitalTwinStateException e) {
                             e.printStackTrace();
                         }
                     });
             pad.getActions().forEach(a -> {
                 try {
-                    this.digitalTwinState.enableAction(new DigitalTwinStateAction(a.getKey(), a.getType(), a.getContentType()));
-                } catch (WldtDigitalTwinStateActionException | WldtDigitalTwinStateActionConflictException
-                         | WldtDigitalTwinStateException e) {
+                    this.digitalTwinStateManager.startStateTransaction();
+                    this.digitalTwinStateManager.enableAction(new DigitalTwinStateAction(a.getKey(), a.getType(), a.getContentType()));
+                    this.digitalTwinStateManager.commitStateTransaction();
+                } catch (WldtDigitalTwinStateException e) {
                     e.printStackTrace();
                 }
             });
             pad.getEvents().forEach(e -> {
                 try {
-                    this.digitalTwinState.registerEvent(new DigitalTwinStateEvent(e.getKey(), e.getType()));
-                } catch (WldtDigitalTwinStateEventException | WldtDigitalTwinStateEventConflictException ex) {
+                    this.digitalTwinStateManager.startStateTransaction();
+                    this.digitalTwinStateManager.registerEvent(new DigitalTwinStateEvent(e.getKey(), e.getType()));
+                    this.digitalTwinStateManager.commitStateTransaction();
+                } catch (WldtDigitalTwinStateException ex) {
                     ex.printStackTrace();
                 }
             });
@@ -102,12 +106,13 @@ public class CoapTestShadowingFunction extends ShadowingModelFunction {
         logger.info("Shadowing - onPAPropertyVariation - property event: {} ", physicalPropertyEventMessage);
         //Update Digital Twin Status
         try {
-            this.digitalTwinState.updateProperty(
+            this.digitalTwinStateManager.startStateTransaction();
+            this.digitalTwinStateManager.updateProperty(
                     new DigitalTwinStateProperty<>(
                             physicalPropertyEventMessage.getPhysicalPropertyId(),
                             physicalPropertyEventMessage.getBody()));
-        } catch (WldtDigitalTwinStatePropertyException | WldtDigitalTwinStatePropertyBadRequestException
-                 | WldtDigitalTwinStatePropertyNotFoundException | WldtDigitalTwinStateException e) {
+            this.digitalTwinStateManager.commitStateTransaction();
+        } catch (WldtDigitalTwinStateException e) {
             e.printStackTrace();
         }
     }
@@ -116,11 +121,11 @@ public class CoapTestShadowingFunction extends ShadowingModelFunction {
     protected void onPhysicalAssetEventNotification(PhysicalAssetEventWldtEvent<?> physicalAssetEventWldtEvent) {
         logger.info("Shadowing - onPhysicalAssetEventNotification - received Event:{}", physicalAssetEventWldtEvent);
         try {
-            this.digitalTwinState.notifyDigitalTwinStateEvent(new DigitalTwinStateEventNotification<>(
+            this.digitalTwinStateManager.notifyDigitalTwinStateEvent(new DigitalTwinStateEventNotification<>(
                     physicalAssetEventWldtEvent.getPhysicalEventKey(),
                     (String) physicalAssetEventWldtEvent.getBody(),
                     physicalAssetEventWldtEvent.getCreationTimestamp()));
-        } catch (WldtDigitalTwinStateEventNotificationException | EventBusException e) {
+        } catch (WldtDigitalTwinStateEventNotificationException e) {
             e.printStackTrace();
         }
     }

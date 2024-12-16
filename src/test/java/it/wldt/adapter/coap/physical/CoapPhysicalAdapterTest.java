@@ -1,97 +1,83 @@
 package it.wldt.adapter.coap.physical;
 
-import it.wldt.adapter.coap.physical.exceptions.CoapPhysicalAdapterConfigurationException;
-import it.wldt.adapter.coap.physical.resources.assets.DigitalTwinActionResource;
-import it.wldt.adapter.coap.physical.resources.assets.functions.methods.CustomPutRequestFunction;
-import it.wldt.adapter.coap.physical.resources.assets.functions.preprocessing.ActionBodyConsumer;
-import it.wldt.adapter.coap.physical.resources.assets.functions.preprocessing.EventBodyProducer;
-import it.wldt.adapter.coap.physical.resources.assets.functions.preprocessing.PropertyBodyProducer;
-import it.wldt.adapter.coap.physical.resources.methods.CoapPutSupport;
+import it.wldt.adapter.coap.physical.model.PhysicalAssetResource;
 import it.wldt.adapter.coap.physical.utils.CoapTestShadowingFunction;
 import it.wldt.adapter.coap.physical.utils.ConsoleDigitalAdapter;
-import it.wldt.core.engine.WldtEngine;
-import it.wldt.exception.EventBusException;
-import it.wldt.exception.ModelException;
-import it.wldt.exception.WldtConfigurationException;
-import it.wldt.exception.WldtRuntimeException;
-import org.eclipse.californium.core.CoapResponse;
+import it.wldt.adapter.physical.event.PhysicalAssetEventWldtEvent;
+import it.wldt.adapter.physical.event.PhysicalAssetPropertyWldtEvent;
+import it.wldt.core.engine.DigitalTwin;
+import it.wldt.core.engine.DigitalTwinEngine;
+import it.wldt.core.event.WldtEvent;
+import it.wldt.exception.*;
 import org.eclipse.californium.core.coap.CoAP;
 import org.eclipse.californium.core.coap.MediaTypeRegistry;
 import org.eclipse.californium.core.coap.Request;
-import org.eclipse.californium.elements.exception.ConnectorException;
 
-import java.io.IOException;
-import java.util.Random;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.*;
 
 public class CoapPhysicalAdapterTest {
-    public static void main(String[] args) throws ModelException, WldtRuntimeException, EventBusException, WldtConfigurationException, CoapPhysicalAdapterConfigurationException, InterruptedException {
-        WldtEngine dt = new WldtEngine(new CoapTestShadowingFunction(), "coap-digital-twin");
+    public static void main(String[] args) throws ModelException, WldtRuntimeException, EventBusException, WldtConfigurationException, InterruptedException, WldtWorkerException, WldtDigitalTwinStateException, WldtEngineException, CoapPhysicalAdapterConfigurationException {
+        DigitalTwinEngine engine = new DigitalTwinEngine();
+
+        DigitalTwin dt = new DigitalTwin("coap-digital-twin", new CoapTestShadowingFunction());
         ConsoleDigitalAdapter digitalAdapter = new ConsoleDigitalAdapter();
 
         dt.addDigitalAdapter(digitalAdapter);
 
-        // String serverAddress = "192.168.10.40";
         String serverAddress = "127.0.0.1";
+        //String serverAddress = "172.16.0.114";
         int serverPort = 5683;
 
-        CustomPutRequestFunction customPutRequestFunction = (resource, payload, ct) -> {
-            Request request = resource.getRequestOptionsBase(CoAP.Code.PUT);
-            request.setPayload(payload);
-            request.getOptions().setContentFormat(MediaTypeRegistry.parse(ct));
-
-            try {
-                CoapResponse response = resource.getClient().advanced(request);
-
-                if (response == null) {
-                    return "Response:null";
-                } else if (!response.isSuccess()) {
-                    return "Response:" + response.getCode();
-                } else if (response.getPayload() != null && response.getPayload().length > 0) {
-                    return String.format("Response:%s", new String(response.getPayload()));
-                } else {
-                    return "Response:" + response.getCode();
-                }
-            } catch (ConnectorException | IOException e) {
-                e.printStackTrace();
-                return e.toString();
-            }
-        };
-
         CoapPhysicalAdapterConfiguration configuration = CoapPhysicalAdapterConfiguration.builder(serverAddress, serverPort)
-                .setAutoUpdateFlag(true)
-                .setAutoUpdatePeriod(5000)
-                .setResourceDiscoveryFlag(true)
-                .setPreferredContentFormat(MediaTypeRegistry.APPLICATION_SENML_JSON)
-                .setDefaultPropertyBodyProducer(new PropertyBodyProducer<>(String::new))
-                .setDefaultEventBodyProducer(new EventBodyProducer<>(String::new))
-                .setDefaultPutRequestFunction(customPutRequestFunction)
-                .setDefaultActionBodyConsumer(new ActionBodyConsumer<String>(String::getBytes))
-                .setDigitalTwinEventsFlag(true)
+                .enableResourceDiscoverySupport(false)
+                .enableObservability(false)
+                .enableAutoUpdateTimer(true)
+                .setAutoUpdateInterval(5000)
+                .setPreferredContentFormat(MediaTypeRegistry.APPLICATION_JSON)
+                .setDefaultPropertyBodyTranslator((key, payload) -> {
+                    List<WldtEvent<String>> events = new ArrayList<>();
+                    try {
+                        events.add(new PhysicalAssetPropertyWldtEvent<>(key, new String(payload)));
+                    } catch (EventBusException e) {
+                        e.printStackTrace();
+                    }
+                    return events;
+                })
+                .setDefaultEventTranslator((key, message) -> {
+                    List<WldtEvent<String>> events = new ArrayList<>();
+                    try {
+                        events.add(new PhysicalAssetEventWldtEvent<>(key, message));
+                    } catch (EventBusException e) {
+                        e.printStackTrace();
+                    }
+                    return events;
+                })
+                .setDefaultActionEventTranslator(event -> {
+                    String[] splitted = event.getActionKey().split(" ");
+                    Request request;
+                    if (splitted[0].equals("change")) {
+                        request = new Request(CoAP.Code.POST);
+                        request.getOptions().setUriPath(splitted[1]);
+                        request.setConfirmable(true);
+                        return request;
+                    } else {
+                        request = new Request(CoAP.Code.PUT);
+                        request.getOptions().setUriPath(splitted[1]);
+                        request.setConfirmable(true);
+                        request.setPayload((String) event.getBody());
+                    }
+                    return request;
+                })
+                .addResource("temperature-sensor", "", MediaTypeRegistry.APPLICATION_SENML_JSON, false, false, false)
+                //.addResource("temperature", "", MediaTypeRegistry.APPLICATION_JSON, false, false, false)
+                //.addResource("humidity", "", MediaTypeRegistry.APPLICATION_JSON, false, false, false)
                 .build();
 
         CoapPhysicalAdapter physicalAdapter = new CoapPhysicalAdapter("coap-test-physical-adapter", configuration);
 
         dt.addPhysicalAdapter(physicalAdapter);
 
-        dt.startLifeCycle();
-
-        Timer timer = new Timer();
-        Random random = new Random();
-
-        timer.schedule(new TimerTask() {
-                           @Override
-                           public void run() {
-                               digitalAdapter.invokeAction("change /temperature-actuator", "", "text/plain");
-                           }
-                       }, 5000, 10000);
-        timer.schedule(new TimerTask() {
-            @Override
-            public void run() {
-                String payload = String.format("%d", random.nextInt(20, 30));
-                digitalAdapter.invokeAction("update /temperature-actuator", payload, MediaTypeRegistry.toString(MediaTypeRegistry.TEXT_PLAIN));
-            }
-        }, 7000, 15000);
+        engine.addDigitalTwin(dt);
+        engine.startAll();
     }
 }

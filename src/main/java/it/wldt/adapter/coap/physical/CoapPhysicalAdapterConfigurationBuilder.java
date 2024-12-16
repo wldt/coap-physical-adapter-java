@@ -1,124 +1,194 @@
 package it.wldt.adapter.coap.physical;
 
-import it.wldt.adapter.coap.physical.resources.assets.functions.methods.CustomPostRequestFunction;
-import it.wldt.adapter.coap.physical.resources.assets.functions.methods.CustomPutRequestFunction;
-import it.wldt.adapter.coap.physical.resources.discovery.ResourceDiscoveryFunction;
-import it.wldt.adapter.coap.physical.exceptions.CoapPhysicalAdapterConfigurationException;
-import it.wldt.adapter.coap.physical.resources.assets.DigitalTwinResource;
-import it.wldt.adapter.coap.physical.resources.assets.functions.preprocessing.ActionBodyConsumer;
-import it.wldt.adapter.coap.physical.resources.assets.functions.preprocessing.EventBodyProducer;
-import it.wldt.adapter.coap.physical.resources.assets.functions.preprocessing.PropertyBodyProducer;
-import it.wldt.adapter.physical.PhysicalAssetAction;
-import it.wldt.adapter.physical.PhysicalAssetEvent;
-import it.wldt.adapter.physical.PhysicalAssetProperty;
+import it.wldt.adapter.coap.physical.model.PhysicalAssetResource;
+import it.wldt.adapter.coap.physical.model.PhysicalAssetResourceListener;
+import it.wldt.adapter.coap.physical.model.UnprocessedResource;
+import it.wldt.adapter.physical.event.PhysicalAssetActionWldtEvent;
+import it.wldt.core.event.WldtEvent;
+import org.eclipse.californium.core.CoapResponse;
+import org.eclipse.californium.core.coap.Request;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
+import java.util.function.BiFunction;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 public class CoapPhysicalAdapterConfigurationBuilder {
-    private final CoapPhysicalAdapterConfiguration configuration;
+    CoapPhysicalAdapterConfiguration configuration;
 
-    private final List<PhysicalAssetProperty<?>> properties = new ArrayList<>();
-    private final List<PhysicalAssetEvent> events = new ArrayList<>();
-    private final List<PhysicalAssetAction> actions = new ArrayList<>();
+    private List<UnprocessedResource> unprocessedResources = new ArrayList<>();
 
-    public CoapPhysicalAdapterConfigurationBuilder(String serverAddress, int serverPort) throws CoapPhysicalAdapterConfigurationException {
-        if (!isValid(serverAddress)) {
-            throw new CoapPhysicalAdapterConfigurationException("Server address cannot be null or blank string");
-        }
-        if (!isValid(serverPort)) {
-            throw new CoapPhysicalAdapterConfigurationException("Server port must be a positive number");
-        }
-
-        this.configuration = new CoapPhysicalAdapterConfiguration(serverAddress, serverPort);
-    }
-
-    public CoapPhysicalAdapterConfigurationBuilder setAutoUpdateFlag(boolean enableAutoUpdate) {
-        this.configuration.setAutoUpdateFlag(enableAutoUpdate);
-        return this;
-    }
-
-    public CoapPhysicalAdapterConfigurationBuilder setAutoUpdatePeriod(long period) {
-        if (period > 0)
-            this.configuration.setAutoUpdatePeriod(period);
-        return this;
-    }
-
-    public CoapPhysicalAdapterConfigurationBuilder setResourceDiscoveryFlag(boolean enableResourceDiscovery) {
-        this.configuration.setResourceDiscoveryFlag(enableResourceDiscovery);
-        return this;
-    }
-
-    public CoapPhysicalAdapterConfigurationBuilder setResourceDiscoveryFunction(ResourceDiscoveryFunction function) {
-        this.configuration.setResourceDiscoveryFunction(function);
-        return this;
-    }
-
-    public CoapPhysicalAdapterConfigurationBuilder setDigitalTwinEventsFlag(boolean enableDigitalTwinEvents) {
-        this.configuration.setDigitalTwinEventsFlag(enableDigitalTwinEvents);
-        return this;
-    }
-
-    public CoapPhysicalAdapterConfigurationBuilder setPreferredContentFormat(int preferredContentFormat) {
-        this.configuration.setPreferredContentFormat(preferredContentFormat);
-        return this;
-    }
-
-    public CoapPhysicalAdapterConfigurationBuilder setDefaultPropertyBodyProducer(PropertyBodyProducer defaultPropertyBodyProducer) {
-        this.configuration.setDefaultPropertyBodyProducer(defaultPropertyBodyProducer);
-        return this;
-    }
-    public CoapPhysicalAdapterConfigurationBuilder setDefaultActionBodyConsumer(ActionBodyConsumer<?> defaultActionBodyConsumer) {
-        this.configuration.setDefaultActionBodyConsumer(defaultActionBodyConsumer);
-        return this;
-    }
-    public CoapPhysicalAdapterConfigurationBuilder setDefaultEventBodyProducer(EventBodyProducer<?> defaultEventBodyProducer) {
-        this.configuration.setDefaultEventBodyProducer(defaultEventBodyProducer);
-        return this;
-    }
-
-    public CoapPhysicalAdapterConfigurationBuilder setDefaultPostRequestFunction(CustomPostRequestFunction defaultPostRequestFunction) {
-        this.configuration.setDefaultPostRequestFunction(defaultPostRequestFunction);
-        return this;
-    }
-
-    public CoapPhysicalAdapterConfigurationBuilder setDefaultPutRequestFunction(CustomPutRequestFunction defaultPutRequestFunction) {
-        this.configuration.setDefaultPutRequestFunction(defaultPutRequestFunction);
-        return this;
-    }
-
-    public CoapPhysicalAdapterConfigurationBuilder addCoapResource(String uri, DigitalTwinResource resource) {
-        this.configuration.addResource(uri, resource);
-
-        return this;
+    protected CoapPhysicalAdapterConfigurationBuilder(String ip, int port) {
+        configuration = new CoapPhysicalAdapterConfiguration(ip, port);
     }
 
     public CoapPhysicalAdapterConfiguration build() throws CoapPhysicalAdapterConfigurationException {
-        if (!this.configuration.getResourceDiscoveryFlag() && this.configuration.getResources().isEmpty()) {
-            throw new CoapPhysicalAdapterConfigurationException("If resource discovery is disabled Physical Adapter must define at least one resource");
+        if (configuration.getIp() == null || configuration.getIp().isBlank()) {
+            throw new CoapPhysicalAdapterConfigurationException("Server address cannot be empty");
+        }
+        if (configuration.getPort() < 0) {
+            throw new CoapPhysicalAdapterConfigurationException("Server port must be positive");
         }
 
-        if (this.configuration.getResourceDiscoveryFlag() && this.configuration.getDefaultPropertyBodyProducer() == null) {
-            this.configuration.setDefaultPropertyBodyProducer(new PropertyBodyProducer<>(Function.identity()));
-        }
-        if (this.configuration.getResourceDiscoveryFlag() && this.configuration.getDefaultActionBodyConsumer() == null) {
-            this.configuration.setDefaultActionBodyConsumer(new ActionBodyConsumer<>(Function.identity()));
-        }
-        if (this.configuration.getResourceDiscoveryFlag() && this.configuration.getDefaultEventBodyProducer() == null) {
-            this.configuration.setDefaultEventBodyProducer(new EventBodyProducer<>(Function.identity()));
+        if (configuration.getAutoUpdateInterval() < 0) {
+            throw new CoapPhysicalAdapterConfigurationException("Auto update interval must be positive");
         }
 
-        this.configuration.setPhysicalAssetDescription(this.actions, this.properties, this.events);
+        if (configuration.getDefaultEventTranslator() == null ||
+                configuration.getDefaultActionEventTranslator() == null ||
+                configuration.getDefaultPropertyBodyTranslator() == null) {
+            throw new CoapPhysicalAdapterConfigurationException("Default translators cannot be null");
+        }
 
-        return this.configuration;
+        Set<PhysicalAssetResource> resources = new HashSet<>();
+        unprocessedResources.forEach(res -> {
+            resources.add(new PhysicalAssetResource(
+                    configuration,
+                    res.name(),
+                    res.resourceType(),
+                    res.contentType(),
+                    configuration.getCustomPropertyBodyTranslators().containsKey(res.name()) ?
+                            configuration.getCustomPropertyBodyTranslators().get(res.name()) :
+                            configuration.getDefaultPropertyBodyTranslator(),
+                    res.hasPostSupport(),
+                    res.hasPutSupport(),
+                    configuration.getCustomEventTranslatorsMap().containsKey(res.name()) ?
+                            configuration.getCustomEventTranslatorsMap().get(res.name()) :
+                            configuration.getDefaultEventTranslator(),
+                    res.observable()
+                    ));
+        });
+        configuration.addResources(resources);
+
+        if (!configuration.isResourceDiscoveryEnabled() && configuration.getResources().isEmpty()) {
+            throw new CoapPhysicalAdapterConfigurationException("Resources collection cannot be empty if resource discovery is enabled");
+        }
+
+        return configuration;
     }
 
-    private boolean isValid(String param) {
-        return param != null && !param.isBlank();
+    public CoapPhysicalAdapterConfigurationBuilder setPreferredContentFormat(int preferredContentFormat) {
+        configuration.setPreferredContentFormat(preferredContentFormat);
+        return this;
     }
 
-    private boolean isValid(int param) {
-        return param > 0;
+    public CoapPhysicalAdapterConfigurationBuilder setEventType(String eventType) {
+        configuration.setEventType(eventType);
+        return this;
+    }
+
+    public CoapPhysicalAdapterConfigurationBuilder setPostActionType(String postActionType) {
+        configuration.setPostActionType(postActionType);
+        return this;
+    }
+
+    public CoapPhysicalAdapterConfigurationBuilder setPutActionType(String putActionType) {
+        configuration.setPutActionType(putActionType);
+        return this;
+    }
+
+    public CoapPhysicalAdapterConfigurationBuilder setPostActionContentType(String postActionContentType) {
+        configuration.setPostActionContentType(postActionContentType);
+        return this;
+    }
+
+    public CoapPhysicalAdapterConfigurationBuilder setPutActionContentType(String putActionContentType) {
+        configuration.setPutActionContentType(putActionContentType);
+        return this;
+    }
+
+    public CoapPhysicalAdapterConfigurationBuilder setResources(Set<PhysicalAssetResource> resources) {
+        configuration.setResources(resources);
+        return this;
+    }
+
+    public CoapPhysicalAdapterConfigurationBuilder addResource(String name, String resourceType, int contentType, boolean hasPostSupport, boolean hasPutSupport, boolean observable) {
+        this.unprocessedResources.add(new UnprocessedResource(name, resourceType, contentType, hasPostSupport, hasPutSupport, observable));
+        return this;
+    }
+
+    public CoapPhysicalAdapterConfigurationBuilder enableObservability(boolean enable) {
+        configuration.enableObservability(enable);
+        return this;
+    }
+
+    public CoapPhysicalAdapterConfigurationBuilder enableAutoUpdateTimer(boolean enable) {
+        configuration.enableAutoUpdateTimer(enable);
+        return this;
+    }
+
+    public CoapPhysicalAdapterConfigurationBuilder setAutoUpdateInterval(long autoUpdateIntervalMs) {
+        configuration.setAutoUpdateInterval(autoUpdateIntervalMs);
+        return this;
+    }
+
+    public CoapPhysicalAdapterConfigurationBuilder enableAutomaticResourceListening(boolean enable) {
+        configuration.enableAutomaticResourceListening(true);
+        return this;
+    }
+
+    public CoapPhysicalAdapterConfigurationBuilder setCustomResourceListeningMap(Map<String, PhysicalAssetResourceListener.ListenerType> customResourceListeningMap) {
+        configuration.setCustomResourceListeningMap(customResourceListeningMap);
+        return this;
+    }
+
+    public CoapPhysicalAdapterConfigurationBuilder enableResourceDiscoverySupport(boolean enable) {
+        configuration.enableResourceDiscoverySupport(enable);
+        return this;
+    }
+
+    public CoapPhysicalAdapterConfigurationBuilder setCustomResourceDiscoveryFunction(Supplier<Set<PhysicalAssetResource>> customResourceDiscoveryFunction) {
+        configuration.setCustomResourceDiscoveryFunction(customResourceDiscoveryFunction);
+        return this;
+    }
+
+    public CoapPhysicalAdapterConfigurationBuilder setIgnoredResources(List<String> ignoredResources) {
+        configuration.setIgnoredResources(ignoredResources);
+        return this;
+    }
+
+    public CoapPhysicalAdapterConfigurationBuilder ignoreResource(String name) {
+        configuration.ignoreResource(name);
+        return this;
+    }
+
+    public CoapPhysicalAdapterConfigurationBuilder setDefaultPropertyBodyTranslator(BiFunction<String, byte[], List<? extends WldtEvent<?>>> defaultPropertyBodyTranslator) {
+        configuration.setDefaultPropertyBodyTranslator(defaultPropertyBodyTranslator);
+        return this;
+    }
+
+    public CoapPhysicalAdapterConfigurationBuilder setDefaultActionEventTranslator(Function<PhysicalAssetActionWldtEvent<?>, Request> defaultActionEventTranslator) {
+        configuration.setDefaultActionEventTranslator(defaultActionEventTranslator);
+        return this;
+    }
+
+    public CoapPhysicalAdapterConfigurationBuilder setDefaultEventTranslator(BiFunction<String, String, List<? extends WldtEvent<?>>> defaultEventTranslator) {
+        configuration.setDefaultEventTranslator(defaultEventTranslator);
+        return this;
+    }
+
+    public CoapPhysicalAdapterConfigurationBuilder setCustomPropertyBodyTranslators(Map<String, BiFunction<String, byte[], List<? extends WldtEvent<?>>>> customPropertyBodyTranslators) {
+        configuration.setCustomPropertyBodyTranslators(customPropertyBodyTranslators);
+        return this;
+    }
+
+    public CoapPhysicalAdapterConfigurationBuilder setCustomActionEventTranslators(Map<String, Function<PhysicalAssetActionWldtEvent<?>, Request>> customActionEventTranslators) {
+        configuration.setCustomActionEventTranslators(customActionEventTranslators);
+        return this;
+    }
+
+    public CoapPhysicalAdapterConfigurationBuilder setCustomEventTranslators(Map<String, BiFunction<String, String, List<? extends WldtEvent<?>>>> customEventTranslators) {
+        configuration.setCustomEventTranslators(customEventTranslators);
+        return this;
+    }
+
+    public CoapPhysicalAdapterConfigurationBuilder setCustomPropertyRequestFunction(Function<Request, CoapResponse> customPropertyRequestFunction) {
+        configuration.setCustomPropertyRequestFunction(customPropertyRequestFunction);
+        return this;
+    }
+
+    public CoapPhysicalAdapterConfigurationBuilder setCustomActionRequestFunction(Function<Request, CoapResponse> customActionRequestFunction) {
+        configuration.setCustomActionRequestFunction(customActionRequestFunction);
+        return this;
     }
 }

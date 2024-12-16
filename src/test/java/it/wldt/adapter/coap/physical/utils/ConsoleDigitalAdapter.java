@@ -20,83 +20,13 @@ public class ConsoleDigitalAdapter extends DigitalAdapter<String> {
     }
 
     @Override
-    protected void onStateChangePropertyCreated(DigitalTwinStateProperty<?> digitalTwinStateProperty) {
-
+    protected void onStateUpdate(DigitalTwinState newDigitalTwinState, DigitalTwinState previousDigitalTwinState, ArrayList<DigitalTwinStateChange> digitalTwinStateChangeList) {
+        logger.info("{} - State update: {}", super.getId(), newDigitalTwinState);
     }
 
     @Override
-    protected void onStateChangePropertyUpdated(DigitalTwinStateProperty<?> digitalTwinStateProperty) {
-        logger.info("DA({}) - OnStateChangePropertyUpdate - property: {}", this.getId(), digitalTwinStateProperty);
-    }
-
-    @Override
-    protected void onStateChangePropertyDeleted(DigitalTwinStateProperty<?> digitalTwinStateProperty) {
-
-    }
-
-    @Override
-    protected void onStatePropertyUpdated(DigitalTwinStateProperty<?> digitalTwinStateProperty) {
-        logger.info("DA({}) - OnStatePropertyUpdate - property:{}", this.getId(), digitalTwinStateProperty);
-    }
-
-    @Override
-    protected void onStatePropertyDeleted(DigitalTwinStateProperty<?> digitalTwinStateProperty) {
-
-    }
-
-    @Override
-    protected void onStateChangeActionEnabled(DigitalTwinStateAction digitalTwinStateAction) {
-
-    }
-
-    @Override
-    protected void onStateChangeActionUpdated(DigitalTwinStateAction digitalTwinStateAction) {
-
-    }
-
-    @Override
-    protected void onStateChangeActionDisabled(DigitalTwinStateAction digitalTwinStateAction) {
-
-    }
-
-    @Override
-    protected void onStateChangeEventRegistered(DigitalTwinStateEvent digitalTwinStateEvent) {
-        logger.info("DA({}) - onStateChangeEventRegistered - event: {} ", this.getId(), digitalTwinStateEvent);
-    }
-
-    @Override
-    protected void onStateChangeEventRegistrationUpdated(DigitalTwinStateEvent digitalTwinStateEvent) {
-
-    }
-
-    @Override
-    protected void onStateChangeEventUnregistered(DigitalTwinStateEvent digitalTwinStateEvent) {
-
-    }
-
-    @Override
-    protected void onDigitalTwinStateEventNotificationReceived(DigitalTwinStateEventNotification<?> digitalTwinStateEventNotification) {
-        logger.info("DA({}) - onEventNotificationReceived - event: {} ", this.getId(), digitalTwinStateEventNotification.getBody());
-    }
-
-    @Override
-    protected void onStateChangeRelationshipCreated(DigitalTwinStateRelationship<?> digitalTwinStateRelationship) {
-
-    }
-
-    @Override
-    protected void onStateChangeRelationshipInstanceCreated(DigitalTwinStateRelationshipInstance<?> digitalTwinStateRelationshipInstance) {
-
-    }
-
-    @Override
-    protected void onStateChangeRelationshipDeleted(DigitalTwinStateRelationship<?> digitalTwinStateRelationship) {
-
-    }
-
-    @Override
-    protected void onStateChangeRelationshipInstanceDeleted(DigitalTwinStateRelationshipInstance<?> digitalTwinStateRelationshipInstance) {
-
+    protected void onEventNotificationReceived(DigitalTwinStateEventNotification<?> digitalTwinStateEventNotification) {
+        logger.info("{} - Event notification: {}", super.getId(), digitalTwinStateEventNotification);
     }
 
     @Override
@@ -110,7 +40,7 @@ public class ConsoleDigitalAdapter extends DigitalAdapter<String> {
     }
 
     @Override
-    public void onDigitalTwinSync(IDigitalTwinState iDigitalTwinState) {
+    public void onDigitalTwinSync(DigitalTwinState iDigitalTwinState) {
         logger.debug("DA({}) - onDTSync - state: {}", this.getId(), digitalTwinState);
         try {
             List<String> eventsKeys = digitalTwinState.getEventList()
@@ -123,7 +53,7 @@ public class ConsoleDigitalAdapter extends DigitalAdapter<String> {
     }
 
     @Override
-    public void onDigitalTwinUnSync(IDigitalTwinState iDigitalTwinState) {
+    public void onDigitalTwinUnSync(DigitalTwinState iDigitalTwinState) {
         logger.info("DA({}) - onDTUnSync - state: {}", this.getId(), digitalTwinState);
     }
 

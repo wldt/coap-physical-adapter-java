@@ -4,7 +4,6 @@ import com.google.gson.Gson;
 import it.unimore.dipi.iot.utils.SenMLPack;
 import it.unimore.dipi.iot.utils.SenMLRecord;
 import it.wldt.adapter.coap.physical.server.model.TemperatureSensor;
-import org.eclipse.californium.core.Utils;
 import org.eclipse.californium.core.coap.CoAP;
 import org.eclipse.californium.core.coap.MediaTypeRegistry;
 import org.eclipse.californium.core.server.resources.CoapExchange;

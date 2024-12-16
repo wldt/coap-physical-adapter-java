@@ -1,368 +1,245 @@
 package it.wldt.adapter.coap.physical;
 
-import it.wldt.adapter.coap.physical.resources.assets.DigitalTwinActionResource;
-import it.wldt.adapter.coap.physical.resources.discovery.DiscoveredResource;
-import it.wldt.adapter.coap.physical.resources.CoapResourceDescriptor;
-import it.wldt.adapter.coap.physical.resources.assets.DigitalTwinResource;
-import it.wldt.adapter.coap.physical.resources.assets.core.DigitalTwinActuatorResource;
-import it.wldt.adapter.coap.physical.resources.assets.core.DigitalTwinParameterResource;
-import it.wldt.adapter.coap.physical.resources.assets.core.DigitalTwinReadOnlyResource;
-import it.wldt.adapter.coap.physical.resources.assets.core.DigitalTwinSensorResource;
-import it.wldt.adapter.coap.physical.resources.methods.CoapPostSupport;
-import it.wldt.adapter.coap.physical.resources.methods.CoapPutSupport;
-import it.wldt.adapter.physical.ConfigurablePhysicalAdapter;
-import it.wldt.adapter.physical.PhysicalAssetAction;
-import it.wldt.adapter.physical.PhysicalAssetEvent;
-import it.wldt.adapter.physical.PhysicalAssetProperty;
+import it.wldt.adapter.coap.physical.model.PhysicalAssetResource;
+import it.wldt.adapter.coap.physical.model.PhysicalAssetResourceListener;
+import it.wldt.adapter.physical.*;
 import it.wldt.adapter.physical.event.PhysicalAssetActionWldtEvent;
 import it.wldt.adapter.physical.event.PhysicalAssetEventWldtEvent;
 import it.wldt.adapter.physical.event.PhysicalAssetPropertyWldtEvent;
 import it.wldt.core.event.WldtEvent;
-import it.wldt.exception.EventBusException;
-import it.wldt.exception.PhysicalAdapterException;
 import org.eclipse.californium.core.CoapClient;
 import org.eclipse.californium.core.WebLink;
 import org.eclipse.californium.core.coap.MediaTypeRegistry;
-import org.eclipse.californium.elements.exception.ConnectorException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.util.HashSet;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Set;
+import java.util.function.BiFunction;
+import java.util.function.Function;
 
-/**
- * It is an implementation of a WLDT {@code ConfigurablePhysicalAdapter} implementing CoAP protocol support via the {@code californium-core} framework.
- * The configuration is passed through a {@code CoapPhysicalAdapterConfiguration} class instance.
- * It implements logging functionalities based on {@code SLF4J}.
- * Resources can be added both manually by passing them via the configuration and automatically by using resource discovery.
- *
- * @see ConfigurablePhysicalAdapter
- * @see CoapPhysicalAdapterConfiguration
- * @see DigitalTwinResource
- */
-public class CoapPhysicalAdapter extends ConfigurablePhysicalAdapter<CoapPhysicalAdapterConfiguration> {
+public class CoapPhysicalAdapter
+        extends ConfigurablePhysicalAdapter<CoapPhysicalAdapterConfiguration>
+        implements PhysicalAssetResourceListener {
     private static final Logger logger = LoggerFactory.getLogger(CoapPhysicalAdapter.class);
+
+    //private CoapPhysicalAdapterConfiguration configuration;
 
     public CoapPhysicalAdapter(String id, CoapPhysicalAdapterConfiguration configuration) {
         super(id, configuration);
     }
 
     @Override
-    public void onIncomingPhysicalAction(PhysicalAssetActionWldtEvent<?> physicalAssetActionWldtEvent) {
-        logger.info("CoAP Physical Adapter - Received incoming physical action: {}", physicalAssetActionWldtEvent);
-
-        if (physicalAssetActionWldtEvent == null) {
-            logger.info("CoAP Physical Adapter - Received null action");
+    public void onIncomingPhysicalAction(PhysicalAssetActionWldtEvent<?> physicalActionEvent) {
+        if (physicalActionEvent == null) {
+            logger.warn("{} - CoAP physical adapter received null incoming action", super.getId());
             return;
         }
+        logger.info("{} - CoAP physical adapter received incoming physical action", super.getId());
 
-        logger.info("CoAP Physical Adapter - Incoming physical action: {}", physicalAssetActionWldtEvent);
 
-        String[] splittedActionKey = physicalAssetActionWldtEvent.getActionKey().split(" ");
+        String[] splittedActionKey = physicalActionEvent.getActionKey().split(" ");
 
-        String method = splittedActionKey[0];
-        CoapResourceDescriptor resource = getConfiguration().getResources().get(splittedActionKey[1]);
+        try {
+            PhysicalAssetResource resource = (PhysicalAssetResource) getConfiguration().getResources().stream().filter(res -> res.getName().equals(splittedActionKey[1])).toArray()[0];
 
-        if (resource == null) {
-            logger.error("CoAP Physical Adapter - Incoming action directed to unregistered resource: {}", physicalAssetActionWldtEvent);
-            return;
-        }
-
-        byte[] body = ((DigitalTwinActionResource) resource).applyActionFunction(physicalAssetActionWldtEvent);
-        String ct = ((DigitalTwinActionResource) resource).getActionContentType();
-
-        switch (method) {
-            case CoapPostSupport.ACTION_KEY -> {
-                if (resource instanceof CoapPostSupport) {
-                    ((CoapPostSupport) resource).sendPOST(body, ct);
-                } else {
-                    logger.error("CoAP Physical Adapter - Incoming action method is not supported by resource: {}", physicalAssetActionWldtEvent);
-                }
+            if (getConfiguration().getCustomActionEventTranslators().containsKey(resource.getName())) {
+                resource.sendAction(getConfiguration().getCustomActionEventTranslators().get(resource.getName()).apply(physicalActionEvent));
+            } else {
+                resource.sendAction(getConfiguration().getDefaultActionEventTranslator().apply(physicalActionEvent));
             }
-            case CoapPutSupport.ACTION_KEY -> {
-                if (resource instanceof CoapPutSupport) {
-                    ((CoapPutSupport) resource).sendPUT(body, ct);
-                }
-                else {
-                    logger.error("CoAP Physical Adapter - Incoming action method is not supported by resource: {}", physicalAssetActionWldtEvent);
-                }
-            }
-            default -> {
-                logger.error("CoAP Physical Adapter - Incoming action has unsupported key method: {}", physicalAssetActionWldtEvent);
-            }
+        } catch (NoSuchElementException e) {
+            logger.warn("{} - CoAP physical adapter received action to unknown resource", super.getId());
+        } catch (Exception e) {
+            logger.error("{} - CoAP physical adapter encountered an error", super.getId(), e);
         }
     }
 
     @Override
     public void onAdapterStart() {
-        logger.info("CoAP Physical Adapter - Starting");
+        logger.info("{} - CoAP physical adapter starting", super.getId());
+
         try {
-            if (getConfiguration().getResourceDiscoveryFlag()) {
-                logger.info("CoAP Physical Adapter - CoAP client discovering resources");
-                discoverCoapResources();
-            }
-
-            getConfiguration().getResources().values().forEach(this::manageResource);
-
-            notifyPhysicalAdapterBound(getConfiguration().getPhysicalAssetDescription());
-        } catch (PhysicalAdapterException | EventBusException e) {  // Bind notification exceptions
-            logger.error("CoAP Physical Adapter - Error notifying binding");
-            e.printStackTrace();
-        } catch (ConnectorException | IOException e) {              // Resource discovery exceptions
-            logger.error("CoAP Physical Adapter - Error discovering CoAP resources");
-            e.printStackTrace();
+            discoverResources();
+        } catch (Exception e) {
+            logger.error("{} - CoAP physical adapter failed to discover resources", super.getId(), e);
+            notifyPhysicalAdapterUnBound("CoAP physical adapter failed to discover resources");
+            return;
         }
 
-        logger.info("CoAP Physical Adapter - Start sequence completed");
+        if (getConfiguration().getResources().isEmpty()) {
+            logger.error("{} - CoAP physical adapter has no resources", super.getId());
+            notifyPhysicalAdapterUnBound("CoAP physical adapter has no resources");
+            return;
+        }
+
+        getConfiguration().getResources().forEach(this::listenResource);
+
+        logger.info("{} - CoAP physical adapter generating PAD", super.getId());
+        getConfiguration().getResources().forEach(resource -> {
+            String resourceKey = (resource.getResourceType() != null && !resource.getResourceType().isBlank() ?
+                    String.format("%s.%s", resource.getResourceType(), resource.getName()) :
+                    resource.getName()
+                    );
+
+            PhysicalAssetProperty<?> property = new PhysicalAssetProperty<>(resourceKey, 0.0);
+            getConfiguration().getPhysicalAssetDescription().getProperties().add(property);
+
+            PhysicalAssetEvent event = new PhysicalAssetEvent(resourceKey, getConfiguration().getEventType());
+            getConfiguration().getPhysicalAssetDescription().getEvents().add(event);
+
+            if (resource.isPostSupported()) {
+                PhysicalAssetAction postAction = new PhysicalAssetAction(
+                        String.format("change %s", resourceKey),
+                        getConfiguration().getPostActionType(),
+                        getConfiguration().getPostActionContentType()
+                );
+                getConfiguration().getPhysicalAssetDescription().getActions().add(postAction);
+            }
+            if (resource.isPutSupported()) {
+                PhysicalAssetAction putAction = new PhysicalAssetAction(
+                        String.format("update %s", resourceKey),
+                        getConfiguration().getPutActionType(),
+                        getConfiguration().getPutActionContentType()
+                );
+                getConfiguration().getPhysicalAssetDescription().getActions().add(putAction);
+            }
+        });
+
+        getConfiguration().getResources().forEach(resource -> {
+            if (getConfiguration().isObservabilityEnabled() && resource.isObservable()) {
+                resource.startObservation();
+
+                getConfiguration().getPhysicalAssetDescription().getRelationships().add(new PhysicalAssetRelationship<>(resource.getName(), "observation"));
+            } else if (getConfiguration().isAutoUpdateTimerEnabled()) {
+                resource.startAutoUpdate(getConfiguration().getAutoUpdateInterval());
+
+                getConfiguration().getPhysicalAssetDescription().getRelationships().add(new PhysicalAssetRelationship<>(resource.getName(), "auto-update"));
+            }
+        });
+
+        try {
+            notifyPhysicalAdapterBound(getConfiguration().getPhysicalAssetDescription());
+        } catch (Exception e) {
+            logger.error("{} - CoAP physical adapter bounding notification failed", super.getId(), e);
+            notifyPhysicalAdapterUnBound("CoAP physical adapter bounding notification failed");
+        }
     }
 
     @Override
     public void onAdapterStop() {
-        logger.info("CoAP Physical Adapter - Stopping adapter");
+        getConfiguration().getResources().clear();
     }
 
-    /**
-     * The method responsible for the resource discovery.
-     * Note that if in the discovery function a resource with {@code Interface.UNKNOWN} is passed it will be ignored by the function
-     *
-     * @throws ConnectorException
-     * @throws IOException
-     */
-    public void discoverCoapResources() throws ConnectorException, IOException {
-        logger.info("CoAP Physical Adapter - Starting resource discovery");
+    private void discoverResources() throws Exception {
+        if (!getConfiguration().isResourceDiscoveryEnabled()) {
+            return;
+        }
 
-        // Create a new CoAP client ready for resource discovery
-        CoapClient coapClient = new CoapClient(getConfiguration().getServerConnectionString());
+        logger.info("{} - CoAP physical adapter starting resource discovery", super.getId());
 
-        // Create a set of discovered resource objects
-        Set<DiscoveredResource> discoveredResources;
+        Set<PhysicalAssetResource> discoveredResources;
 
-        if (getConfiguration().getResourceDiscoveryFunction() != null) {
-            // If resource discovery has a custom function get resources from that
-            discoveredResources = getConfiguration().getResourceDiscoveryFunction().discover(coapClient);
+        if (getConfiguration().getCustomResourceDiscoveryFunction() != null) {
+            discoveredResources = getConfiguration().getCustomResourceDiscoveryFunction().get();
         } else {
-            // Else use default CoAP CoRE resource discovery (/.well-known/core)
+            CoapClient coapClient = new CoapClient(getConfiguration().getServerConnectionString());
             discoveredResources = new HashSet<>();
-            Set<WebLink> linkSet = coapClient.discover();
 
-            for (WebLink link : linkSet) {
+            Set<WebLink> webLinks = coapClient.discover();
+
+            webLinks.forEach(link -> {
+                // URI
+
                 String uri = link.getURI();
-                String resourceType = link.getAttributes().getFirstAttributeValue(DiscoveredResource.WKC_ATTR_RESOURCE_TYPE);
-                List<String> supportedContentTypes = link.getAttributes().getAttributeValues(DiscoveredResource.WKC_ATTR_CONTENT_TYPE);
-                String linkInterface = link.getAttributes().getFirstAttributeValue(DiscoveredResource.WKC_ATTR_RESOURCE_INTERFACE);
-                boolean observable = link.getAttributes().containsAttribute(DiscoveredResource.WKC_ATTR_OBSERVABLE);
 
-                int contentType = -1;
-                for (String ct: supportedContentTypes) {
-                    if (getConfiguration().getPreferredContentFormat() == Integer.parseInt(ct)) {
-                        contentType = Integer.parseInt(ct);
-                    }
+                // RESOURCE TYPE
+
+                String resourceType = link.getAttributes().getFirstAttributeValue("rt");
+
+                // CONTENT TYPE
+
+                int contentType = MediaTypeRegistry.UNDEFINED;
+                if (link.getAttributes().getAttributeValues("ct").contains(Integer.toString(getConfiguration().getPreferredContentFormat()))) {
+                    contentType = getConfiguration().getPreferredContentFormat();
                 }
 
-                DiscoveredResource.Interface resourceInterface = DiscoveredResource.Interface.fromString(linkInterface);
+                // PAYLOAD TRANSLATORS
 
-                if (contentType < 0) {
-                    // If ct is not defined in the Link set it to text/plain
-                    contentType = MediaTypeRegistry.TEXT_PLAIN;
+                BiFunction<String, byte[], List<? extends WldtEvent<?>>> getRequestTranslator;
+                boolean hasPostSupport = false;
+                boolean hasPutSupport = false;
+
+                if (getConfiguration().getCustomPropertyBodyTranslators().containsKey(uri)) {
+                    getRequestTranslator = getConfiguration().getCustomPropertyBodyTranslators().get(uri);
+                } else {
+                    getRequestTranslator = getConfiguration().getDefaultPropertyBodyTranslator();
                 }
 
-                discoveredResources.add(new DiscoveredResource(uri, resourceType, contentType, resourceInterface, observable));
-            }
-        }
-
-        for (DiscoveredResource dr : discoveredResources) {
-            if (dr.uri() == null || dr.uri().isBlank() || dr.resourceInterface() == null ||
-                    dr.resourceInterface() == DiscoveredResource.Interface.UNKNOWN) {
-                // If resource does not contain necessary info proceed to the next one
-                continue;
-            }
-
-            // Separate uri from server address
-            String uri = dr.uri().substring(dr.uri().indexOf('/'));
-
-            // Get WLDT key. If rt is not defined use uri, otherwise use <rt>.<uri>
-            String wldtKey = (dr.resourceType() == null || dr.resourceType().isBlank()) ?
-                    uri :
-                    String.format("%s.%s", dr.resourceType(), uri);
-
-            // Replaces each non-alphanumeric character different from '.' with ''
-            wldtKey = wldtKey.replaceAll("[^a-zA-Z0-9.]", "");
-
-            DigitalTwinResource resource = null;
-
-            logger.info("CoAP Physical Adapter - Resource discovery found resource {}", wldtKey);
-
-            switch (dr.resourceInterface()) {
-                case SENSOR -> {
-                    logger.info("CoAP Physical Adapter - Resource {} is a sensor", wldtKey);
-                    if (getConfiguration().getDigitalTwinEventsFlag()) {
-                        resource = new DigitalTwinSensorResource<>(getConfiguration().getServerConnectionString(), uri, wldtKey,
-                                getConfiguration().getDefaultPropertyBodyProducer(),
-                                getConfiguration().getDefaultEventBodyProducer());
-                    } else {
-                        resource = new DigitalTwinSensorResource<>(getConfiguration().getServerConnectionString(), uri, wldtKey,
-                                getConfiguration().getDefaultPropertyBodyProducer());
-                    }
+                if (link.getAttributes().getFirstAttributeValue("if").equals("core.a")) {       // POST
+                    hasPostSupport = true;
                 }
-                case ACTUATOR -> {
-                    logger.info("CoAP Physical Adapter - Resource {} is an actuator", wldtKey);
-                    if (getConfiguration().getDigitalTwinEventsFlag()) {
-                        resource = new DigitalTwinActuatorResource<>(
-                                getConfiguration().getServerConnectionString(),
-                                uri,
-                                wldtKey,
-                                getConfiguration().getDefaultPropertyBodyProducer(),
-                                getConfiguration().getDefaultEventBodyProducer(),
-                                getConfiguration().getDefaultActionBodyConsumer());
-                    } else {
-                        resource = new DigitalTwinActuatorResource<>(
-                                getConfiguration().getServerConnectionString(),
-                                uri,
-                                wldtKey,
-                                getConfiguration().getDefaultPropertyBodyProducer(),
-                                getConfiguration().getDefaultActionBodyConsumer());
-                    }
+
+                if (link.getAttributes().getFirstAttributeValue("if").equals("core.p") ||
+                        link.getAttributes().getFirstAttributeValue("if").equals("core.a")) {   // PUT
+                    hasPutSupport = true;
                 }
-                case PARAMETER -> {
-                    logger.info("CoAP Physical Adapter - Resource {} is a parameter", wldtKey);
-                    if (getConfiguration().getDigitalTwinEventsFlag()) {
-                        resource = new DigitalTwinParameterResource<>(
-                                getConfiguration().getServerConnectionString(),
-                                uri,
-                                wldtKey,
-                                getConfiguration().getDefaultPropertyBodyProducer(),
-                                getConfiguration().getDefaultEventBodyProducer(),
-                                getConfiguration().getDefaultActionBodyConsumer());
-                    } else {
-                        resource = new DigitalTwinActuatorResource<>(
-                                getConfiguration().getServerConnectionString(),
-                                uri,
-                                wldtKey,
-                                getConfiguration().getDefaultPropertyBodyProducer(),
-                                getConfiguration().getDefaultActionBodyConsumer());
-                    }
-                }
-                case READ_ONLY -> {
-                    logger.info("CoAP Physical Adapter - Resource {} is a read-only", wldtKey);
-                    if (getConfiguration().getDigitalTwinEventsFlag()) {
-                        resource = new DigitalTwinReadOnlyResource<>(
-                                getConfiguration().getServerConnectionString(),
-                                uri,
-                                wldtKey,
-                                getConfiguration().getDefaultPropertyBodyProducer(),
-                                getConfiguration().getDefaultEventBodyProducer());
-                    } else {
-                        resource = new DigitalTwinReadOnlyResource<>(
-                                getConfiguration().getServerConnectionString(),
-                                uri,
-                                wldtKey,
-                                getConfiguration().getDefaultPropertyBodyProducer());
-                    }
-                }
-                default -> {    // UNKNOWN (Should not enter here)
-                    // If not in CoRE Interfaces format resource is discarded
-                    logger.warn("CoAP Physical Adapter - Resource {} is not in CoRE Interfaces format. Discarded.", wldtKey);
-                }
-            }
 
-            if (resource == null) {
-                // If resource is not defined proceed to next one
-                // This condition should never enter since it was already checked before, however it is kept for prevention
-                continue;
-            }
+                // EVENT TRANSLATOR
 
-            if (resource instanceof DigitalTwinActuatorResource && getConfiguration().getDefaultPutRequestFunction() != null) {
-                ((DigitalTwinActuatorResource<?,?,?>) resource).setPutRequestFunction(getConfiguration().getDefaultPutRequestFunction());
-            }
-            if (resource instanceof DigitalTwinParameterResource && getConfiguration().getDefaultPutRequestFunction() != null) {
-                ((DigitalTwinParameterResource<?,?,?>) resource).setPutRequestFunction(getConfiguration().getDefaultPutRequestFunction());
-            }
+                BiFunction<String, String, List<? extends WldtEvent<?>>> eventTranslator = (
+                        getConfiguration().getCustomEventTranslatorsMap().containsKey(uri) ?
+                                getConfiguration().getCustomEventTranslatorsMap().get(uri) :
+                                getConfiguration().getDefaultEventTranslator()
+                        );
 
-            if (resource instanceof DigitalTwinActuatorResource && getConfiguration().getDefaultPostRequestFunction() != null) {
-                ((DigitalTwinActuatorResource<?,?,?>) resource).setPostRequestFunction(getConfiguration().getDefaultPostRequestFunction());
-            }
+                // OBSERVABILITY
 
-            // Set resource content type and start observing or auto updating
-            resource.setPreferredContentType(dr.contentType());
+                boolean observable = link.getAttributes().containsAttribute("obs");
 
-            if (dr.observable()) {
-                resource.startObserving();
-            } else if (getConfiguration().getAutoUpdateFlag()){
-                resource.setAutoUpdatePeriod(getConfiguration().getAutoUpdatePeriod());
-                resource.startAutoUpdate();
-            }
+                // RESOURCE ADDITION
 
-            getConfiguration().addResource(resource.getResourceUri(), resource);
-        }
-        logger.info("CoAP Physical Adapter - Ending resource discovery");
-    }
-
-    private void manageResource(DigitalTwinResource resource) {
-        logger.info("CoAP Physical Adapter - Starting resource {} payload management", resource.getResourceUri());
-
-        // Add new payload listener
-        resource.addPayloadListener(value -> {
-            // Apply property body production function and obtain events
-            List<? extends WldtEvent<?>> wldtEvents = resource.applyPropertyFunction(value);
-
-            wldtEvents.forEach(e -> {
-                // Publish PAP WLDT events
-                try {
-                    if (e instanceof PhysicalAssetPropertyWldtEvent) {
-                        publishPhysicalAssetPropertyWldtEvent((PhysicalAssetPropertyWldtEvent<?>) e);
-                    }
-                }catch (EventBusException ex) {
-                    ex.printStackTrace();
+                if (!getConfiguration().getIgnoredResources().contains(uri)) {
+                    discoveredResources.add(new PhysicalAssetResource(getConfiguration(), uri, resourceType, contentType, getRequestTranslator, hasPostSupport, hasPutSupport, eventTranslator, observable));
                 }
             });
-        });
-
-        // Add new event listener
-        resource.addEventListener(message -> {
-            // Apply event body production function and obtain events
-            List<? extends WldtEvent<?>> wldtEvents = resource.applyEventFunction(message);
-
-            wldtEvents.forEach(e -> {
-                // Publish PAE WLDT events
-                try {
-                    if (e instanceof PhysicalAssetEventWldtEvent) {
-                        publishPhysicalAssetEventWldtEvent((PhysicalAssetEventWldtEvent<?>) e);
-                    }
-                } catch (EventBusException ex) {
-                    ex.printStackTrace();
-                }
-            });
-        });
-
-        // Create property asset and add it to the PAD
-        PhysicalAssetProperty<?> property = new PhysicalAssetProperty<>(resource.getPropertyKey(), 0.0);
-        getConfiguration().getPhysicalAssetDescription().getProperties().add(property);
-
-        // Create event asset and add it to the PAD
-        PhysicalAssetEvent event = new PhysicalAssetEvent(resource.getPropertyKey(), MediaTypeRegistry.toString(MediaTypeRegistry.TEXT_PLAIN));
-        getConfiguration().getPhysicalAssetDescription().getEvents().add(event);
-
-        if (resource instanceof CoapPostSupport) {
-            // If resource can receive "change" action events create the action asset and add it to the PAD
-            PhysicalAssetAction action = new PhysicalAssetAction(
-                    String.format("%s %s", CoapPostSupport.ACTION_KEY, resource.getResourceUri()),
-                    resource.getPropertyKey(),
-                    MediaTypeRegistry.toString(resource.getPreferredContentType()));
-
-            getConfiguration().getPhysicalAssetDescription().getActions().add(action);
         }
-        if (resource instanceof CoapPutSupport) {
-            // If resource can receive "update" action events create the action asset and add it to the PAD
-            PhysicalAssetAction action = new PhysicalAssetAction(
-                    String.format("%s %s", CoapPutSupport.ACTION_KEY, resource.getResourceUri()),
-                    resource.getPropertyKey(),
-                    MediaTypeRegistry.toString(resource.getPreferredContentType()));
-
-            getConfiguration().getPhysicalAssetDescription().getActions().add(action);
-        }
-
-        logger.info("CoAP Physical Adapter - Ending resource {} payload management", resource.getResourceUri());
+        this.getConfiguration().addResources(discoveredResources);
     }
+
+    private void listenResource(PhysicalAssetResource resource) {
+        logger.info("{} - CoAP physical adapter starting resource listening ({})", super.getId(), resource.getName());
+
+        if (getConfiguration().isAutomaticResourceListeningEnabled()) {
+            resource.addListener(this, PhysicalAssetResourceListener.ListenerType.ALL);
+        } else if (getConfiguration().getCustomResourceListeningMap().containsKey(resource.getName())) {
+            resource.addListener(this, getConfiguration().getCustomResourceListeningMap().get(resource.getName()));
+        }
+    }
+
+    @Override
+    public void onPropertyChanged(PhysicalAssetResource resource, List<? extends WldtEvent<?>> properties) {
+        properties.forEach(e -> {
+            try {
+                publishPhysicalAssetPropertyWldtEvent((PhysicalAssetPropertyWldtEvent<?>) e);
+            } catch (Exception ex) {
+                logger.error("{} - CoAP physical adapter failed to publish property", super.getId(), ex);
+            }
+        });
+    }
+
+    @Override
+    public void onEvent(PhysicalAssetResource resource, List<? extends WldtEvent<?>> events) {
+        events.forEach(e -> {
+            try {
+                publishPhysicalAssetEventWldtEvent((PhysicalAssetEventWldtEvent<?>) e);
+            } catch (Exception ex) {
+                logger.error("{} - CoAP physical adapter failed to publish event", super.getId(), ex);
+            }
+        });
+    }
+
+
 }
