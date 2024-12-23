@@ -28,7 +28,6 @@ public class CoapPhysicalAdapterTest {
         //String serverAddress = "172.16.0.114";
         int serverPort = 5683;
 
-        // TODO Fix (look at logs)
         CoapPhysicalAdapterConfiguration configuration = CoapPhysicalAdapterConfiguration.builder(serverAddress, serverPort)
                 //.enableResourceDiscoverySupport(false)
                 .enableResourceDiscoverySupport(true)
