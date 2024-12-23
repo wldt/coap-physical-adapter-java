@@ -153,7 +153,7 @@ public class CoapPhysicalAdapter
             webLinks.forEach(link -> {
                 // URI
 
-                String uri = link.getURI();
+                String uri = link.getURI().replaceFirst("/", "");
 
                 // RESOURCE TYPE
 

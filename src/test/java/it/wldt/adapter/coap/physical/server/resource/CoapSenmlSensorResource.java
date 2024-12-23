@@ -34,7 +34,6 @@ public abstract class CoapSenmlSensorResource<T extends GenericSensor<?>> extend
     }
 
     private void init() {
-        System.out.println(String.format("[INIT] -> %s", this.getName()));
         setObservable(true);
         setObserveType(CoAP.Type.CON);
 

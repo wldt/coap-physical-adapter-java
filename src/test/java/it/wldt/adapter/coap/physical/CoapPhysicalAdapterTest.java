@@ -28,9 +28,12 @@ public class CoapPhysicalAdapterTest {
         //String serverAddress = "172.16.0.114";
         int serverPort = 5683;
 
+        // TODO Fix (look at logs)
         CoapPhysicalAdapterConfiguration configuration = CoapPhysicalAdapterConfiguration.builder(serverAddress, serverPort)
-                .enableResourceDiscoverySupport(false)
-                .enableObservability(false)
+                //.enableResourceDiscoverySupport(false)
+                .enableResourceDiscoverySupport(true)
+                //.enableObservability(false)
+                .enableObservability(true)
                 .enableAutoUpdateTimer(true)
                 .setAutoUpdateInterval(5000)
                 .setPreferredContentFormat(MediaTypeRegistry.APPLICATION_JSON)
@@ -68,7 +71,7 @@ public class CoapPhysicalAdapterTest {
                     }
                     return request;
                 })
-                .addResource("temperature-sensor", "", MediaTypeRegistry.APPLICATION_SENML_JSON, false, false, false)
+                //.addResource("temperature-sensor", "", MediaTypeRegistry.APPLICATION_SENML_JSON, false, false, false)
                 //.addResource("temperature", "", MediaTypeRegistry.APPLICATION_JSON, false, false, false)
                 //.addResource("humidity", "", MediaTypeRegistry.APPLICATION_JSON, false, false, false)
                 .build();

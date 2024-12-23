@@ -7,10 +7,14 @@ import it.wldt.adapter.coap.physical.server.model.TemperatureSensor;
 import org.eclipse.californium.core.coap.CoAP;
 import org.eclipse.californium.core.coap.MediaTypeRegistry;
 import org.eclipse.californium.core.server.resources.CoapExchange;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Optional;
 
 public class TemperatureSensorResource extends CoapSenmlSensorResource<TemperatureSensor> {
+    private Logger logger = LoggerFactory.getLogger(TemperatureSensorResource.class);
+
     private static final String OBJECT_TITLE = "TemperatureSensor";
 
     private static final Number SENSOR_VERSION = 0.4;
@@ -53,8 +57,6 @@ public class TemperatureSensorResource extends CoapSenmlSensorResource<Temperatu
 
     @Override
     public void handleGET(CoapExchange exchange) {
-        System.out.println(String.format("%s -> GET", this.getName()));
-
         exchange.setMaxAge(sensor.getTimerUpdatePeriod());
 
         if (exchange.getRequestOptions().getAccept() == MediaTypeRegistry.APPLICATION_SENML_JSON ||
@@ -62,16 +64,13 @@ public class TemperatureSensorResource extends CoapSenmlSensorResource<Temperatu
             Optional<String> payload = getJsonSenmlResponse();
 
             if (payload.isPresent()) {
-                System.out.println(String.format("\t2.05 CONTENT - %s", payload.get()));
                 exchange.respond(CoAP.ResponseCode.CONTENT, payload.get(), exchange.getRequestOptions().getAccept());
             }
             else {
-                System.out.println("\t5.00 INTERNAL SERVER ERROR");
                 exchange.respond(CoAP.ResponseCode.INTERNAL_SERVER_ERROR);
             }
         }
         else {
-            System.out.println(String.format("\t2.00 OK - %s", updatedValue));
             exchange.respond(CoAP.ResponseCode.CONTENT, String.valueOf(updatedValue), MediaTypeRegistry.TEXT_PLAIN);
         }
     }

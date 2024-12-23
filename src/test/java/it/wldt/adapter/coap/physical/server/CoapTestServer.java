@@ -6,8 +6,12 @@ import it.wldt.adapter.coap.physical.server.resource.TemperatureActuatorResource
 import it.wldt.adapter.coap.physical.server.resource.TemperatureSensorResource;
 import org.eclipse.californium.core.CoapServer;
 import org.eclipse.californium.core.server.resources.Resource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class CoapTestServer extends CoapServer {
+    private static Logger logger = LoggerFactory.getLogger(CoapTestServer.class);
+
     private static final int SERVER_PORT = 5683;
 
     private static final String DEVICE_ID = "wldt:coap:test";
@@ -20,11 +24,7 @@ public class CoapTestServer extends CoapServer {
     }
 
     private static void logResource(Resource resource) {
-        System.out.println(String.format(
-                "[RESOURCE] -> %s %s",
-                resource.getURI(),
-                resource.isObservable() ? "<observable>" : ""
-        ));
+        logger.info("Resource log: '{}'{}", resource.getURI(), (resource.isObservable() ? "(observable)" : ""));
 
         if (!resource.getURI().equals("/.well-known")) {
             resource.getChildren().forEach(CoapTestServer::logResource);
@@ -36,10 +36,6 @@ public class CoapTestServer extends CoapServer {
 
         server.start();
 
-        System.out.println("--RESOURCE-LOGGING--");
-
         server.getRoot().getChildren().forEach(CoapTestServer::logResource);
-
-        System.out.println("--SERVER-LOGGING--");
     }
 }
