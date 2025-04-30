@@ -23,7 +23,7 @@ public class CoapPhysicalAdapterConfigurationBuilder {
     }
 
     public CoapPhysicalAdapterConfiguration build() throws CoapPhysicalAdapterConfigurationException {
-        if (configuration.getIp() == null || configuration.getIp().isBlank()) {
+        if (configuration.getIp() == null || configuration.getIp().trim().isEmpty()) {
             throw new CoapPhysicalAdapterConfigurationException("Server address cannot be empty");
         }
         if (configuration.getPort() < 0) {
@@ -44,18 +44,18 @@ public class CoapPhysicalAdapterConfigurationBuilder {
         unprocessedResources.forEach(res -> {
             resources.add(new PhysicalAssetResource(
                     configuration,
-                    res.name(),
-                    res.resourceType(),
-                    res.contentType(),
-                    configuration.getCustomPropertyBodyTranslators().containsKey(res.name()) ?
-                            configuration.getCustomPropertyBodyTranslators().get(res.name()) :
+                    res.getName(),
+                    res.getResourceType(),
+                    res.getContentType(),
+                    configuration.getCustomPropertyBodyTranslators().containsKey(res.getName()) ?
+                            configuration.getCustomPropertyBodyTranslators().get(res.getName()) :
                             configuration.getDefaultPropertyBodyTranslator(),
                     res.hasPostSupport(),
                     res.hasPutSupport(),
-                    configuration.getCustomEventTranslatorsMap().containsKey(res.name()) ?
-                            configuration.getCustomEventTranslatorsMap().get(res.name()) :
+                    configuration.getCustomEventTranslatorsMap().containsKey(res.getName()) ?
+                            configuration.getCustomEventTranslatorsMap().get(res.getName()) :
                             configuration.getDefaultEventTranslator(),
-                    res.observable()
+                    res.isObservable()
                     ));
         });
         configuration.addResources(resources);
@@ -72,28 +72,74 @@ public class CoapPhysicalAdapterConfigurationBuilder {
         return this;
     }
 
-    public CoapPhysicalAdapterConfigurationBuilder setEventType(String eventType) {
-        configuration.setEventType(eventType);
+
+    public CoapPhysicalAdapterConfigurationBuilder setDefaultEventType(String eventType) {
+        configuration.setDefaultEventType(eventType);
         return this;
     }
 
-    public CoapPhysicalAdapterConfigurationBuilder setPostActionType(String postActionType) {
-        configuration.setPostActionType(postActionType);
+    public CoapPhysicalAdapterConfigurationBuilder addCustomEventType(String resourceName, String eventType) {
+        configuration.addCustomEventType(resourceName, eventType);
         return this;
     }
 
-    public CoapPhysicalAdapterConfigurationBuilder setPutActionType(String putActionType) {
-        configuration.setPutActionType(putActionType);
+    public CoapPhysicalAdapterConfigurationBuilder setDefaultActuatorActionType(String actionType) {
+        configuration.setDefaultActuatorActionType(actionType);
         return this;
     }
 
-    public CoapPhysicalAdapterConfigurationBuilder setPostActionContentType(String postActionContentType) {
-        configuration.setPostActionContentType(postActionContentType);
+    public CoapPhysicalAdapterConfigurationBuilder addCustomActuatorActionType(String resourceName, String actionType) {
+        configuration.addCustomActuatorActionType(resourceName, actionType);
         return this;
     }
 
-    public CoapPhysicalAdapterConfigurationBuilder setPutActionContentType(String putActionContentType) {
-        configuration.setPutActionContentType(putActionContentType);
+    public CoapPhysicalAdapterConfigurationBuilder setDefaultPostActionType(String postActionType) {
+        configuration.setDefaultPostActionType(postActionType);
+        return this;
+    }
+
+    public CoapPhysicalAdapterConfigurationBuilder addCustomPostActionType(String resourceName, String postActionType) {
+        configuration.addCustomPostActionType(resourceName, postActionType);
+        return this;
+    }
+
+    public CoapPhysicalAdapterConfigurationBuilder setDefaultPutActionType(String putActionType) {
+        configuration.setDefaultPutActionType(putActionType);
+        return this;
+    }
+
+    public CoapPhysicalAdapterConfigurationBuilder addCustomPutActionType(String resourceName, String putActionType) {
+        configuration.addCustomPutActionType(resourceName, putActionType);
+        return this;
+    }
+
+    public CoapPhysicalAdapterConfigurationBuilder setDefaultActuatorActionContentType(String actuatorActionContentType) {
+        configuration.setDefaultActuatorActionContentType(actuatorActionContentType);
+        return this;
+    }
+
+    public CoapPhysicalAdapterConfigurationBuilder addCustomActuatorActionContentType(String resourceName, String actuatorActionContentType) {
+        configuration.addCustomActuatorActionContentType(resourceName, actuatorActionContentType);
+        return this;
+    }
+
+    public CoapPhysicalAdapterConfigurationBuilder setDefaultPostActionContentType(String postActionContentType) {
+        configuration.setDefaultPostActionContentType(postActionContentType);
+        return this;
+    }
+
+    public CoapPhysicalAdapterConfigurationBuilder addCustomPostActionContentType(String resourceName, String postActionContentType) {
+        configuration.addCustomPostActionContentType(resourceName, postActionContentType);
+        return this;
+    }
+
+    public CoapPhysicalAdapterConfigurationBuilder setDefaultPutActionContentType(String putActionContentType) {
+        configuration.setDefaultPutActionContentType(putActionContentType);
+        return this;
+    }
+
+    public CoapPhysicalAdapterConfigurationBuilder addCustomPutActionContentType(String resourceName, String putActionContentType) {
+        configuration.addCustomPutActionContentType(resourceName, putActionContentType);
         return this;
     }
 

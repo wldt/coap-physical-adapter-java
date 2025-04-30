@@ -18,7 +18,6 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.function.BiFunction;
-import java.util.function.Function;
 
 public class CoapPhysicalAdapter
         extends ConfigurablePhysicalAdapter<CoapPhysicalAdapterConfiguration>
@@ -39,11 +38,8 @@ public class CoapPhysicalAdapter
         }
         logger.info("{} - CoAP physical adapter received incoming physical action", super.getId());
 
-
-        String[] splittedActionKey = physicalActionEvent.getActionKey().split(" ");
-
         try {
-            PhysicalAssetResource resource = (PhysicalAssetResource) getConfiguration().getResources().stream().filter(res -> res.getName().equals(splittedActionKey[1])).toArray()[0];
+            PhysicalAssetResource resource = (PhysicalAssetResource) getConfiguration().getResources().stream().filter(res -> res.getName().equals(physicalActionEvent.getActionKey()));
 
             if (getConfiguration().getCustomActionEventTranslators().containsKey(resource.getName())) {
                 resource.sendAction(getConfiguration().getCustomActionEventTranslators().get(resource.getName()).apply(physicalActionEvent));
@@ -82,29 +78,38 @@ public class CoapPhysicalAdapter
             String resourceKey = (resource.getResourceType() != null && !resource.getResourceType().trim().isEmpty() ?
                     String.format("%s.%s", resource.getResourceType(), resource.getName()) :
                     resource.getName()
-                    );
+            );
 
             PhysicalAssetProperty<?> property = new PhysicalAssetProperty<>(resourceKey, 0.0);
             getConfiguration().getPhysicalAssetDescription().getProperties().add(property);
 
-            PhysicalAssetEvent event = new PhysicalAssetEvent(resourceKey, getConfiguration().getEventType());
+            PhysicalAssetEvent event = new PhysicalAssetEvent(resourceKey, getConfiguration().getEventType(resource.getName()));
             getConfiguration().getPhysicalAssetDescription().getEvents().add(event);
 
-            if (resource.isPostSupported()) {
-                PhysicalAssetAction postAction = new PhysicalAssetAction(
-                        String.format("change %s", resourceKey),
-                        getConfiguration().getPostActionType(),
-                        getConfiguration().getPostActionContentType()
+            PhysicalAssetAction action = null;
+            if (resource.isPostSupported() && resource.isPutSupported()) {
+                action = new PhysicalAssetAction(
+                        resourceKey,
+                        getConfiguration().getActuatorActionType(resource.getName()),
+                        getConfiguration().getActuatorActionContentType(resource.getName())
                 );
-                getConfiguration().getPhysicalAssetDescription().getActions().add(postAction);
+
+            } else if (resource.isPutSupported()) {
+                action = new PhysicalAssetAction(
+                        resourceKey,
+                        getConfiguration().getPutActionType(resource.getName()),
+                        getConfiguration().getPutActionContentType(resource.getName())
+                );
+            }else if (resource.isPostSupported()) {
+                action = new PhysicalAssetAction(
+                        resourceKey,
+                        getConfiguration().getPostActionType(resource.getName()),
+                        getConfiguration().getPostActionContentType(resource.getName())
+                );
             }
-            if (resource.isPutSupported()) {
-                PhysicalAssetAction putAction = new PhysicalAssetAction(
-                        String.format("update %s", resourceKey),
-                        getConfiguration().getPutActionType(),
-                        getConfiguration().getPutActionContentType()
-                );
-                getConfiguration().getPhysicalAssetDescription().getActions().add(putAction);
+
+            if (action != null) {
+                getConfiguration().getPhysicalAssetDescription().getActions().add(action);
             }
         });
 

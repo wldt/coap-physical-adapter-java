@@ -17,7 +17,8 @@ repositories {
 
 dependencies {
     api("org.eclipse.californium:californium-core:3.8.0")
-    api("ch.qos.logback:logback-classic:1.5.6")
+    api("ch.qos.logback:logback-classic:1.5.13")
+    api("com.google.code.gson:gson:2.10.1")
     api("io.github.wldt:wldt-core:0.4.0")
     testImplementation("junit:junit:4.13.2")
 }

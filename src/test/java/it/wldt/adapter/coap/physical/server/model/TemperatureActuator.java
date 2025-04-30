@@ -59,19 +59,19 @@ public class TemperatureActuator extends GenericActuator<Double, Integer> {
 
     public static String getStatusDescription(int status) {
         switch (status) {
-            case STATUS_OFF -> {
+            case STATUS_OFF: {
                 return "Off";
             }
-            case STATUS_IDLE -> {
+            case STATUS_IDLE: {
                 return "Idle";
             }
-            case STATUS_COOLING -> {
+            case STATUS_COOLING: {
                 return "Cooling";
             }
-            case STATUS_HEATING -> {
+            case STATUS_HEATING: {
                 return "Heating";
             }
-            default -> {
+            default: {
                 return "Unknown";
             }
         }

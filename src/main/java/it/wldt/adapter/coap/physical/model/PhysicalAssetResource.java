@@ -112,7 +112,7 @@ public class PhysicalAssetResource {
         listeners.forEach((listener, type) -> {
             if (type == PhysicalAssetResourceListener.ListenerType.EVENT || type == PhysicalAssetResourceListener.ListenerType.ALL) {
                 listener.onEvent(this, eventTranslator.apply(
-                        resourceType != null && !resourceType.isBlank() ?
+                        resourceType != null && !resourceType.trim().isEmpty() ?
                                 String.format("%s.%s", resourceType, name) :
                                 name,
                         message));
@@ -124,7 +124,7 @@ public class PhysicalAssetResource {
         listeners.forEach((listener, type) -> {
             if (type == PhysicalAssetResourceListener.ListenerType.PROPERTY || type == PhysicalAssetResourceListener.ListenerType.ALL) {
                 listener.onPropertyChanged(this, getRequestTranslator.apply(
-                        resourceType != null && !resourceType.isBlank() ?
+                        resourceType != null && !resourceType.trim().isEmpty() ?
                                 String.format("%s.%s", resourceType, name) :
                                 name,
                         payload));

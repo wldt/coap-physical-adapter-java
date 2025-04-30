@@ -22,12 +22,27 @@ public class CoapPhysicalAdapterConfiguration {
 
     private int preferredContentFormat = MediaTypeRegistry.TEXT_PLAIN;
 
-    private String eventType = "EVENT";
-    private String postActionType = "POST";
-    private String putActionType = "PUT";
+    // EVENT TYPES
+    private String defaultEventType = "event";
+    private Map<String, String> customEventTypes = new TreeMap<>();
 
-    private String postActionContentType = MediaTypeRegistry.toString(MediaTypeRegistry.TEXT_PLAIN);
-    private String putActionContentType = MediaTypeRegistry.toString(MediaTypeRegistry.TEXT_PLAIN);
+    // ACTION TYPES
+    private String defaultActuatorActionType = "action";
+    private String defaultPostActionType = "toggle";
+    private String defaultPutActionType = "parameter";
+
+    private Map<String, String> customActuatorActionTypes = new TreeMap<>();
+    private Map<String, String> customPostActionTypes = new TreeMap<>();
+    private Map<String, String> customPutActionTypes = new TreeMap<>();
+
+    // ACTION CONTENT TYPES
+    private String defaultActuatorActionContentType = MediaTypeRegistry.toString(MediaTypeRegistry.TEXT_PLAIN);
+    private String defaultPostActionContentType = MediaTypeRegistry.toString(MediaTypeRegistry.TEXT_PLAIN);
+    private String defaultPutActionContentType = MediaTypeRegistry.toString(MediaTypeRegistry.TEXT_PLAIN);
+
+    private Map<String, String> customActuatorActionContentTypes = new TreeMap<>();
+    private Map<String, String> customPostActionContentTypes = new TreeMap<>();
+    private Map<String, String> customPutActionContentTypes = new TreeMap<>();
 
     private Set<PhysicalAssetResource> resources = new HashSet<>();
 
@@ -125,24 +140,46 @@ public class CoapPhysicalAdapterConfiguration {
         return customResourceListeningMap;
     }
 
-    public String getEventType() {
-        return eventType;
+    public String getEventType(String eventName) {
+        return this.customEventTypes.containsKey(eventName) ?
+                this.customEventTypes.get(eventName) :
+                this.defaultEventType;
     }
 
-    public String getPostActionType() {
-        return postActionType;
+    public String getActuatorActionType(String resourceName) {
+        return this.customActuatorActionTypes.containsKey(resourceName) ?
+                this.customActuatorActionTypes.get(resourceName) :
+                this.defaultActuatorActionType;
     }
 
-    public String getPutActionType() {
-        return putActionType;
+    public String getPostActionType(String resourceName) {
+        return this.customPostActionTypes.containsKey(resourceName) ?
+                this.customPostActionTypes.get(resourceName) :
+                this.defaultPostActionType;
     }
 
-    public String getPostActionContentType() {
-        return postActionContentType;
+    public String getPutActionType(String resourceName) {
+        return this.customPutActionTypes.containsKey(resourceName) ?
+                this.customPutActionTypes.get(resourceName) :
+                this.defaultPutActionType;
     }
 
-    public String getPutActionContentType() {
-        return putActionContentType;
+    public String getActuatorActionContentType(String resourceName) {
+        return this.customActuatorActionContentTypes.containsKey(resourceName) ?
+                this.customActuatorActionContentTypes.get(resourceName) :
+                this.defaultActuatorActionContentType;
+    }
+
+    public String getPostActionContentType(String resourceName) {
+        return this.customPostActionContentTypes.containsKey(resourceName) ?
+                this.customPostActionContentTypes.get(resourceName) :
+                this.defaultPostActionContentType;
+    }
+
+    public String getPutActionContentType(String resourceName) {
+        return this.customPutActionContentTypes.containsKey(resourceName) ?
+                this.customPutActionContentTypes.get(resourceName) :
+                this.defaultPutActionContentType;
     }
 
     public boolean isObservabilityEnabled() {
@@ -177,29 +214,75 @@ public class CoapPhysicalAdapterConfiguration {
         this.preferredContentFormat = preferredContentFormat;
     }
 
-    protected void setEventType(String eventType) {
-        this.eventType = eventType;
+    // EVENT TYPES
+
+    protected void setDefaultEventType(String defaultEventType) {
+        this.defaultEventType = defaultEventType;
     }
 
-    protected void setPostActionType(String postActionType) {
-        this.postActionType = postActionType;
+    protected void addCustomEventType(String resourceName, String eventType) {
+        this.customEventTypes.put(resourceName, eventType);
     }
 
-    protected void setPutActionType(String putActionType) {
-        this.putActionType = putActionType;
+    // ACTION TYPES
+
+    protected void setDefaultActuatorActionType(String actionType) {
+        this.defaultActuatorActionType = actionType;
     }
 
-    protected void setPostActionContentType(String postActionContentType) {
-        this.postActionContentType = postActionContentType;
+    protected void addCustomActuatorActionType(String resourceName, String actionType) {
+        this.customActuatorActionTypes.put(resourceName, actionType);
     }
 
-    protected void setPutActionContentType(String putActionContentType) {
-        this.putActionContentType = putActionContentType;
+    protected void setDefaultPostActionType(String actionType) {
+        this.defaultPostActionType = actionType;
     }
+
+    protected void addCustomPostActionType(String resourceName, String actionType) {
+        this.customPostActionTypes.put(resourceName, actionType);
+    }
+
+    protected void setDefaultPutActionType(String actionType) {
+        this.defaultPutActionType = actionType;
+    }
+
+    protected void addCustomPutActionType(String resourceName, String actionType) {
+        this.customPutActionTypes.put(resourceName, actionType);
+    }
+
+    // ACTION CONTENT TYPES
+
+    protected void setDefaultActuatorActionContentType(String contentType) {
+        this.defaultActuatorActionContentType = contentType;
+    }
+
+    protected void addCustomActuatorActionContentType(String resourceName, String contentType) {
+        this.customActuatorActionContentTypes.put(resourceName, contentType);
+    }
+
+    protected void setDefaultPostActionContentType(String contentType) {
+        this.defaultPostActionContentType = contentType;
+    }
+
+    protected void addCustomPostActionContentType(String resourceName, String contentType) {
+        this.customPostActionContentTypes.put(resourceName, contentType);
+    }
+
+    protected void setDefaultPutActionContentType(String contentType) {
+        this.defaultPutActionContentType = contentType;
+    }
+
+    protected void addCustomPutActionContentType(String resourceName, String contentType) {
+        this.customPutActionContentTypes.put(resourceName, contentType);
+    }
+
+    // MANUAL RESOURCE ADDITION
 
     protected void setResources(Set<PhysicalAssetResource> resources) {
         this.resources = resources;
     }
+
+    // OBSERVABILITY & POLLING
 
     protected void enableObservability(boolean enable) {
         this.enableObservability = enable;
@@ -221,6 +304,8 @@ public class CoapPhysicalAdapterConfiguration {
         this.customResourceListeningMap = customResourceListeningMap;
     }
 
+    // RESOURCE DISCOVERY
+
     protected void enableResourceDiscoverySupport(boolean enable) {
         this.enableResourceDiscoverySupport = enable;
     }
@@ -236,6 +321,8 @@ public class CoapPhysicalAdapterConfiguration {
     protected void ignoreResource(String name) {
         this.ignoredResources.add(name);
     }
+
+    // BODY TRANSLATORS
 
     protected void setDefaultPropertyBodyTranslator(BiFunction<String, byte[], List<? extends WldtEvent<?>>> defaultPropertyBodyTranslator) {
         this.defaultPropertyBodyTranslator = defaultPropertyBodyTranslator;
@@ -268,4 +355,5 @@ public class CoapPhysicalAdapterConfiguration {
     protected void setCustomActionRequestFunction(Function<Request, CoapResponse> customActionRequestFunction) {
         this.customActionRequestFunction = customActionRequestFunction;
     }
+
 }
