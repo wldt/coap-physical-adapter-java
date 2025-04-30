@@ -79,7 +79,7 @@ public class CoapPhysicalAdapter
 
         logger.info("{} - CoAP physical adapter generating PAD", super.getId());
         getConfiguration().getResources().forEach(resource -> {
-            String resourceKey = (resource.getResourceType() != null && !resource.getResourceType().isBlank() ?
+            String resourceKey = (resource.getResourceType() != null && !resource.getResourceType().trim().isEmpty() ?
                     String.format("%s.%s", resource.getResourceType(), resource.getName()) :
                     resource.getName()
                     );
