@@ -19,17 +19,39 @@ import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.function.BiFunction;
 
+/**
+ * CoAP Physical Adapter implementation.
+ * <p>
+ * This adapter is used to interact with CoAP resources.
+ * It supports resource discovery, observability, and automatic resource listening.
+ * </p>
+ */
 public class CoapPhysicalAdapter
         extends ConfigurablePhysicalAdapter<CoapPhysicalAdapterConfiguration>
         implements PhysicalAssetResourceListener {
     private static final Logger logger = LoggerFactory.getLogger(CoapPhysicalAdapter.class);
+    private static final String COAP_PHYSICAL_ADAPTER_ID = "coap-physical-adapter";
 
-    //private CoapPhysicalAdapterConfiguration configuration;
-
+    /**
+     * Constructs a new CoapPhysicalAdapter with the given ID and configuration.
+     *
+     * @param id            the ID of the adapter
+     * @param configuration the configuration for the adapter
+     */
     public CoapPhysicalAdapter(String id, CoapPhysicalAdapterConfiguration configuration) {
         super(id, configuration);
     }
 
+    /**
+     * Handles an incoming physical action event for the CoAP physical adapter.
+     * <p>
+     * This method processes the received action event, identifies the corresponding
+     * resource, and sends the action to the resource using the appropriate translator.
+     * If the resource is unknown or an error occurs, it logs the issue.
+     * </p>
+     *
+     * @param physicalActionEvent the incoming physical action event to process
+     */
     @Override
     public void onIncomingPhysicalAction(PhysicalAssetActionWldtEvent<?> physicalActionEvent) {
         if (physicalActionEvent == null) {
@@ -53,6 +75,21 @@ public class CoapPhysicalAdapter
         }
     }
 
+    /**
+     * Starts the CoAP physical adapter.
+     * <p>
+     * This method performs the following operations:
+     * <ul>
+     *     <li>Discovers available resources using the {@code discoverResources()} method.</li>
+     *     <li>Checks the presence of resources; if no resources are found, notifies that the adapter is unbound.</li>
+     *     <li>Starts listening to the found resources.</li>
+     *     <li>Generates the physical asset description (PAD) containing properties, events, and actions of the resources.</li>
+     *     <li>If enabled, handles observability and automatic updates for resources.</li>
+     * </ul>
+     * Once the method has performed all its operations without errors, it notifies that the adapter is successfully bound.
+     * If any errors occur during execution, appropriate logs are recorded, and the adapter is notified as unbound.
+     * </p>
+     */
     @Override
     public void onAdapterStart() {
         logger.info("{} - CoAP physical adapter starting", super.getId());
@@ -93,7 +130,6 @@ public class CoapPhysicalAdapter
                         getConfiguration().getActuatorActionType(resource.getName()),
                         getConfiguration().getActuatorActionContentType(resource.getName())
                 );
-
             } else if (resource.isPutSupported()) {
                 action = new PhysicalAssetAction(
                         resourceKey,
@@ -133,11 +169,27 @@ public class CoapPhysicalAdapter
         }
     }
 
+    /**
+     * Stops the CoAP physical adapter and clears all the registered resources.
+     */
     @Override
     public void onAdapterStop() {
         getConfiguration().getResources().clear();
     }
 
+   /**
+    * Discovers resources available on the CoAP server.
+    * <p>
+    * This method performs resource discovery by either using a custom resource discovery function,
+    * if provided, or by querying the CoAP server directly. It processes the discovered resources,
+    * extracting their URI, resource type, content type, and other attributes. It also determines
+    * the resource's capabilities, such as support for POST and PUT methods, observability, and
+    * event translation. Discovered resources are added to the adapter's configuration unless they
+    * are explicitly ignored.
+    * </p>
+    *
+    * @throws Exception if an error occurs during resource discovery
+    */
     private void discoverResources() throws Exception {
         if (!getConfiguration().isResourceDiscoveryEnabled()) {
             return;
@@ -214,6 +266,10 @@ public class CoapPhysicalAdapter
         this.getConfiguration().addResources(discoveredResources);
     }
 
+    /**
+     * Adds the adapter instance as listener to the resource
+     * @param resource the resource to listen to
+     */
     private void listenResource(PhysicalAssetResource resource) {
         logger.info("{} - CoAP physical adapter starting resource listening ({})", super.getId(), resource.getName());
 
@@ -224,6 +280,11 @@ public class CoapPhysicalAdapter
         }
     }
 
+    /**
+     * Publishes a physical asset property event containing the received property updates
+     * @param resource   The resource which received an update.
+     * @param properties The list of updated properties.
+     */
     @Override
     public void onPropertyChanged(PhysicalAssetResource resource, List<? extends WldtEvent<?>> properties) {
         properties.forEach(e -> {
@@ -235,6 +296,11 @@ public class CoapPhysicalAdapter
         });
     }
 
+    /**
+     * Publishes a physical asset event containing the received events
+     * @param resource The resource which triggered the event.
+     * @param events   The list of events.
+     */
     @Override
     public void onEvent(PhysicalAssetResource resource, List<? extends WldtEvent<?>> events) {
         events.forEach(e -> {
@@ -245,6 +311,5 @@ public class CoapPhysicalAdapter
             }
         });
     }
-
 
 }

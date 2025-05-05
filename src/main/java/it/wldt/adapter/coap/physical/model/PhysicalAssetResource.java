@@ -13,14 +13,17 @@ import org.slf4j.LoggerFactory;
 
 import java.util.*;
 import java.util.function.BiFunction;
-import java.util.function.Function;
 
+/**
+ * Represents a CoAP resource.
+ * It is used to send requests and receive responses from the server.
+ */
 public class PhysicalAssetResource {
     Logger logger = LoggerFactory.getLogger(PhysicalAssetResource.class);
 
     String name;
 
-    private CoapPhysicalAdapterConfiguration configuration;
+    private final CoapPhysicalAdapterConfiguration configuration;
 
     private final Map<PhysicalAssetResourceListener, PhysicalAssetResourceListener.ListenerType> listeners;
     private PhysicalAssetResourceListener.ListenerType eventsNotified;
@@ -100,14 +103,28 @@ public class PhysicalAssetResource {
         this.listeners = new HashMap<>();
     }
 
+    /**
+     * Adds a listener to the resource.
+     * The listener must be an implementation of {@link PhysicalAssetResource}.
+     * @param listener The listener to add.
+     * @param type     The type of data the listener is interested in.
+     */
     public void addListener(PhysicalAssetResourceListener listener, PhysicalAssetResourceListener.ListenerType type) {
         listeners.put(listener, type);
     }
 
+    /**
+     * Removes a listener from the resource.
+     * @param listener The listener to remove.
+     */
     public void removeListener(PhysicalAssetResourceListener listener) {
         listeners.remove(listener);
     }
 
+    /**
+     * Notifies all listeners of an event.
+     * @param message The event message.
+     */
     protected void notifyEvent(String message) {
         listeners.forEach((listener, type) -> {
             if (type == PhysicalAssetResourceListener.ListenerType.EVENT || type == PhysicalAssetResourceListener.ListenerType.ALL) {
@@ -120,6 +137,10 @@ public class PhysicalAssetResource {
         });
     }
 
+    /**
+     * Notifies all listeners of a property change.
+     * @param payload The new value of the property.
+     */
     protected void notifyPropertyChange(byte[] payload) {
         listeners.forEach((listener, type) -> {
             if (type == PhysicalAssetResourceListener.ListenerType.PROPERTY || type == PhysicalAssetResourceListener.ListenerType.ALL) {
@@ -164,6 +185,14 @@ public class PhysicalAssetResource {
         return resourceType;
     }
 
+    /**
+     * Starts observing the resource.
+     * If any polling or previous observation is active, they will be cancelled.
+     * This method will send an observe request to the resource.
+     * After the observe relation is established, the onLoad method will be called at any new property update.
+     * If an error happens at any point during the observation process, it will get logged as a warning.
+     * If an error occurs while establishing the observe relation, it will be logged as an error.
+     */
     public void startObservation() {
         if (autoUpdateTimer != null) {
             autoUpdateTimer.cancel();
@@ -199,6 +228,9 @@ public class PhysicalAssetResource {
         }
     }
 
+    /**
+     * Stops observing the resource.
+     */
     public void stopObservation() {
         if (observeRelation != null) {
             observeRelation.proactiveCancel();
@@ -206,6 +238,11 @@ public class PhysicalAssetResource {
         observeRelation = null;
     }
 
+    /**
+     * Starts a timer that will periodically update the property.
+     * If any observation or previous polling is active, they will be cancelled.
+     * @param autoUpdateInterval The interval in milliseconds between each update call.
+     */
     public void startAutoUpdate(long autoUpdateInterval) {
         if (observeRelation != null) {
             observeRelation.proactiveCancel();
@@ -224,6 +261,9 @@ public class PhysicalAssetResource {
         }, 0, autoUpdateInterval);
     }
 
+    /**
+     * Stops the timer that updates the property.
+     */
     public void stopAutoUpdate() {
         if (autoUpdateTimer != null) {
             autoUpdateTimer.cancel();
@@ -235,6 +275,12 @@ public class PhysicalAssetResource {
         updateProperty(getBaseRequest(CoAP.Code.GET));
     }
 
+    /**
+     * Sends a GET request to the resource.
+     * If a custom request method is provided in the configuration, it will be used to send the request, otherwise the default method will be used.
+     * If an error occurs during the communication, it gets logged as an error.
+     * @param request The request to send, if null a default GET request will be created instead.
+     */
     public void updateProperty(Request request) {
         try {
 
@@ -259,11 +305,20 @@ public class PhysicalAssetResource {
             }
         } catch (Exception e) {
             logger.error("CoAP physical adapter failed to send GET request to {}/{}", configuration.getServerConnectionString(), this.name, e);
-            e.printStackTrace();
         }
     }
 
+    /**
+     * Sends an action request to the resource.
+     * If the response is not successful an event will be notified.
+     * If an error occurs during the communication, it gets logged as an error.
+     * @param request The request to send, if null a POST request will be created instead.
+     */
     public void sendAction(Request request) {
+        if (request == null) {
+            request = getBaseRequest(CoAP.Code.POST);
+        }
+
         if (request.getCode() == CoAP.Code.POST && !hasPostSupport ||
             request.getCode() == CoAP.Code.PUT && !hasPutSupport) {
             logger.warn("Invoked unsupported action request to {}/{}", configuration.getServerConnectionString(), name);
@@ -271,10 +326,6 @@ public class PhysicalAssetResource {
         }
         try {
             CoapResponse coapResponse;
-
-            if (request == null) {
-                request = getBaseRequest(CoAP.Code.POST);
-            }
 
             if (configuration.getCustomActionRequestFunction() != null) {
                 coapResponse = configuration.getCustomActionRequestFunction().apply(request);
@@ -292,6 +343,11 @@ public class PhysicalAssetResource {
         }
     }
 
+    /**
+     * Creates a base request with the given code setting the URI path and the Accept options.
+     * @param code The CoAP request code.
+     * @return The base request.
+     */
     private Request getBaseRequest(CoAP.Code code) {
         Request request = new Request(code);
         request.getOptions().setUriPath(name);

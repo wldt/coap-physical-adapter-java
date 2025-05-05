@@ -1,5 +1,10 @@
 package it.wldt.adapter.coap.physical.model;
 
+/**
+ * Represents a resource that has not been processed yet.
+ * This class is used to store information about the resource
+ * such as its name, type, content type, and supported methods.
+ */
 public class UnprocessedResource {
     private final String name;
     private final String resourceType;
