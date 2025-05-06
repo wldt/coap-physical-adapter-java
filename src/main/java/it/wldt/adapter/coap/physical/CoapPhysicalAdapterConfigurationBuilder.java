@@ -39,7 +39,7 @@ public class CoapPhysicalAdapterConfigurationBuilder {
      * After checking the data is correct, it processes the manually added resources adding them to the configuration.
      *
      * @return The configuration instance.
-     * @throws CoapPhysicalAdapterConfigurationException In case the configuration is invalid.
+     * @throws CoapPhysicalAdapterConfigurationException In the case of the configuration being invalid.
      */
     public CoapPhysicalAdapterConfiguration build() throws CoapPhysicalAdapterConfigurationException {
         if (configuration.getIp() == null || configuration.getIp().trim().isEmpty()) {
@@ -87,7 +87,7 @@ public class CoapPhysicalAdapterConfigurationBuilder {
     }
 
     /**
-     * Sets the preferred content format used during the communication in case the server supports it.
+     * Sets the preferred content format used during the communication in the case of the server supporting it.
      * @param preferredContentFormat The preferred CoAP content format.
      * @return The builder instance.
      */
@@ -200,7 +200,7 @@ public class CoapPhysicalAdapterConfigurationBuilder {
     }
 
     /**
-     * Sets the list of manually added resources to the provided instance.
+     * Sets the list of already processed resources to the provided instance.
      * @param resources A set containing all the resources.
      * @return The builder instance.
      */
