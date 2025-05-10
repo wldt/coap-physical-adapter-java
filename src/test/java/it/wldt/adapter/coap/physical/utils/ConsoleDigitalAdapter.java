@@ -10,6 +10,8 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.stream.Collectors;
 
 public class ConsoleDigitalAdapter extends DigitalAdapter<String> {
@@ -32,6 +34,33 @@ public class ConsoleDigitalAdapter extends DigitalAdapter<String> {
     @Override
     public void onAdapterStart() {
         logger.debug("DA({}) - onAdapterStart", this.getId());
+        notifyDigitalAdapterBound();
+
+        Timer timer = new Timer();
+        timer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                logger.info("Digital Adapter invoking action with body=15");
+                // Test for Adapter's PUT actions
+                invokeAction("iot.actuator.temperature.temperature-actuator", "15", "text/plain");
+            }
+        }, 0, 3000);
+        timer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                logger.info("Digital Adapter invoking action with body=25");
+                // Test for Adapter's PUT actions
+                invokeAction("iot.actuator.temperature.temperature-actuator", "25", "text/plain");
+            }
+        }, 0, 5000);
+        timer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                logger.info("Digital Adapter invoking action with empty body");
+                // Test for Adapter's POST actions
+                invokeAction("iot.actuator.temperature.temperature-actuator", "", "text/plain");
+            }
+        }, 0, 7000);
     }
 
     @Override

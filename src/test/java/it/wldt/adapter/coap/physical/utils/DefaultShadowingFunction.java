@@ -15,10 +15,10 @@ import org.slf4j.LoggerFactory;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-public class CoapTestShadowingFunction extends ShadowingFunction {
-    private static final Logger logger = LoggerFactory.getLogger(CoapTestShadowingFunction.class);
+public class DefaultShadowingFunction extends ShadowingFunction {
+    private static final Logger logger = LoggerFactory.getLogger(DefaultShadowingFunction.class);
 
-    public CoapTestShadowingFunction() {
+    public DefaultShadowingFunction() {
         super("coap-test-shadowing-function");
     }
 

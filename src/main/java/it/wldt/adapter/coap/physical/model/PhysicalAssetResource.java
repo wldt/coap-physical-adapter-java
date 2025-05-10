@@ -26,7 +26,6 @@ public class PhysicalAssetResource {
     private final CoapPhysicalAdapterConfiguration configuration;
 
     private final Map<PhysicalAssetResourceListener, PhysicalAssetResourceListener.ListenerType> listeners;
-    private PhysicalAssetResourceListener.ListenerType eventsNotified;
 
     private CoapClient client;
 
@@ -129,9 +128,7 @@ public class PhysicalAssetResource {
         listeners.forEach((listener, type) -> {
             if (type == PhysicalAssetResourceListener.ListenerType.EVENT || type == PhysicalAssetResourceListener.ListenerType.ALL) {
                 listener.onEvent(this, eventTranslator.apply(
-                        resourceType != null && !resourceType.trim().isEmpty() ?
-                                String.format("%s.%s", resourceType, name) :
-                                name,
+                        this.resourceType.trim().isEmpty() ? this.name : this.resourceType.concat(".").concat(this.name),
                         message));
             }
         });
@@ -145,10 +142,9 @@ public class PhysicalAssetResource {
         listeners.forEach((listener, type) -> {
             if (type == PhysicalAssetResourceListener.ListenerType.PROPERTY || type == PhysicalAssetResourceListener.ListenerType.ALL) {
                 listener.onPropertyChanged(this, getRequestTranslator.apply(
-                        resourceType != null && !resourceType.trim().isEmpty() ?
-                                String.format("%s.%s", resourceType, name) :
-                                name,
-                        payload));
+                        this.resourceType.trim().isEmpty() ? this.name : this.resourceType.concat(".").concat(this.name),
+                        payload
+                ));
             }
         });
     }
@@ -330,16 +326,21 @@ public class PhysicalAssetResource {
             if (configuration.getCustomActionRequestFunction() != null) {
                 coapResponse = configuration.getCustomActionRequestFunction().apply(request);
             } else {
+                request.getOptions().setUriPath(name);
                 coapResponse = client.advanced(request);
             }
 
             if (coapResponse == null) {
+                logger.warn("CoAP request got null response");
                 notifyEvent("CoAP request got null response");
             } else if (!coapResponse.isSuccess()) {
+                logger.warn("CoAP request failed with code={}", coapResponse.getCode());
                 notifyEvent("CoAP request failed with code=" + coapResponse.getCode());
+            } else {
+                logger.info("CoAP request succeeded");
             }
         } catch (Exception e) {
-            logger.error("CoAP physical adapter failed to send POST request to {}/{}", configuration.getServerConnectionString(), this.name, e);
+            logger.error("CoAP physical adapter failed to send request to {}/{}", configuration.getServerConnectionString(), this.name, e);
         }
     }
 

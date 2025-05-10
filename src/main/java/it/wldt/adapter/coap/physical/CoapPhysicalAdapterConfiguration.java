@@ -49,6 +49,8 @@ public class CoapPhysicalAdapterConfiguration {
     // ADAPTER COAP RESOURCES
     private Set<PhysicalAssetResource> resources = new HashSet<>();
 
+    private final Map<String, String> resourceKeyNameAssociationMap = new HashMap<>();
+
     // RESOURCES OBSERVABILITY/POLLING
     private boolean observabilitySupport = true;
     private boolean autoUpdateTimerSupport = true;
@@ -85,6 +87,12 @@ public class CoapPhysicalAdapterConfiguration {
         this.port = port;
     }
 
+    /**
+     * Creates a new instance of the CoAP Physical Adapter configuration builder.
+     * @param ip The IP address of the CoAP server.
+     * @param port The port of the CoAP server.
+     * @return A new instance of the CoAP Physical Adapter configuration builder.
+     */
     public static CoapPhysicalAdapterConfigurationBuilder builder(String ip, int port) {
         return new CoapPhysicalAdapterConfigurationBuilder(ip, port);
     }
@@ -352,4 +360,7 @@ public class CoapPhysicalAdapterConfiguration {
         this.customActionRequestFunction = customActionRequestFunction;
     }
 
+    public Map<String, String> getResourceKeyNameAssociationMap() {
+        return resourceKeyNameAssociationMap;
+    }
 }

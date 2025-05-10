@@ -119,9 +119,9 @@ public class CoapPhysicalAdapterConfigurationBuilder {
 
     /**
      * Adds a WLDT action type only to the specified resource supporting both POST & PUT requests.
-     * @param resourceName
-     * @param actionType
-     * @return
+     * @param resourceName The resource to apply the type to.
+     * @param actionType The WLDT action type.
+     * @return The builder instance.
      */
     public CoapPhysicalAdapterConfigurationBuilder addCustomActionType(String resourceName, String actionType) {
         configuration.addCustomActionType(resourceName, actionType);
