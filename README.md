@@ -30,6 +30,16 @@ In the WLDT library, Physical Adapters have the responsibility to generate and p
 
 ## Class Structure & Functionalities
 
+### CoapPhysicalAdapter
+
+The `CoapPhysicalAdapter` class is the core component for interacting with physical assets. Instantiate it with a unique ID and the configuration. It extends the default WLDT Library `PhysicalAdapter` implementing all the functionalities to automatically interact with a CoAP physical device following the specifications and details provided in the `CoapPhysicalAdapterConfiguration` and built using `CoapPhysicalAdapterConfigurationBuilder`.
+
+A `CoapPhysicalAdapter` instance can be created as follows:
+
+```java
+CoapPhysicalAdapter coapPhysicalAdapter = new CoapPhysicalAdapter("uniqueId", configuration);
+```
+
 ### CoapPhysicalAdapterConfigurationBuilder
 
 The `CoapPhysicalAdapterConfigurationBuilder` is the class used to build the configuration used by the `CoapPhysicalAdapter` and described and implemented through the class `CoapPhysicalAdapterConfiguration`.
@@ -39,6 +49,7 @@ In order to create a configuration builder we can use the `builder()` static met
 ```java
 CoapPhysicalAdapterConfiguration.builder()
 ```
+
 Creates a new instance of the CoAP Physical Adapter configuration builder.
 
 *Parameters*:
@@ -247,6 +258,26 @@ Sets the function which sends CoAP POST & PUT request to the Physical Asset.
 
 *Returns*: The builder instance.
 
+##### Usage and examples
+
+The custom request functions can be useful in case of the Physical Asset not being compatible with the default requests or the requests needing extra configuration, and they will be automatically called by the Adapter instead of the default Californiun CoAP client's `advanced()` method.
+
+They can be set by passing a lambda function to the previously shown methods, as shown in the following example setting a custom property request function:
+
+```java
+builder.setCustomPropertyRequestFunction(request -> {
+  // Add proxy setting to the request
+  request.getOptions().setProxyUri(proxyUri);
+  request.getOptions().setProxyScheme(proxyScheme);
+
+  // Set OSCORE options
+  request.getOptions().setOscore(oscore);
+
+  // Send request and return response
+  return client.advanced(request);
+})
+```
+
 #### Observability & polling
 
 ##### enableObservability
@@ -321,6 +352,38 @@ Sets a map containing the property translation functions of specific resources.
 
 *Returns*: The builder instance.
 
+##### Usage and examples
+
+The property translators are used to process the incoming data before updating the Digital Twin State.
+
+They can be set by passing a lambda function to the previously shown methods, as shown in the following example, which de-serializes a JSON-serialized class instance and returns the list of corresponding property events:
+
+```java
+builder.setDefaultPropertyBodyTranslator((key, payload) -> {
+  // Instantiate events list
+  List<WldtEvent<String>> events = new ArrayList<>();
+
+  // Instantiate de-serializer
+  Gson gson = new Gson();
+
+  // De-serialize incoming data into class instance
+  IncomingDataModel processedData = gson.fromJson(new String(payload), IncomingDataModel.class);
+
+  // Create propety event associated with the de-serialized instance and add it to the events list
+  try {
+    events.add(new PhysicalAssetPropertyWldtEvent<>(
+      String.format("%s.%s.%s", KEY_PA1, KEY_PA_PROPERTY, processedData.getName().replace(" ", "-").toLowerCase()),
+      processedData.getValue()
+    );
+  } catch (EventBusException e) {
+    e.printStackTrace();
+  }
+
+  // Return list of events
+  return events;
+})
+```
+
 #### CoAP communication events to WLDT event notifications
 
 ##### setDefaultEventTranslator
@@ -351,6 +414,29 @@ Sets a map containing the event translation functions of specific resources.
 
 *Returns*: The builder instance.
 
+##### Usage and examples
+
+As with property translators, event translators are used to process the incoming event messages before updating the Digital Twin State.
+
+They can be set by passing a lambda function to the previously shown methods, as shown in the following example:
+
+```java
+builder.setDefaultEventTranslator((key, message) -> {
+  // Instantiate events list
+  List<WldtEvent<String>> events = new ArrayList<>();
+
+  try {
+    // Add received event to the list
+    events.add(new PhysicalAssetEventWldtEvent<>(key, message));
+  } catch (EventBusException e) {
+    e.printStackTrace();
+  }
+
+  // Return list of events
+  return events;
+})
+```
+
 #### WLDT actions to CoAP requests
 
 ##### setDefaultActionEventTranslator
@@ -380,6 +466,28 @@ Sets a map containing the action translation functions of specific resources.
 - **customActionEventTranslators**: A map containing the resource names as keys and the translation functions as values
 
 *Returns*: The builder instance.
+
+##### Usage and examples
+
+Action translators are used to process an incoming physical action and create an associated request which will be sent to the Physical Asset.
+
+They can be set by passing a lambda function to the previously shown methods, as shown in the following example:
+
+```java
+.setDefaultActionEventTranslator(event -> {
+  // Create request with method based on event body presence
+  Request request = new Request(event.getBody().equals("") ? CoAP.Code.POST : CoAP.Code.PUT);
+
+  // Set request confirmability
+  request.setConfirmable(true);
+
+  // Set request payload
+  request.setPayload((String) event.getBody());
+
+  // Return created request
+  return request;
+})
+```
 
 #### Resource updates listening
 
@@ -504,15 +612,9 @@ Adds a WLDT action type only to the specified resource supporting both POST & PU
 
 *Returns*: The builder instance.
 
-#####
-
-```java
-
-```
-
 #### Build
 
-After all the configuration is completed, to retreive the `CoapPhysicalAdapterConfiguration` instance, the `build()` method must be invoked:
+After all the configuration is completed, the `CoapPhysicalAdapterConfiguration` instance can be retreived by using the `build()` method:
 
 ```java
 CoapPhysicalAdapterConfiguration build() throws CoapPhysicalAdapterConfigurationException
@@ -524,28 +626,23 @@ This method checks that everything needed is provided correctly and, if so, proc
 
 *Throws*: `CoapPhysicalAdapterConfigurationException` - In the case of the configuration being invalid.
 
-### CoapPhysicalAdapter
-
-The `CoapPhysicalAdapter` class is the core component for interacting with physical assets. Instantiate it with a unique ID and the configuration. It extends the default WLDT Library `PhysicalAdapter` implementing all the functionalities to automatically interact with a CoAP physical device following the specifications and details provided in the `CoapPhysicalAdapterConfiguration` and built using `CoapPhysicalAdapterConfigurationBuilder`.
-
-An example of its creation is:
-
-```java
-CoapPhysicalAdapter coapPhysicalAdapter = new CoapPhysicalAdapter("uniqueId", configuration);
-```
-
 ### Integrated example
 
 This example demonstrates the integration of a `CoapPhysicalAdapter` within a Digital Twin setup, where multiple adapters (including a console adapter) are added to a Digital Twin, and the overall system is managed by a `DigitalTwinEngine`.
 
 ```java
+// Create the Digital Twin Engine
+DigitalTwinEngine engine = new DigitalTwinEngine();
+
+//[...]
+
 // Create a Digital Twin with a default shadowing function
 DigitalTwin dt = new DigitalTwin("coap-digital-twin", new DefaultShadowingFunction());
 
 // Create an instance of ConsoleDigitalAdapter
 ConsoleDigitalAdapter digitalAdapter = new ConsoleDigitalAdapter();
 
-// Create an instance of CoapPhysicalAdapterConfiguration
+// Create an instance of CoapPhysicalAdapterConfiguration, enabling resource discovery, observability and polling, and setting simple property, event, and action translators
 CoapPhysicalAdapterConfiguration configuration = CoapPhysicalAdapterConfiguration.builder(serverAddress, serverPort)
   .enableResourceDiscoverySupport(true)
   .enableObservability(true)
@@ -578,6 +675,15 @@ CoapPhysicalAdapterConfiguration configuration = CoapPhysicalAdapterConfiguratio
     return request;
   })
   .build();
+
+  CoapPhysicalAdapter physicalAdapter = new CoapPhysicalAdapter("coap-test-physical-adapter", configuration);
+
+  dt.addPhysicalAdapter(physicalAdapter);
+
+  // [...]
+
+  engine.addDigitalTwin(dt);
+  engine.startAll();
 ```
 
 Since the resource discovery is enabled, the PAD gets automatically generated based on it, but in case it's needed it's possible to manually add resources using the `addResource` method
