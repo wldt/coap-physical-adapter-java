@@ -1,8 +1,8 @@
 package it.wldt.adapter.coap.physical;
 
 import it.wldt.adapter.coap.physical.configuration.CoapPhysicalAdapterConfiguration;
-import it.wldt.adapter.coap.physical.utils.DefaultShadowingFunction;
 import it.wldt.adapter.coap.physical.utils.ConsoleDigitalAdapter;
+import it.wldt.adapter.coap.physical.utils.DefaultShadowingFunction;
 import it.wldt.adapter.physical.event.PhysicalAssetEventWldtEvent;
 import it.wldt.adapter.physical.event.PhysicalAssetPropertyWldtEvent;
 import it.wldt.core.engine.DigitalTwin;
@@ -10,14 +10,16 @@ import it.wldt.core.engine.DigitalTwinEngine;
 import it.wldt.core.event.WldtEvent;
 import it.wldt.exception.*;
 import org.eclipse.californium.core.coap.CoAP;
-import org.eclipse.californium.core.coap.MediaTypeRegistry;
 import org.eclipse.californium.core.coap.Request;
 
-import java.util.*;
+import java.io.File;
+import java.io.IOException;
+import java.net.URISyntaxException;
+import java.util.ArrayList;
+import java.util.List;
 
-public class CoapPhysicalAdapterTest {
-
-    public static void main(String[] args) throws ModelException, WldtRuntimeException, EventBusException, WldtConfigurationException, InterruptedException, WldtWorkerException, WldtDigitalTwinStateException, WldtEngineException, CoapPhysicalAdapterConfigurationException {
+public class CoapPhysicalAdapterYamlTest {
+    public static void main(String[] args) throws ModelException, WldtRuntimeException, WldtWorkerException, EventBusException, WldtDigitalTwinStateException, WldtConfigurationException, URISyntaxException, IOException, CoapPhysicalAdapterConfigurationException, WldtEngineException {
         DigitalTwinEngine engine = new DigitalTwinEngine();
 
         DigitalTwin dt = new DigitalTwin("coap-digital-twin", new DefaultShadowingFunction());
@@ -25,15 +27,11 @@ public class CoapPhysicalAdapterTest {
 
         dt.addDigitalAdapter(digitalAdapter);
 
-        String serverAddress = "127.0.0.1";
-        int serverPort = 5683;
-
-        CoapPhysicalAdapterConfiguration configuration = CoapPhysicalAdapterConfiguration.builder(serverAddress, serverPort)
-                .enableResourceDiscoverySupport(true)
-                .enableObservability(true)
-                .setAutoUpdateTimerSupport(true)
-                .setAutoUpdateInterval(5000)
-                .setPreferredContentFormat(MediaTypeRegistry.APPLICATION_JSON)
+        CoapPhysicalAdapterConfiguration configuration = CoapPhysicalAdapterConfiguration.fromYaml(new File(
+                CoapPhysicalAdapterYamlTest.class
+                        .getClassLoader()
+                        .getResource("paconfig.yaml")
+                        .toURI()))
                 .setDefaultPropertyBodyTranslator((key, payload) -> {
                     List<WldtEvent<String>> events = new ArrayList<>();
                     try {

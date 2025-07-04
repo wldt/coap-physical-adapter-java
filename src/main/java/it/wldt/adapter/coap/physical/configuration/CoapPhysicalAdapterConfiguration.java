@@ -1,14 +1,17 @@
-package it.wldt.adapter.coap.physical;
+package it.wldt.adapter.coap.physical.configuration;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import it.wldt.adapter.coap.physical.model.PhysicalAssetResource;
 import it.wldt.adapter.coap.physical.model.PhysicalAssetResourceListener;
 import it.wldt.adapter.physical.PhysicalAssetDescription;
 import it.wldt.adapter.physical.event.PhysicalAssetActionWldtEvent;
 import it.wldt.core.event.WldtEvent;
 import org.eclipse.californium.core.CoapResponse;
-import org.eclipse.californium.core.coap.MediaTypeRegistry;
 import org.eclipse.californium.core.coap.Request;
 
+import java.io.*;
+import java.nio.file.Files;
 import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -21,49 +24,13 @@ import java.util.function.Supplier;
 public class CoapPhysicalAdapterConfiguration {
     private final PhysicalAssetDescription pad = new PhysicalAssetDescription();
 
-    // COAP SERVER INFO
-    private final String ip;
-    private final int port;
-
-    // CONTENT FORMAT PREFERENCE
-    private int preferredContentFormat = MediaTypeRegistry.TEXT_PLAIN;
-
-    // WLDT EVENT TYPES
-    private String defaultEventType = "event";
-    private final Map<String, String> customEventTypes = new TreeMap<>();
-
-    // WLDT ACTION TYPES
-    private String defaultActuatorActionType = "action";
-    private String defaultPostActionType = "toggle";
-    private String defaultPutActionType = "parameter";
-
-    private final Map<String, String> customActionTypes = new TreeMap<>();
-
-    // WLDT ACTION CONTENT TYPES
-    private String defaultActuatorActionContentType = MediaTypeRegistry.toString(MediaTypeRegistry.TEXT_PLAIN);
-    private String defaultPostActionContentType = MediaTypeRegistry.toString(MediaTypeRegistry.TEXT_PLAIN);
-    private String defaultPutActionContentType = MediaTypeRegistry.toString(MediaTypeRegistry.TEXT_PLAIN);
-
-    private final Map<String, String> customActionContentTypes = new TreeMap<>();
-
-    // ADAPTER COAP RESOURCES
     private Set<PhysicalAssetResource> resources = new HashSet<>();
-
     private final Map<String, String> resourceKeyNameAssociationMap = new HashMap<>();
 
-    // RESOURCES OBSERVABILITY/POLLING
-    private boolean observabilitySupport = true;
-    private boolean autoUpdateTimerSupport = true;
-    private long autoUpdateInterval = 5000;
-
-    // RESOURCES LISTENERS
-    private boolean automaticResourceListening = true;
-    private Map<String, PhysicalAssetResourceListener.ListenerType> customResourceListeningMap = new TreeMap<>();
+    CoapPhysicalAdapterConfigurationData configurationData;
 
     // RESOURCE DISCOVERY CONFIGURATION
-    private boolean resourceDiscoverySupport;
     private Supplier<Set<PhysicalAssetResource>> customResourceDiscoveryFunction;
-    private List<String> ignoredResources = new ArrayList<>();
 
     // COAP TO WLDT DATA TRANSLATION
     private BiFunction<String, byte[], List<? extends WldtEvent<?>>> defaultPropertyBodyTranslator;
@@ -83,8 +50,26 @@ public class CoapPhysicalAdapterConfiguration {
 
 
     protected CoapPhysicalAdapterConfiguration(String ip, int port) {
-        this.ip = ip;
-        this.port = port;
+        this.configurationData = new CoapPhysicalAdapterConfigurationData(ip, port);
+    }
+
+    public CoapPhysicalAdapterConfiguration(CoapPhysicalAdapterConfigurationData configurationData) {
+        this.configurationData = configurationData;
+    }
+
+    /**
+     * Creates a new instance of the CoAP Physical Adapter configuration builder from a YAML file.
+     * @param yamlConfig The YAML file containing the configuration.
+     * @return A new instance of the CoAP Physical Adapter configuration builder.
+     * @throws IOException If an error occurs while reading the YAML file.
+     */
+    public static CoapPhysicalAdapterConfigurationBuilder fromYaml(File yamlConfig) throws IOException {
+        try(InputStream inputStream = Files.newInputStream(yamlConfig.toPath())) {
+            ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+            mapper.findAndRegisterModules();
+
+            return new CoapPhysicalAdapterConfigurationBuilder(mapper.readValue(inputStream, CoapPhysicalAdapterConfigurationData.class));
+        }
     }
 
     /**
@@ -98,19 +83,19 @@ public class CoapPhysicalAdapterConfiguration {
     }
 
     public String getIp() {
-        return ip;
+        return configurationData.getIp();
     }
 
     public int getPort() {
-        return port;
+        return configurationData.getPort();
     }
 
     public String getServerConnectionString() {
-        return String.format("coap://%s:%d", ip, port);
+        return String.format("coap://%s:%d", configurationData.getIp(), configurationData.getPort());
     }
 
-    public boolean isResourceDiscoveryEnabled() {
-        return resourceDiscoverySupport;
+    public boolean getResourceDiscoverySupport() {
+        return configurationData.getResourceDiscoverySupport();
     }
 
     public Supplier<Set<PhysicalAssetResource>> getCustomResourceDiscoveryFunction() {
@@ -118,7 +103,7 @@ public class CoapPhysicalAdapterConfiguration {
     }
 
     public int getPreferredContentFormat() {
-        return preferredContentFormat;
+        return configurationData.getPreferredContentFormat();
     }
 
     public void addResources(Set<PhysicalAssetResource> discoveredResources) {
@@ -149,69 +134,69 @@ public class CoapPhysicalAdapterConfiguration {
     }
 
     public List<String> getIgnoredResources() {
-        return ignoredResources;
+        return configurationData.getIgnoredResources();
     }
 
-    public boolean isAutomaticResourceListeningEnabled() {
-        return automaticResourceListening;
+    public boolean getResourceNotificationsSupport() {
+        return configurationData.getResourceNotificationsSupport();
     }
 
-    public Map<String, PhysicalAssetResourceListener.ListenerType> getCustomResourceListeningMap() {
-        return customResourceListeningMap;
+    public Map<String, PhysicalAssetResourceListener.ListenerType> getCustomResourceNotificationsMap() {
+        return configurationData.getCustomResourceNotificationsMap();
     }
 
     public String getEventType(String eventName) {
-        return this.customEventTypes.containsKey(eventName) ?
-                this.customEventTypes.get(eventName) :
-                this.defaultEventType;
+        return this.configurationData.getCustomWldtEventTypesMap().containsKey(eventName) ?
+                this.configurationData.getCustomWldtEventTypesMap().get(eventName) :
+                this.configurationData.getDefaultWldtEventType();
     }
 
     public String getActuatorActionType(String resourceName) {
-        return this.customActionTypes.containsKey(resourceName) ?
-                this.customActionTypes.get(resourceName) :
-                this.defaultActuatorActionType;
+        return this.configurationData.getCustomWldtActionTypesMap().containsKey(resourceName) ?
+                this.configurationData.getCustomWldtActionTypesMap().get(resourceName) :
+                this.configurationData.getDefaultWldtActuatorActionType();
     }
 
     public String getPostActionType(String resourceName) {
-        return this.customActionTypes.containsKey(resourceName) ?
-                this.customActionTypes.get(resourceName) :
-                this.defaultPostActionType;
+        return this.configurationData.getCustomWldtActionTypesMap().containsKey(resourceName) ?
+                this.configurationData.getCustomWldtActionTypesMap().get(resourceName) :
+                this.configurationData.getDefaultWldtPostActionType();
     }
 
     public String getPutActionType(String resourceName) {
-        return this.customActionTypes.containsKey(resourceName) ?
-                this.customActionTypes.get(resourceName) :
-                this.defaultPutActionType;
+        return this.configurationData.getCustomWldtActionTypesMap().containsKey(resourceName) ?
+                this.configurationData.getCustomWldtActionTypesMap().get(resourceName) :
+                this.configurationData.getDefaultWldtPutActionType();
     }
 
     public String getActuatorActionContentType(String resourceName) {
-        return this.customActionContentTypes.containsKey(resourceName) ?
-                this.customActionContentTypes.get(resourceName) :
-                this.defaultActuatorActionContentType;
+        return this.configurationData.getCustomWldtActionContentTypes().containsKey(resourceName) ?
+                this.configurationData.getCustomWldtActionContentTypes().get(resourceName) :
+                this.configurationData.getDefaultActuatorWldtActionContentType();
     }
 
     public String getPostActionContentType(String resourceName) {
-        return this.customActionContentTypes.containsKey(resourceName) ?
-                this.customActionContentTypes.get(resourceName) :
-                this.defaultPostActionContentType;
+        return this.configurationData.getCustomWldtActionContentTypes().containsKey(resourceName) ?
+                this.configurationData.getCustomWldtActionContentTypes().get(resourceName) :
+                this.configurationData.getDefaultPostWldtActionContentType();
     }
 
     public String getPutActionContentType(String resourceName) {
-        return this.customActionContentTypes.containsKey(resourceName) ?
-                this.customActionContentTypes.get(resourceName) :
-                this.defaultPutActionContentType;
+        return this.configurationData.getCustomWldtActionContentTypes().containsKey(resourceName) ?
+                this.configurationData.getCustomWldtActionContentTypes().get(resourceName) :
+                this.configurationData.getDefaultPutWldtActionContentType();
     }
 
     public boolean isObservabilityEnabled() {
-        return observabilitySupport;
+        return configurationData.getObservabilitySupport();
     }
 
     public boolean isAutoUpdateTimerEnabled() {
-        return autoUpdateTimerSupport;
+        return configurationData.getAutoUpdateTimerSupport();
     }
 
     public long getAutoUpdateInterval() {
-        return autoUpdateInterval;
+        return configurationData.getAutoUpdateInterval();
     }
 
     public Function<Request, CoapResponse> getCustomPropertyRequestFunction() {
@@ -231,53 +216,53 @@ public class CoapPhysicalAdapterConfiguration {
     }
 
     protected void setPreferredContentFormat(int preferredContentFormat) {
-        this.preferredContentFormat = preferredContentFormat;
+        this.configurationData.setPreferredContentFormat(preferredContentFormat);
     }
 
     // EVENT TYPES
 
     protected void setDefaultEventType(String defaultEventType) {
-        this.defaultEventType = defaultEventType;
+        this.configurationData.setDefaultWldtEventType(defaultEventType);
     }
 
     protected void addCustomEventType(String resourceName, String eventType) {
-        this.customEventTypes.put(resourceName, eventType);
+        this.configurationData.getCustomWldtEventTypesMap().put(resourceName, eventType);
     }
 
     // ACTION TYPES
 
     protected void setDefaultActuatorActionType(String actionType) {
-        this.defaultActuatorActionType = actionType;
+        this.configurationData.setDefaultWldtActuatorActionType(actionType);
     }
 
     protected void setDefaultPostActionType(String actionType) {
-        this.defaultPostActionType = actionType;
+        this.configurationData.setDefaultWldtPostActionType(actionType);
     }
 
     protected void setDefaultPutActionType(String actionType) {
-        this.defaultPutActionType = actionType;
+        this.configurationData.setDefaultWldtPutActionType(actionType);
     }
 
     protected void addCustomActionType(String resourceName, String actionType) {
-        this.customActionTypes.put(resourceName, actionType);
+        this.configurationData.getCustomWldtActionTypesMap().put(resourceName, actionType);
     }
 
     // ACTION CONTENT TYPES
 
     protected void setDefaultActuatorActionContentType(String contentType) {
-        this.defaultActuatorActionContentType = contentType;
+        this.configurationData.setDefaultActuatorWldtActionContentType(contentType);
     }
 
     protected void setDefaultPostActionContentType(String contentType) {
-        this.defaultPostActionContentType = contentType;
+        this.configurationData.setDefaultPostWldtActionContentType(contentType);
     }
 
     protected void setDefaultPutActionContentType(String contentType) {
-        this.defaultPutActionContentType = contentType;
+        this.configurationData.setDefaultPutWldtActionContentType(contentType);
     }
 
     protected void addCustomActionContentType(String resourceName, String contentType) {
-        this.customActionContentTypes.put(resourceName, contentType);
+        this.configurationData.getCustomWldtActionContentTypes().put(resourceName, contentType);
     }
 
     // MANUAL RESOURCE ADDITION
@@ -288,42 +273,38 @@ public class CoapPhysicalAdapterConfiguration {
 
     // OBSERVABILITY & POLLING
 
-    protected void enableObservability(boolean enable) {
-        this.observabilitySupport = enable;
+    protected void setObservabilitySupport(boolean enable) {
+        this.configurationData.setObservabilitySupport(enable);
     }
 
-    protected void enableAutoUpdateTimer(boolean enable) {
-        this.autoUpdateTimerSupport = enable;
+    protected void setAutoUpdateTimerSupport(boolean enable) {
+        this.configurationData.setAutoUpdateTimerSupport(enable);
     }
 
     protected void setAutoUpdateInterval(long autoUpdateInterval) {
-        this.autoUpdateInterval = autoUpdateInterval;
+        this.configurationData.setAutoUpdateInterval(autoUpdateInterval);
     }
 
     protected void setAutomaticResourceListening(boolean enable) {
-        this.automaticResourceListening = enable;
-    }
-
-    protected void setCustomResourceListeningMap(Map<String, PhysicalAssetResourceListener.ListenerType> customResourceListeningMap) {
-        this.customResourceListeningMap = customResourceListeningMap;
+        this.configurationData.setResourceNotificationsSupport(enable);
     }
 
     // RESOURCE DISCOVERY
 
     protected void enableResourceDiscoverySupport(boolean enable) {
-        this.resourceDiscoverySupport = enable;
+        this.configurationData.setResourceDiscoverySupport(enable);
     }
 
     protected void setCustomResourceDiscoveryFunction(Supplier<Set<PhysicalAssetResource>> customResourceDiscoveryFunction) {
         this.customResourceDiscoveryFunction = customResourceDiscoveryFunction;
     }
 
-    protected void setIgnoredResources(List<String> ignoredResources) {
-        this.ignoredResources = ignoredResources;
+    protected void ignoreResources(Collection<String> ignoredResources) {
+        this.configurationData.getIgnoredResources().addAll(ignoredResources);
     }
 
     protected void ignoreResource(String name) {
-        this.ignoredResources.add(name);
+        this.configurationData.getIgnoredResources().add(name);
     }
 
     // BODY TRANSLATORS

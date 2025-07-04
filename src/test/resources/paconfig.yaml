@@ -1,0 +1,7 @@
+ip: "127.0.0.1"
+port: 5683
+resourceDiscoverySupport: true
+observabilitySupport: true
+autoUpdateTimerSupport: true
+autoUpdateInterval: 5000
+preferredContentFormat: 50 # application/json

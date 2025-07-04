@@ -1,6 +1,6 @@
 package it.wldt.adapter.coap.physical.model;
 
-import it.wldt.adapter.coap.physical.CoapPhysicalAdapterConfiguration;
+import it.wldt.adapter.coap.physical.configuration.CoapPhysicalAdapterConfiguration;
 import it.wldt.core.event.WldtEvent;
 import org.eclipse.californium.core.CoapClient;
 import org.eclipse.californium.core.CoapHandler;

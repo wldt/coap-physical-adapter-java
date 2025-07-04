@@ -1,5 +1,5 @@
 # CoAP Physical Adapter
-
+<!--TODO: Update with changed method names and add YAML integration-->
 The `CoapPhysicalAdapter` acts as a bridge between the Digital Twin and the Physical Assets, leveraging the CoAP protocol for communication.
 It implements various features, which can be enabled or disabled via the usage of a builder-based configuration, which also allows the implementation of custom behavior where needed.
 

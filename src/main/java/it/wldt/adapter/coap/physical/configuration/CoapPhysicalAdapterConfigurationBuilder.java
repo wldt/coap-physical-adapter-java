@@ -1,5 +1,6 @@
-package it.wldt.adapter.coap.physical;
+package it.wldt.adapter.coap.physical.configuration;
 
+import it.wldt.adapter.coap.physical.CoapPhysicalAdapterConfigurationException;
 import it.wldt.adapter.coap.physical.model.PhysicalAssetResource;
 import it.wldt.adapter.coap.physical.model.PhysicalAssetResourceListener;
 import it.wldt.adapter.coap.physical.model.UnprocessedResource;
@@ -32,6 +33,10 @@ public class CoapPhysicalAdapterConfigurationBuilder {
      */
     protected CoapPhysicalAdapterConfigurationBuilder(String ip, int port) {
         configuration = new CoapPhysicalAdapterConfiguration(ip, port);
+    }
+
+    protected CoapPhysicalAdapterConfigurationBuilder(CoapPhysicalAdapterConfigurationData configurationData) {
+        this.configuration = new CoapPhysicalAdapterConfiguration(configurationData);
     }
 
     /**
@@ -79,7 +84,7 @@ public class CoapPhysicalAdapterConfigurationBuilder {
         });
         configuration.addResources(resources);
 
-        if (!configuration.isResourceDiscoveryEnabled() && configuration.getResources().isEmpty()) {
+        if (!configuration.getResourceDiscoverySupport() && configuration.getResources().isEmpty()) {
             throw new CoapPhysicalAdapterConfigurationException("Resources collection cannot be empty if resource discovery is enabled");
         }
 
@@ -231,7 +236,7 @@ public class CoapPhysicalAdapterConfigurationBuilder {
      * @return The builder instance.
      */
     public CoapPhysicalAdapterConfigurationBuilder enableObservability(boolean enable) {
-        configuration.enableObservability(enable);
+        configuration.setObservabilitySupport(enable);
         return this;
     }
 
@@ -240,8 +245,8 @@ public class CoapPhysicalAdapterConfigurationBuilder {
      * @param enable A flag indicating whether to enable or disable the polling.
      * @return The builder instance.
      */
-    public CoapPhysicalAdapterConfigurationBuilder enableAutoUpdateTimer(boolean enable) {
-        configuration.enableAutoUpdateTimer(enable);
+    public CoapPhysicalAdapterConfigurationBuilder setAutoUpdateTimerSupport(boolean enable) {
+        configuration.setAutoUpdateTimerSupport(enable);
         return this;
     }
 
@@ -272,8 +277,8 @@ public class CoapPhysicalAdapterConfigurationBuilder {
      * @param customResourceListeningMap A map having the name of the resource as key and what to listen to as a value (instance of <code>{@link PhysicalAssetResourceListener.ListenerType}</code>).
      * @return The builder instance.
      */
-    public CoapPhysicalAdapterConfigurationBuilder setCustomResourceListeningMap(Map<String, PhysicalAssetResourceListener.ListenerType> customResourceListeningMap) {
-        configuration.setCustomResourceListeningMap(customResourceListeningMap);
+    public CoapPhysicalAdapterConfigurationBuilder addCustomResourceNotifications(Map<String, PhysicalAssetResourceListener.ListenerType> customResourceListeningMap) {
+        configuration.getCustomResourceNotificationsMap().putAll(customResourceListeningMap);
         return this;
     }
 
@@ -303,8 +308,8 @@ public class CoapPhysicalAdapterConfigurationBuilder {
      * @param ignoredResources A list containing the names of the resources to ignore.
      * @return The builder instance.
      */
-    public CoapPhysicalAdapterConfigurationBuilder setIgnoredResources(List<String> ignoredResources) {
-        configuration.setIgnoredResources(ignoredResources);
+    public CoapPhysicalAdapterConfigurationBuilder ignoreResources(List<String> ignoredResources) {
+        configuration.ignoreResources(ignoredResources);
         return this;
     }
 

@@ -20,6 +20,7 @@ dependencies {
     api("ch.qos.logback:logback-classic:1.5.13")
     api("com.google.code.gson:gson:2.10.1")
     api("io.github.wldt:wldt-core:0.4.0")
+    api("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.19.0")
     testImplementation("junit:junit:4.13.2")
 }
 

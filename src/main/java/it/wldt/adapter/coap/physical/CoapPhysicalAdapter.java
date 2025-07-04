@@ -1,5 +1,6 @@
 package it.wldt.adapter.coap.physical;
 
+import it.wldt.adapter.coap.physical.configuration.CoapPhysicalAdapterConfiguration;
 import it.wldt.adapter.coap.physical.model.PhysicalAssetResource;
 import it.wldt.adapter.coap.physical.model.PhysicalAssetResourceListener;
 import it.wldt.adapter.physical.*;
@@ -19,7 +20,6 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.util.*;
 import java.util.function.BiFunction;
-import java.util.stream.Collectors;
 
 /**
  * CoAP Physical Adapter implementation.
@@ -123,10 +123,10 @@ public class CoapPhysicalAdapter
         getConfiguration().getResources().forEach(resource -> {
             // -- Add adapter as listener --
 
-            if (getConfiguration().isAutomaticResourceListeningEnabled()) {
+            if (getConfiguration().getResourceNotificationsSupport()) {
                 resource.addListener(this, ListenerType.ALL);
-            } else if (getConfiguration().getCustomResourceListeningMap().containsKey(resource.getName())) {
-                resource.addListener(this, getConfiguration().getCustomResourceListeningMap().get(resource.getName()));
+            } else if (getConfiguration().getCustomResourceNotificationsMap().containsKey(resource.getName())) {
+                resource.addListener(this, getConfiguration().getCustomResourceNotificationsMap().get(resource.getName()));
             }
 
             // -- Create the Physical Asset Description (PAD) --
@@ -200,7 +200,7 @@ public class CoapPhysicalAdapter
     * @throws Exception if an error occurs during resource discovery
     */
     private void discoverResources() throws Exception {
-        if (!getConfiguration().isResourceDiscoveryEnabled()) {
+        if (!getConfiguration().getResourceDiscoverySupport()) {
             return;
         }
 
