@@ -1,5 +1,6 @@
 package it.wldt.adapter.coap.physical.configuration;
 
+import it.wldt.adapter.coap.physical.CoapPhysicalAdapter;
 import it.wldt.adapter.coap.physical.model.PhysicalAssetResourceListener;
 import org.eclipse.californium.core.coap.MediaTypeRegistry;
 
@@ -9,8 +10,8 @@ public class CoapPhysicalAdapterConfigurationData {
     // COAP
 
     // -> SERVER INFO
-    private final String ip;
-    private final int port;
+    private String ip;
+    private int port;
 
     // -> CONTENT
     private int preferredContentFormat = MediaTypeRegistry.TEXT_PLAIN;
@@ -23,20 +24,20 @@ public class CoapPhysicalAdapterConfigurationData {
     // -> RESOURCE DISCOVERY
 
     private boolean resourceDiscoverySupport = true;
-    private List<String> ignoredResources;
+    private List<String> ignoredResources = new ArrayList<>();
 
     // WLDT EVENTS
 
     // -> WLDT EVENT NOTIFICATION TYPES
     private String defaultWldtEventType = "event";
-    private Map<String, String> customWldtEventTypesMap;
+    private Map<String, String> customWldtEventTypesMap = new TreeMap<>();
 
     // -> WLDT ACTION EVENT TYPES
     private String defaultWldtActuatorActionType = "action";
     private String defaultWldtPostActionType = "toggle";
     private String defaultWldtPutActionType = "parameter";
 
-    private Map<String, String> customWldtActionTypesMap;
+    private Map<String, String> customWldtActionTypesMap = new TreeMap<>();
 
     // -> WLDT ACTION EVENT CONTENT TYPES
 
@@ -44,16 +45,18 @@ public class CoapPhysicalAdapterConfigurationData {
     private String defaultPostWldtActionContentType = MediaTypeRegistry.toString(MediaTypeRegistry.TEXT_PLAIN);
     private String defaultPutWldtActionContentType = MediaTypeRegistry.toString(MediaTypeRegistry.TEXT_PLAIN);
 
-    private Map<String, String> customWldtActionContentTypes;
+    private Map<String, String> customWldtActionContentTypes = new TreeMap<>();
 
     // ADAPTER
 
     // -> NOTIFICATIONS
 
     private boolean resourceNotificationsSupport = true;
-    private Map<String, PhysicalAssetResourceListener.ListenerType> customResourceNotificationsMap;
+    private Map<String, PhysicalAssetResourceListener.ListenerType> customResourceNotificationsMap = new TreeMap<>();
 
     // CONSTRUCTORS
+
+    public CoapPhysicalAdapterConfigurationData() { }
 
     public CoapPhysicalAdapterConfigurationData(String ip, int port) {
         this.ip = ip;
@@ -115,8 +118,16 @@ public class CoapPhysicalAdapterConfigurationData {
         return ip;
     }
 
+    public void setIp(String ip) {
+        this.ip = ip;
+    }
+
     public int getPort() {
         return port;
+    }
+
+    public void setPort(int port) {
+        this.port = port;
     }
 
     public int getPreferredContentFormat() {

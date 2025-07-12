@@ -125,7 +125,7 @@ public class CoapPhysicalAdapter
 
             if (getConfiguration().getResourceNotificationsSupport()) {
                 resource.addListener(this, ListenerType.ALL);
-            } else if (getConfiguration().getCustomResourceNotificationsMap().containsKey(resource.getName())) {
+            } else if (getConfiguration().getCustomResourceNotificationsMap() != null && getConfiguration().getCustomResourceNotificationsMap().containsKey(resource.getName())) {
                 resource.addListener(this, getConfiguration().getCustomResourceNotificationsMap().get(resource.getName()));
             }
 
