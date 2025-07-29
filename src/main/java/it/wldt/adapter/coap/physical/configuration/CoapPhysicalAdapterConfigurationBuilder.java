@@ -25,7 +25,7 @@ public class CoapPhysicalAdapterConfigurationBuilder {
 
     /**
      * Creates a new CoapPhysicalAdapterConfigurationBuilder instance.
-     * Called inside the <code>{@link CoapPhysicalAdapterConfiguration}</code>'s <code>build()</code> method.
+     * Called inside the <code>{@link CoapPhysicalAdapterConfiguration}</code>'s <code>builder()</code> method.
      *
      * @param ip   the server address
      * @param port the server port
@@ -34,6 +34,12 @@ public class CoapPhysicalAdapterConfigurationBuilder {
         configuration = new CoapPhysicalAdapterConfiguration(ip, port);
     }
 
+    /**
+     * Creates a new CoapPhysicalAdapterConfigurationBuilder instance.
+     * Called inside the <code>{@link CoapPhysicalAdapterConfiguration}</code>'s <code>fromYaml()</code> method.
+     *
+     * @param configurationData The configuration data to base the configuration on.
+     */
     protected CoapPhysicalAdapterConfigurationBuilder(CoapPhysicalAdapterConfigurationData configurationData) {
         this.configuration = new CoapPhysicalAdapterConfiguration(configurationData);
     }

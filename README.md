@@ -61,6 +61,23 @@ Creates a new instance of the CoAP Physical Adapter configuration builder.
 
 In the builder there's plenty of methods that can be used to configure the Adapter's behavior:
 
+A builder can also be retrieved from a YAML file, by calling the `fromYaml(File yamlConfig)` static method contained in `CoapDigitalAdapterConfiguration`:
+
+```java
+CoapPhysicalAdapterConfiguration.fromYaml(File yamlConfig)
+```
+
+Creates a new instance of the CoAP Physical Adapter configuration builder from a YAML file.
+
+*Parameters*:
+
+- **yamlConfig**: The file containing the configuration.
+
+*Returns*: A new instance of the CoAP Physical Adapter configuration builder. 
+
+*Throws*: IOException If an error occurs while reading the YAML file.
+
+
 #### Resource discovery
 
 ##### enableResourceDiscoverySupport
@@ -625,6 +642,58 @@ This method checks that everything needed is provided correctly and, if so, proc
 *Returns*: The configuration instance
 
 *Throws*: `CoapPhysicalAdapterConfigurationException` - In the case of the configuration being invalid.
+
+### YAML Configuration
+
+The `CoapPhysicalAdapter` can be configured using a YAML file, which allows for easy configuration management and sharing. 
+
+The YAML file should follow the structure defined of the `CoapPhysicalAdapterConfigurationData` class, which contains all the deserialized data.
+The YAML configuration can be loaded into a `CoapPhysicalAdapterConfigurationBuilder` using the static `fromYaml(File yamlConfig)` method contained in the `CoapPhysicalAdapterConfiguration` class.
+
+Below are an example of how to load a YAML configuration file and which parameters it can contain:
+
+```java
+CoapPhysicalAdapterConfiguration configuration = CoapPhysicalAdapterConfiguration.fromYaml(new File(
+        CoapPhysicalAdapterYamlTest.class
+                .getClassLoader()
+                .getResource("paconfig.yaml")
+                .toURI()))
+        [...]
+        .build();
+```
+
+```yaml
+ip: <string>                                    # Physical Asset's IP address
+port: <int>                                     # Physical Asset's CoAP server port
+preferredContentFormat: <int>                   # CoAP content format value, e.g.: text/plain=0, application/json = 50, ...
+observabilitySupport: <boolean>                 # Enables/disables the observability
+autoUpdateTimerSupport: <boolean>               # Enables/disables the polling
+autoUpdateInterval: <int>                       # Polling interval in milliseconds
+resourceDiscoverySupport: <boolean>             # Enables/disables the resource discovery
+ignoredResources:                               # List of resources to ignore during the resource discovery
+  - <string>
+  - <string>
+defaultWldtEventType: <string>                  # Default WLDT event notification type
+customWldtEventTypes:                           # Map of custom WLDT event notification types
+  <event_name_1>: <string>
+  <event_name_2>: <string>
+defaultWldtActionType: <string>                 # Default WLDT action type for resources supporting both POST & PUT requests
+defaultWldtPostActionType: <string>             # Default WLDT action type for resources supporting only POST requests
+defaultWldtPutActionType: <string>              # Default WLDT action type for resources supporting only PUT requests
+customWldtActionTypesMap:                       # Map of custom WLDT action types
+  <action_name_1>: <string>
+  <action_name_2>: <string>
+defaultActuatorWldtActionContentType: <string>  # Default WLDT action content type for resources supporting both POST & PUT requests
+defaultPostWldtActionContentType: <string>      # Default WLDT action content type for resources supporting only POST requests
+defaultPutWldtActionContentType: <string>       # Default WLDT action content type for resources supporting only PUT requests
+customWldtActionContentTypesMap:                # Map of custom WLDT action content types
+  <action_name_1>: <string>
+  <action_name_2>: <string>
+resourceNotificationSupport: <boolean>          # Enables/disables the automatic resource listening
+customResourceListeningMap:                     # Map of resources to listen to, specifying if it has to listen to property updates, events, or both
+  <resource_name_1>: <listener_type>            # listener_type can be "BOTH", "PROPERTY" or "EVENT"
+  <resource_name_2>: <listener_type>
+```
 
 ### Integrated example
 

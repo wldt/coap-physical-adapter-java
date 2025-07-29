@@ -6,6 +6,12 @@ import org.eclipse.californium.core.coap.MediaTypeRegistry;
 
 import java.util.*;
 
+/**
+ * Configuration data for the CoAP physical adapter.
+ * This class holds all the necessary serializable configuration parameters for the CoAP Physical Adapter,
+ * including server information, content formats, data synchronization settings,
+ * resource discovery options, and WLDT event/action types.
+ */
 public class CoapPhysicalAdapterConfigurationData {
     // COAP
 
