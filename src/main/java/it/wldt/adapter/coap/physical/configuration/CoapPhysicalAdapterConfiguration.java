@@ -53,7 +53,7 @@ public class CoapPhysicalAdapterConfiguration {
         this.configurationData = new CoapPhysicalAdapterConfigurationData(ip, port);
     }
 
-    public CoapPhysicalAdapterConfiguration(CoapPhysicalAdapterConfigurationData configurationData) {
+    protected CoapPhysicalAdapterConfiguration(CoapPhysicalAdapterConfigurationData configurationData) {
         this.configurationData = configurationData;
     }
 
