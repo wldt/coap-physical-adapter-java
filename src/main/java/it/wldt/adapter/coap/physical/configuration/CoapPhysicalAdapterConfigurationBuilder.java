@@ -1,6 +1,5 @@
 package it.wldt.adapter.coap.physical.configuration;
 
-import it.wldt.adapter.coap.physical.CoapPhysicalAdapterConfigurationException;
 import it.wldt.adapter.coap.physical.model.PhysicalAssetResource;
 import it.wldt.adapter.coap.physical.model.PhysicalAssetResourceListener;
 import it.wldt.adapter.coap.physical.model.UnprocessedResource;

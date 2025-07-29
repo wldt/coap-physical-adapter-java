@@ -1,6 +1,7 @@
 package it.wldt.adapter.coap.physical;
 
 import it.wldt.adapter.coap.physical.configuration.CoapPhysicalAdapterConfiguration;
+import it.wldt.adapter.coap.physical.configuration.CoapPhysicalAdapterConfigurationException;
 import it.wldt.adapter.coap.physical.utils.DefaultShadowingFunction;
 import it.wldt.adapter.coap.physical.utils.ConsoleDigitalAdapter;
 import it.wldt.adapter.physical.event.PhysicalAssetEventWldtEvent;
