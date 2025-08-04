@@ -18,7 +18,6 @@ In the WLDT library, Physical Adapters have the responsibility to generate and p
 
 | coap-physical-adapter | wldt-core 0.2.1 | wldt-core 0.3.0 | wldt-core 0.4.0 |
 |-----------------------|-----------------|-----------------|-----------------|
-| 0.1.0                 | ❌               | ✅               | ❌               |
 | 0.1.1                 | ❌               | ❌               | ✅               |
 
 
