@@ -19,13 +19,28 @@ In the WLDT library, Physical Adapters have the responsibility to generate and p
 | coap-physical-adapter | wldt-core 0.2.1 | wldt-core 0.3.0 | wldt-core 0.4.0 |
 |-----------------------|-----------------|-----------------|-----------------|
 | 0.1.1                 | ❌               | ❌               | ✅               |
+| 0.1.2                 | ❌               | ❌               | ✅               |
 
 
 ## Installation
 
+To use the adapter in your Java project, you can include it as a dependency using Maven or Gradle.
+
 ### Maven
 
+```xml
+<dependency>
+    <groupId>io.github.wldt</groupId>
+    <artifactId>coap-physical-adapter</artifactId>
+    <version>0.1.2</version>
+</dependency>
+```
+
 ### Gradle
+
+```groovy
+implementation("io.github.wldt:coap-physical-adapter:0.1.2")
+```
 
 ## Class Structure & Functionalities
 
