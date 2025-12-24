@@ -49,10 +49,10 @@ jobs:
           ORG_GRADLE_PROJECT_signingInMemoryKeyPassword: ${{ secrets.SIGNING_PASSWORD }}
 
       # STEP 6: Create automatic GitHub Release with changelog
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2  # Popular release action
-        if: runner.os != 'Windows'  # Skip on Windows (known bugs)
-        with:
-          generate_release_notes: true  # Analyzes commits → auto changelog
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Auto-generated GitHub token
+      #- name: Create GitHub Release
+      #  uses: softprops/action-gh-release@v2  # Popular release action
+      #  if: runner.os != 'Windows'  # Skip on Windows (known bugs)
+      #  with:
+      #    generate_release_notes: true  # Analyzes commits → auto changelog
+      #  env:
+      #    GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Auto-generated GitHub token
