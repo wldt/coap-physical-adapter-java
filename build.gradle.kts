@@ -3,6 +3,7 @@ version = "0.1.2"
 description = "Physical adapter to connect with the CoAP protocol"
 java.sourceCompatibility = JavaVersion.VERSION_1_8
 
+
 plugins {
     id("com.vanniktech.maven.publish") version "0.35.0"
     `java-library`

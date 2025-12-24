@@ -81,19 +81,15 @@ public class CoapPhysicalAdapter
     }
 
     /**
-     * Starts the CoAP physical adapter.
-     * <p>
-     * This method performs the following operations:
-     * <ul>
-     *     <li>Discovers available resources using the {@code discoverResources()} method.</li>
-     *     <li>Checks the presence of resources; if no resources are found, notifies that the adapter is unbound.</li>
-     *     <li>Starts listening to the found resources.</li>
-     *     <li>Generates the physical asset description (PAD) containing properties, events, and actions of the resources.</li>
-     *     <li>If enabled, handles observability and automatic updates for resources.</li>
-     * </ul>
+     *Starts the CoAP physical adapter.
+     *This method performs the following operations:
+     *- Discovers available resources using the {@code discoverResources()} method.
+     *- Checks the presence of resources; if no resources are found, notifies that the adapter is unbound.
+     *- Starts listening to the found resources.
+     *- Generates the physical asset description (PAD) containing properties, events, and actions of the resources.
+     *If enabled, handles observability and automatic updates for resources.
      * Once the method has performed all its operations without errors, it notifies that the adapter is successfully bound.
      * If any errors occur during execution, appropriate logs are recorded, and the adapter is notified as unbound.
-     * </p>
      */
     @Override
     public void onAdapterStart() {

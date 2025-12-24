@@ -128,7 +128,7 @@ public class CoapPhysicalAdapterConfigurationBuilder {
     }
 
     /**
-     * Adds a WLDT action type only to the specified resource supporting both POST & PUT requests.
+     * Adds a WLDT action type only to the specified resource supporting both POST and PUT requests.
      * @param resourceName The resource to apply the type to.
      * @param actionType The WLDT action type.
      * @return The builder instance.
@@ -139,7 +139,7 @@ public class CoapPhysicalAdapterConfigurationBuilder {
     }
 
     /**
-     * Sets the default WLDT action type for CoAP resources supporting both POST & PUT requests.
+     * Sets the default WLDT action type for CoAP resources supporting both POST and PUT requests.
      * @param actionType The WLDT action type
      * @return The builder instance.
      */
@@ -180,7 +180,7 @@ public class CoapPhysicalAdapterConfigurationBuilder {
     }
 
     /**
-     * Sets the default WLDT action content type for CoAP resources supporting both POST & PUT requests.
+     * Sets the default WLDT action content type for CoAP resources supporting both POST and PUT requests.
      * @param actuatorActionContentType The WLDT action type
      * @return The builder instance.
      */
@@ -399,7 +399,7 @@ public class CoapPhysicalAdapterConfigurationBuilder {
     }
 
     /**
-     * Sets the function which sends CoAP POST & PUT request to the Physical Asset.
+     * Sets the function which sends CoAP POST and PUT request to the Physical Asset.
      * @param customActionRequestFunction A function which receives a CoAP request as input and returns the CoAP response.
      * @return The builder instance.
      */
