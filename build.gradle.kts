@@ -16,11 +16,6 @@ repositories {
     mavenLocal()
 }
 
-mavenPublishing {
-    publishToMavenCentral()
-    signAllPublications()
-}
-
 dependencies {
     api("org.eclipse.californium:californium-core:3.8.0")
     api("ch.qos.logback:logback-classic:1.5.13")
@@ -58,6 +53,9 @@ afterEvaluate {
 
 mavenPublishing {
     coordinates(group.toString(), name.toString(), version.toString())
+
+    publishToMavenCentral()
+    signAllPublications()
 
     pom {
         name.set("WLDT CoAP Physical Adapter")
